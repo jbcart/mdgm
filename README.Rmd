@@ -1,0 +1,59 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# mdgm
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of mdgm is to ...
+
+## Installation
+
+You can install the development version of mdgm from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+pak::pak("jbcart/mdgm")
+```
+
+## Example
+
+This is a basic example which shows you how to solve a common problem:
+
+```{r example}
+# library(mdgm)
+## basic example code
+```
+
+What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+
+```{r cars}
+summary(cars)
+```
+
+## C++ unit tests
+
+The graph storage data structures implemented in `src/GraphStorage.*` now ship
+with standalone C++ unit tests under `tests/cpp`. You can build and execute
+them with any C++20 compiler using:
+
+``` bash
+make -C tests/cpp
+./tests/cpp/graph_storage_tests
+```
+
+The `Makefile` links directly against the sources in `src/` so the tests will
+always exercise the current implementation.
