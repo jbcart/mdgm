@@ -1,7 +1,9 @@
-#ifndef MDGM_RNG_H
-#define MDGM_RNG_H
+#ifndef MDGM_RANDOM_H
+#define MDGM_RANDOM_H
 
 #include <random>
+#include <span>
+#include <vector>
 
 namespace mdgm {
   
@@ -42,6 +44,11 @@ class RNG {
     return dist(rng_);
   }
 
+  std::size_t discrete(std::span<const double> weights) {
+    std::discrete_distribution<std::size_t> dist(weights.data(), weights.data() + weights.size());
+    return dist(rng_);
+  }
+
  private:
   rng_type rng_;
 
@@ -54,4 +61,4 @@ class RNG {
 
 } // namespace mdgm
 
-#endif  // MDGM_RNG_H
+#endif  // MDGM_RANDOM_H

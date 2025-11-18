@@ -7,6 +7,7 @@
 
 
 namespace mdgm {
+
   TEST(GraphStorage, COOConstruction) {
     std::size_t nvertices = 3;
     std::vector<std::size_t> row_ind = {0, 1, 2};
@@ -36,17 +37,18 @@ namespace mdgm {
   }
 
   TEST(GraphStorage, COOtoCSR) {
+    // Create a COO graph with some duplicate edges
     std::size_t nvertices = 4;
-    std::vector<std::size_t> row_ind = {1, 2, 1, 0, 0};
-    std::vector<std::size_t> col_ind = {3, 3, 2, 3, 1};
-    std::vector<double> weights = {3.0, 5.0, 4.0, 1.0, 2.0};
+    std::vector<std::size_t> row_ind = {1, 2, 1, 1, 0, 0, 2};
+    std::vector<std::size_t> col_ind = {3, 3, 2, 2, 3, 1, 3};
+    std::vector<double> weights = {4.0, 5.0, 3.0, 3.0, 2.0, 1.0, 5.0};
 
     GraphCOO coo_graph(nvertices, row_ind, col_ind, weights);
     GraphCSR csr_graph(coo_graph);
 
-    // Check CSR structure
+    // Check CSR structure - sorted and deduplicated
     std::vector<std::size_t> expected_row_ptr = {0, 2, 4, 5, 5};
-    std::vector<std::size_t> expected_col_ind = {3, 1, 3, 2, 3};
+    std::vector<std::size_t> expected_col_ind = {1, 3, 2, 3, 3};
     std::vector<double> expected_weights = {1.0, 2.0, 3.0, 4.0, 5.0};
 
     EXPECT_EQ(csr_graph.row_ptr(), expected_row_ptr);
@@ -55,7 +57,7 @@ namespace mdgm {
 
     // Check adjacency retrieval
     auto adj_vertex_0 = csr_graph.adjacent(0);
-    std::vector<std::size_t> expected_adj_0 = {3, 1};
+    std::vector<std::size_t> expected_adj_0 = {1, 3};
     EXPECT_EQ(std::vector<std::size_t>(adj_vertex_0.begin(), adj_vertex_0.end()), expected_adj_0);
 
     auto adj_weights_0 = csr_graph.adjacent_weights(0);

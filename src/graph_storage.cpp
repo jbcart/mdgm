@@ -1,9 +1,9 @@
 #include "graph_storage.h"
 
-#include <cstddef>
-#include <vector>
-#include <span>
 #include <algorithm>
+#include <cstddef>
+#include <span>
+#include <vector>
 
 namespace mdgm {
 
@@ -36,32 +36,36 @@ void GraphCSR::BuildFromCOO_(const GraphCOO& coo) {
 }
 
 void GraphCSR::SortAndDeduplicate_() {
+  // Store original row_ptr_ for reference
+  std::vector<std::size_t> orig_row_ptr_ = row_ptr_;
   for (std::size_t i = 0; i < nvertices_; ++i) {
-    std::size_t b = row_ptr_[i];
-    std::size_t e = row_ptr_[i + 1];
+    std::size_t b = orig_row_ptr_[i];
+    std::size_t e = orig_row_ptr_[i + 1];
 
-    std::vector<std::pair<std::size_t, double>> tmp;
-    tmp.reserve(e - b);
-    for (std::size_t j = b; j < e; ++j) {
-      tmp.emplace_back(col_ind_[j], weights_[j]);
-    }
-
-    // sorts by column index
-    std::sort(tmp.begin(), tmp.end(),
-              [](const auto& a, const auto& b) { return a.first < b.first; });
-
-    std::size_t k = b;
-    for (std::size_t j = 0; j < tmp.size(); ++j) {
-      if (j == 0 || tmp[j].first != tmp[j - 1].first) {
-        col_ind_[k] = tmp[j].first;
-        weights_[k] = tmp[j].second;
-        ++k;
-      } else {
-        weights_[k - 1] += tmp[j].second;
+    if (e - b > 1) {
+      std::vector<std::pair<std::size_t, double>> tmp;
+      tmp.reserve(e - b);
+      for (std::size_t j = b; j < e; ++j) {
+        tmp.emplace_back(col_ind_[j], weights_[j]);
       }
-    }
 
-    row_ptr_[i + 1] = k;
+      // sorts by column index
+      std::sort(tmp.begin(), tmp.end(),
+                [](const auto& a, const auto& b) { return a.first < b.first; });
+
+      std::size_t k = row_ptr_[i];  // position to write deduplicated entries
+      for (std::size_t j = 0; j < tmp.size(); ++j) {
+        if (j == 0 || tmp[j].first != tmp[j - 1].first) {
+          col_ind_[k] = tmp[j].first;
+          weights_[k] = tmp[j].second;
+          ++k;
+        }
+      }
+      row_ptr_[i + 1] = k;  // Update row_ptr_ to new end position
+    } else {
+      row_ptr_[i + 1] =
+          row_ptr_[i] + (e - b);  // adjust for previous duplicates
+    }
   }
 
   std::size_t new_size = row_ptr_[nvertices_];
