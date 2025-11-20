@@ -35,14 +35,18 @@ void GraphCSR::BuildFromCOO_(const GraphCOO& coo) {
 }
 
 void GraphCSR::SortAndDeduplicate_() {
-  // Store original row_ptr_ for reference
+  // NOTE: Duplicate edges are discarded; only the first occruence (lowest column after sort) is
+  // kept. Weights of discarded edges are ignored. 
+  
+  // Store original row_ptr_ for correct reference of col_ind_ and weights_ during processing
   std::vector<std::size_t> orig_row_ptr_ = row_ptr_;
   for (std::size_t i = 0; i < nvertices_; ++i) {
     std::size_t b = orig_row_ptr_[i];
     std::size_t e = orig_row_ptr_[i + 1];
+    std::vector<std::pair<std::size_t, double>> tmp;
 
     if (e - b > 1) {
-      std::vector<std::pair<std::size_t, double>> tmp;
+      tmp.clear();
       tmp.reserve(e - b);
       for (std::size_t j = b; j < e; ++j) {
         tmp.emplace_back(col_ind_[j], weights_[j]);

@@ -27,3 +27,27 @@ rng_create_cpp <- function() {
 rng_create_seed_cpp <- function(seed) {
   .Call(`_mdgm_rng_create_seed_cpp`, seed)
 }
+
+rng_set_seed_cpp <- function(rng, seed) {
+  invisible(.Call(`_mdgm_rng_set_seed_cpp`, rng, seed))
+}
+
+rng_reseed_random_cpp <- function(rng) {
+  invisible(.Call(`_mdgm_rng_reseed_random_cpp`, rng))
+}
+
+rng_uniform_cpp <- function(rng, a, b) {
+  .Call(`_mdgm_rng_uniform_cpp`, rng, a, b)
+}
+
+rng_uniform_int_cpp <- function(rng, a, b) {
+  .Call(`_mdgm_rng_uniform_int_cpp`, rng, a, b)
+}
+
+rng_normal_cpp <- function(rng, mean, stddev) {
+  .Call(`_mdgm_rng_normal_cpp`, rng, mean, stddev)
+}
+
+rng_discrete_cpp <- function(rng, weights) {
+  .Call(`_mdgm_rng_discrete_cpp`, rng, weights)
+}

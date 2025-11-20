@@ -54,11 +54,61 @@ extern "C" SEXP _mdgm_rng_create_seed_cpp(SEXP seed) {
     return cpp11::as_sexp(rng_create_seed_cpp(cpp11::as_cpp<cpp11::decay_t<int>>(seed)));
   END_CPP11
 }
+// R_utils.cpp
+void rng_set_seed_cpp(cpp11::external_pointer<mdgm::RNG> rng, int seed);
+extern "C" SEXP _mdgm_rng_set_seed_cpp(SEXP rng, SEXP seed) {
+  BEGIN_CPP11
+    rng_set_seed_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::RNG>>>(rng), cpp11::as_cpp<cpp11::decay_t<int>>(seed));
+    return R_NilValue;
+  END_CPP11
+}
+// R_utils.cpp
+void rng_reseed_random_cpp(cpp11::external_pointer<mdgm::RNG> rng);
+extern "C" SEXP _mdgm_rng_reseed_random_cpp(SEXP rng) {
+  BEGIN_CPP11
+    rng_reseed_random_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::RNG>>>(rng));
+    return R_NilValue;
+  END_CPP11
+}
+// R_utils.cpp
+double rng_uniform_cpp(cpp11::external_pointer<mdgm::RNG> rng, double a, double b);
+extern "C" SEXP _mdgm_rng_uniform_cpp(SEXP rng, SEXP a, SEXP b) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(rng_uniform_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::RNG>>>(rng), cpp11::as_cpp<cpp11::decay_t<double>>(a), cpp11::as_cpp<cpp11::decay_t<double>>(b)));
+  END_CPP11
+}
+// R_utils.cpp
+int rng_uniform_int_cpp(cpp11::external_pointer<mdgm::RNG> rng, int a, int b);
+extern "C" SEXP _mdgm_rng_uniform_int_cpp(SEXP rng, SEXP a, SEXP b) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(rng_uniform_int_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::RNG>>>(rng), cpp11::as_cpp<cpp11::decay_t<int>>(a), cpp11::as_cpp<cpp11::decay_t<int>>(b)));
+  END_CPP11
+}
+// R_utils.cpp
+double rng_normal_cpp(cpp11::external_pointer<mdgm::RNG> rng, double mean, double stddev);
+extern "C" SEXP _mdgm_rng_normal_cpp(SEXP rng, SEXP mean, SEXP stddev) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(rng_normal_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::RNG>>>(rng), cpp11::as_cpp<cpp11::decay_t<double>>(mean), cpp11::as_cpp<cpp11::decay_t<double>>(stddev)));
+  END_CPP11
+}
+// R_utils.cpp
+int rng_discrete_cpp(cpp11::external_pointer<mdgm::RNG> rng, const cpp11::doubles& weights);
+extern "C" SEXP _mdgm_rng_discrete_cpp(SEXP rng, SEXP weights) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(rng_discrete_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::RNG>>>(rng), cpp11::as_cpp<cpp11::decay_t<const cpp11::doubles&>>(weights)));
+  END_CPP11
+}
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
     {"_mdgm_rng_create_cpp",                            (DL_FUNC) &_mdgm_rng_create_cpp,                            0},
     {"_mdgm_rng_create_seed_cpp",                       (DL_FUNC) &_mdgm_rng_create_seed_cpp,                       1},
+    {"_mdgm_rng_discrete_cpp",                          (DL_FUNC) &_mdgm_rng_discrete_cpp,                          2},
+    {"_mdgm_rng_normal_cpp",                            (DL_FUNC) &_mdgm_rng_normal_cpp,                            3},
+    {"_mdgm_rng_reseed_random_cpp",                     (DL_FUNC) &_mdgm_rng_reseed_random_cpp,                     1},
+    {"_mdgm_rng_set_seed_cpp",                          (DL_FUNC) &_mdgm_rng_set_seed_cpp,                          2},
+    {"_mdgm_rng_uniform_cpp",                           (DL_FUNC) &_mdgm_rng_uniform_cpp,                           3},
+    {"_mdgm_rng_uniform_int_cpp",                       (DL_FUNC) &_mdgm_rng_uniform_int_cpp,                       3},
     {"_mdgm_undirected_graph_create_cpp",               (DL_FUNC) &_mdgm_undirected_graph_create_cpp,               4},
     {"_mdgm_undirected_graph_nedges_cpp",               (DL_FUNC) &_mdgm_undirected_graph_nedges_cpp,               1},
     {"_mdgm_undirected_graph_neighbors_cpp",            (DL_FUNC) &_mdgm_undirected_graph_neighbors_cpp,            2},

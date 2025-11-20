@@ -48,6 +48,14 @@ class RNG {
     return dist(rng_);
   }
 
+  void Reseed(result_type seed) {
+    rng_.seed(seed);
+  }
+
+  void Reseed() {
+    reseed_random();
+  }
+
  private:
   rng_type rng_;
 
