@@ -1,42 +1,29 @@
-#include "undirected_graph.h"
-
 #include <algorithm>
+#include <mdgm/graph_storage.hpp>
+#include <mdgm/rng.hpp>
+#include <mdgm/undirected_graph.hpp>
 #include <stdexcept>
 #include <vector>
 
-#include "graph_storage.h"
-#include "random.h"
-
 namespace mdgm {
 
-UndirectedGraph::UndirectedGraph(const GraphCSR& csr) : csr_(csr) {
-  ValidateUndirected_();
-}
+UndirectedGraph::UndirectedGraph(const GraphCSR& csr) : csr_(csr) { ValidateUndirected_(); }
 
-UndirectedGraph::UndirectedGraph(const GraphCOO& coo) : csr_(coo) {
-  ValidateUndirected_();
-}
+UndirectedGraph::UndirectedGraph(const GraphCOO& coo) : csr_(coo) { ValidateUndirected_(); }
 
-std::span<const std::size_t> UndirectedGraph::neighbors(
-    std::size_t vertex) const {
+std::span<const std::size_t> UndirectedGraph::neighbors(std::size_t vertex) const {
   return csr_.adjacent(vertex);
 }
 
-std::span<const double> UndirectedGraph::neighbor_weights(
-    std::size_t vertex) const {
+std::span<const double> UndirectedGraph::neighbor_weights(std::size_t vertex) const {
   return csr_.adjacent_weights(vertex);
 }
 
-std::size_t UndirectedGraph::nvertices() const noexcept {
-  return csr_.nvertices();
-}
+std::size_t UndirectedGraph::nvertices() const noexcept { return csr_.nvertices(); }
 
-std::size_t UndirectedGraph::nedges() const noexcept {
-  return csr_.weights().size() / 2;
-}
+std::size_t UndirectedGraph::nedges() const noexcept { return csr_.weights().size() / 2; }
 
-GraphCOO UndirectedGraph::SampleSpanningTree(
-    RNG& rng, SpanningTreeMethod method = kWilson, int k = 1000) const {
+GraphCOO UndirectedGraph::SampleSpanningTree(RNG& rng, SpanningTreeMethod method, int k) const {
   switch (method) {
     case kWilson:
       return SampleSpanningTreeWilson_(rng);
@@ -78,10 +65,9 @@ GraphCOO UndirectedGraph::SampleSpanningTreeWilson_(RNG& rng) const {
   // iterate while there exists at least one vertex not yet in the tree
   while (std::count(in_tree.begin(), in_tree.end(), 1) < nvertices()) {
     // start a new random walk from a random vertex not in the tree
-    std::size_t next = rng.uniform<std::size_t>(
-        0, std::count(in_tree.begin(), in_tree.end(), 0) - 1);
-    random_walk.push_back(next +
-                          std::count(in_tree.data(), in_tree.data() + next, 1));
+    std::size_t next =
+        rng.uniform<std::size_t>(0, std::count(in_tree.begin(), in_tree.end(), 0) - 1);
+    random_walk.push_back(next + std::count(in_tree.data(), in_tree.data() + next, 1));
 
     next = NextVertex_(rng, next);
     while (in_tree[next] == 0) {
@@ -116,8 +102,7 @@ GraphCOO UndirectedGraph::SampleSpanningTreeHybrid_(RNG& rng, int k) const {
   return GraphCOO(0, {}, {}, {});
 }
 
-GraphCOO UndirectedGraph::SampleSpanningTreeFastForward_(RNG& rng,
-                                                         int k) const {
+GraphCOO UndirectedGraph::SampleSpanningTreeFastForward_(RNG& rng, int k) const {
   // unimplemented
   return GraphCOO(0, {}, {}, {});
 }
@@ -128,15 +113,13 @@ void UndirectedGraph::ValidateUndirected_() const {
     std::span<const std::size_t> nbrs_u = csr_.adjacent(u);
     for (std::size_t v : nbrs_u) {
       if (v == u) {
-        throw std::invalid_argument(
-            "Self-loops are not allowed in undirected graph");
+        throw std::invalid_argument("Self-loops are not allowed in undirected graph");
       }
       std::span<const std::size_t> nbrs_v = csr_.adjacent(v);
       auto it = std::lower_bound(nbrs_v.begin(), nbrs_v.end(), u);
       if (it == nbrs_v.end()) {
-        throw std::invalid_argument(
-            "Graph is not undirected: missing reverse edge (" +
-            std::to_string(v) + " -> " + std::to_string(u) + ")");
+        throw std::invalid_argument("Graph is not undirected: missing reverse edge (" +
+                                    std::to_string(v) + " -> " + std::to_string(u) + ")");
       }
     }
   }

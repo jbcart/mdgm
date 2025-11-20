@@ -1,30 +1,27 @@
 #include <cpp11.hpp>
 #include <cstddef>
+#include <mdgm/graph_storage.hpp>
+#include <mdgm/rng.hpp>
+#include <mdgm/undirected_graph.hpp>
+#include <memory>
 #include <stdexcept>
+#include <string>
 #include <vector>
-
-#include "graph_storage.h"
-#include "random.h"
-#include "undirected_graph.h"
 
 namespace {
 
-inline mdgm::SpanningTreeMethod ParseMethod(const cpp11::string& method) {
+inline mdgm::SpanningTreeMethod ParseMethod(const std::string& method) {
   using namespace mdgm;
   if (method == "wilson") return kWilson;
   if (method == "aldous_broder") return kAldousBroder;
   if (method == "hybrid") return kHybrid;
   if (method == "fast_forward") return kFastForward;
-  throw std::invalid_argument("Unknown spanning tree method: " +
-                              std::string(method));
+  throw std::invalid_argument("Unknown spanning tree method: " + method);
 }
 
-inline void CheckLengths(const cpp11::integers& row_ind,
-                         const cpp11::integers& col_ind,
-                         const cpp11::doubles& weights) {
-  if (row_ind.size() != col_ind.size() || row_ind.size() != weights.size()) {
-    throw std::invalid_argument(
-        "row_ind, col_ind, and weights must have the same length");
+inline void CheckLengths(const cpp11::integers& row, const cpp11::integers& col) {
+  if (row.size() != col.size()) {
+    throw std::invalid_argument("row and col must have the same length");
   }
 }
 
@@ -32,27 +29,31 @@ inline void CheckLengths(const cpp11::integers& row_ind,
 
 [[cpp11::register]]
 cpp11::external_pointer<mdgm::UndirectedGraph> undirected_graph_create_cpp(
-    int nvertices, const cpp11::integers& row, const cpp11::integers& col) {
-  CheckLengths(row, col, w);
+    int nvertices, const cpp11::integers& row, const cpp11::integers& col,
+    const cpp11::doubles& weights) {
+  CheckLengths(row, col);
   std::vector<std::size_t> row_ind(row.size());
   std::vector<std::size_t> col_ind(col.size());
+  std::vector<double> edge_weights(weights.size());
   for (std::size_t i{0}; i < row.size(); ++i) {
     if (row[i] < 1 || row[i] > nvertices || col[i] < 1 || col[i] > nvertices) {
       cpp11::stop("row and col values must be between 1 and nvertices");
     }
     row_ind[i] = static_cast<std::size_t>(row[i] - 1);
     col_ind[i] = static_cast<std::size_t>(col[i] - 1);
+    edge_weights[i] = weights[i];
   }
-  mdgm::GraphCOO coo(nvertices, row_ind, col_ind);
+  mdgm::GraphCOO coo(nvertices, row_ind, col_ind, edge_weights);
   auto graph = std::make_unique<mdgm::UndirectedGraph>(coo);
   return cpp11::external_pointer<mdgm::UndirectedGraph>(graph.release());
 }
 
 [[cpp11::register]]
-cpp11::list undirected_graph_sample_spanning_tree_cpp(
-    cpp11::external_pointer<mdgm::UndirectedGraph> g, cpp11::r_string method,
-    int k, cpp11::external_pointer<mdgm::RNG> rng) {
-  auto meth = ParseMethod(static_cast<std::string>(method));
+cpp11::writable::list undirected_graph_sample_spanning_tree_cpp(
+    cpp11::external_pointer<mdgm::UndirectedGraph> g, cpp11::strings method, int k,
+    cpp11::external_pointer<mdgm::RNG> rng) {
+  using namespace cpp11::literals;
+  auto meth = ParseMethod(static_cast<std::string>(method[0]));
 
   mdgm::GraphCOO tree = g->SampleSpanningTree(*rng, meth, k);
 
@@ -65,12 +66,13 @@ cpp11::list undirected_graph_sample_spanning_tree_cpp(
     r[i] = static_cast<int>(row_ind[i] + 1);
     c[i] = static_cast<int>(col_ind[i] + 1);
   }
-  return cpp11::writable::list({r, c}, {"row", "col"});
+  return cpp11::writable::list({"row"_nm = r, "col"_nm = c});
 }
 
 [[cpp11::register]]
-cpp11::list undirected_graph_neighbors_cpp(
+cpp11::writable::list undirected_graph_neighbors_cpp(
     cpp11::external_pointer<mdgm::UndirectedGraph> g, int vertex) {
+  using namespace cpp11::literals;
   if (vertex < 1 || vertex > static_cast<int>(g->nvertices())) {
     cpp11::stop("vertex must be between 1 and nvertices");
   }
@@ -83,34 +85,15 @@ cpp11::list undirected_graph_neighbors_cpp(
     c[i] = static_cast<int>(nbrs[i] + 1);
     w[i] = weights[i];
   }
-  return cpp11::writable::list({c, w}, {"neighbors", "weights"});
+  return cpp11::writable::list({"neighbors"_nm = c, "weights"_nm = w});
 }
 
 [[cpp11::register]]
-int undirected_graph_nvertices_cpp(
-    cpp11::external_pointer<mdgm::UndirectedGraph> g) {
+int undirected_graph_nvertices_cpp(cpp11::external_pointer<mdgm::UndirectedGraph> g) {
   return static_cast<int>(g->nvertices());
 }
 
 [[cpp11::register]]
-int undirected_graph_nedges_cpp(
-    cpp11::external_pointer<mdgm::UndirectedGraph> g) {
+int undirected_graph_nedges_cpp(cpp11::external_pointer<mdgm::UndirectedGraph> g) {
   return static_cast<int>(g->nedges());
 }
-
-[[cpp11::register]]
-cpp11::external_pointer<mdgm::RNG> rng_create_cpp() {
-  auto rng = std::make_unique<mdgm::RNG>();
-  return cpp11::external_pointer<mdgm::RNG>(rng.release());
-}
-
-[[cpp11::register]]
-cpp11::external_pointer<mdgm::RNG> rng_create_cpp(int seed) {
-  auto rng = std::make_unique<mdgm::RNG>(seed);
-  return cpp11::external_pointer<mdgm::RNG>(rng.release());
-}
-
-
-
-
-

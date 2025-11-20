@@ -1,17 +1,15 @@
-#ifndef MDGM_GRAPH_STORAGE_H
-#define MDGM_GRAPH_STORAGE_H
+#pragma once
 
 #include <cstddef>
 #include <span>
-#include <vector>
 #include <stdexcept>
+#include <vector>
 
 namespace mdgm {
 
 class GraphCOO {
  public:
-  GraphCOO(std::size_t nvertices,
-           const std::vector<std::size_t>& row_ind,
+  GraphCOO(std::size_t nvertices, const std::vector<std::size_t>& row_ind,
            const std::vector<std::size_t>& col_ind,
            const std::vector<double>& weights)
       : nvertices_(nvertices),
@@ -25,7 +23,8 @@ class GraphCOO {
 
   GraphCOO(std::size_t nvertices, const std::vector<std::size_t>& row_ind,
            const std::vector<std::size_t>& col_ind)
-      : GraphCOO(nvertices, row_ind, col_ind, std::vector<double>(row_ind.size(), 1.0)) {}
+      : GraphCOO(nvertices, row_ind, col_ind,
+                 std::vector<double>(row_ind.size(), 1.0)) {}
 
   ~GraphCOO() = default;
   GraphCOO(const GraphCOO&) = default;
@@ -35,7 +34,7 @@ class GraphCOO {
     row_ind_.push_back(row);
     col_ind_.push_back(col);
     weights_.push_back(weight);
-  }  
+  }
 
   std::size_t nvertices() const noexcept { return nvertices_; }
   const std::vector<std::size_t>& row_ind() const noexcept { return row_ind_; }
@@ -78,5 +77,3 @@ class GraphCSR {
 };
 
 }  // namespace mdgm
-
-#endif  // MDGM_GRAPH_STORAGE_H

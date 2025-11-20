@@ -1,5 +1,4 @@
-#ifndef MDGM_RANDOM_H
-#define MDGM_RANDOM_H
+#pragma once
 
 #include <random>
 #include <span>
@@ -60,5 +59,3 @@ class RNG {
 };
 
 } // namespace mdgm
-
-#endif  // MDGM_RANDOM_H

@@ -1,12 +1,10 @@
-#ifndef MDGM_UNDIRECTED_GRAPH_H
-#define MDGM_UNDIRECTED_GRAPH_H
+#pragma once
 
 #include <cstddef>
+#include <mdgm/graph_storage.hpp>
+#include <mdgm/rng.hpp>
 #include <span>
 #include <vector>
-
-#include "graph_storage.h"
-#include "random.h"
 
 namespace mdgm {
 
@@ -27,8 +25,7 @@ class UndirectedGraph {
   std::size_t nvertices() const noexcept;
   std::size_t nedges() const noexcept;
 
-  GraphCOO SampleSpanningTree(RNG& rng, SpanningTreeMethod method = kWilson,
-                              int k = 1000) const;
+  GraphCOO SampleSpanningTree(RNG& rng, SpanningTreeMethod method = kWilson, int k = 1000) const;
 
  private:
   void ValidateUndirected_() const;
@@ -43,10 +40,8 @@ class UndirectedGraph {
   std::size_t SampleRootVertex_(RNG& rng) const;
 
   GraphCSR csr_;
-  bool is_connected_;
-  bool checked_connected_;
+  [[maybe_unused]] bool is_connected_;
+  [[maybe_unused]] bool checked_connected_;
 };
 
 }  // namespace mdgm
-
-#endif  // MDGM_UNDIRECTED_GRAPH_H

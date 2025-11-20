@@ -19,6 +19,7 @@
 /*.Rcheck/
 
 # RStudio files
+mdgm.Rproj
 .Rproj.user/
 
 # produced vignettes
@@ -47,3 +48,13 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+inst/doc
+
+# development files
+playground/
+build/
+
+# vscode settings
+.vscode/
+
+

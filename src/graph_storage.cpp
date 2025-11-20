@@ -1,7 +1,6 @@
-#include "graph_storage.h"
-
 #include <algorithm>
 #include <cstddef>
+#include <mdgm/graph_storage.hpp>
 #include <span>
 #include <vector>
 
@@ -63,8 +62,7 @@ void GraphCSR::SortAndDeduplicate_() {
       }
       row_ptr_[i + 1] = k;  // Update row_ptr_ to new end position
     } else {
-      row_ptr_[i + 1] =
-          row_ptr_[i] + (e - b);  // adjust for previous duplicates
+      row_ptr_[i + 1] = row_ptr_[i] + (e - b);  // adjust for previous duplicates
     }
   }
 

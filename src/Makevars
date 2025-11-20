@@ -1,0 +1,12 @@
+CXX_STD = CXX20
+
+
+PKG_CPPFLAGS = \
+  -I../inst/include
+
+OBJECTS = \
+  graph_storage.o \
+  undirected_graph.o \
+  R_undirected_graph.o \
+  R_utils.o \
+  cpp11.o 
