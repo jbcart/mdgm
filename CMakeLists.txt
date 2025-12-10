@@ -12,9 +12,16 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Source Library
-file(GLOB_RECURSE SRC_FILES src/*.cpp)
-add_library(mdgm_objs ${SRC_FILES})
-target_include_directories(mdgm_objs PUBLIC ${PROJECT_SOURCE_DIR}/src)
+file(GLOB 
+  SRC_FILES 
+  src/graph_storage.cpp
+  src/undirected_graph.cpp
+)
+add_library(mdgm_objs OBJECT ${SRC_FILES})
+target_include_directories(mdgm_objs PUBLIC 
+  ${PROJECT_SOURCE_DIR}/src
+  ${PROJECT_SOURCE_DIR}/inst/include
+)
 
 # Testing with GoogleTest
 if(BUILD_TESTS)
@@ -29,7 +36,7 @@ if(BUILD_TESTS)
 
   enable_testing()
 
-  file(GLOB TEST_FILES test/cpp/*.cpp)
+  file(GLOB TEST_FILES tests/cpp/*.cpp)
   add_executable(mdgm_tests ${TEST_FILES})
 
   target_link_libraries(mdgm_tests PRIVATE

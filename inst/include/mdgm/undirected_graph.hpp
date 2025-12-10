@@ -11,14 +11,17 @@ namespace mdgm {
 enum SpanningTreeMethod {
   kWilson,
   kAldousBroder,
-  kHybrid,
   kFastForward,
 };
 
 class UndirectedGraph {
  public:
-  UndirectedGraph(const GraphCSR& csr);
   UndirectedGraph(const GraphCOO& coo);
+  UndirectedGraph(const GraphCSR& csr, bool validate = true);
+
+  ~UndirectedGraph() = default;
+  UndirectedGraph(const UndirectedGraph&) = default;
+  UndirectedGraph& operator=(const UndirectedGraph&) = default;
 
   std::span<const std::size_t> neighbors(std::size_t vertex) const;
   std::span<const double> neighbor_weights(std::size_t vertex) const;
@@ -29,19 +32,19 @@ class UndirectedGraph {
 
  private:
   void ValidateUndirected_() const;
-  void ValidateConnected_() const;
+  void ValidateConnected_();
 
   GraphCOO SampleSpanningTreeWilson_(RNG& rng) const;
   GraphCOO SampleSpanningTreeAldousBroder_(RNG& rng) const;
   GraphCOO SampleSpanningTreeFastForward_(RNG& rng, int k) const;
-  GraphCOO SampleSpanningTreeHybrid_(RNG& rng, int k) const;
 
   std::size_t NextVertex_(RNG& rng, std::size_t current) const;
   std::size_t SampleRootVertex_(RNG& rng) const;
+  void UpdateRemaining_(std::vector<std::size_t>& remaining,
+                        std::vector<std::size_t>& pos, std::size_t vertex) const;
 
   GraphCSR csr_;
-  [[maybe_unused]] bool is_connected_;
-  [[maybe_unused]] bool checked_connected_;
+  bool is_connected_;
 };
 
 }  // namespace mdgm

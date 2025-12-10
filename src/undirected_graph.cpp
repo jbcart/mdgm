@@ -7,9 +7,87 @@
 
 namespace mdgm {
 
-UndirectedGraph::UndirectedGraph(const GraphCSR& csr) : csr_(csr) { ValidateUndirected_(); }
+UndirectedGraph GenerateRegularGraph(std::vector<std::size_t> dims, int order) {
+  if (dims.size() != 2) {
+    throw std::invalid_argument("Only 2D regular graphs are supported");
+  }
+  if (order < 1 || order > 2) {
+    throw std::invalid_argument("Order must be between 1 and 2");
+  }
+  std::size_t nrows{dims[0]};
+  std::size_t ncols{dims[1]};
+  std::size_t nvertices{nrows * ncols};
+  std::size_t nedges{};
+  if (order == 1) {
+    nedges = nvertices * 2 - nrows - ncols;
+  } else if (order == 2) {
+    nedges = nvertices * 3 - nrows * 2 - ncols * 2 + 1;
+  }
+  std::vector<std::size_t> row_ptr(nvertices + 1, 0);
+  std::vector<std::size_t> col_ind;
+  col_ind.reserve(nedges);
+  std::vector<double> weights(nedges, 1.0);
+  std::size_t v{};
+  for (std::size_t r{0}; r < nrows; ++r) {
+    for (std::size_t c{0}; c < ncols; ++c) {
+      v = r * ncols + c;
+      row_ptr[v + 1] = row_ptr[v];
+      // add SW neighbor
+      if (order == 2 && r > 0 && c > 0) {
+        col_ind.push_back(v - ncols - 1);
+        ++row_ptr[v + 1];
+      }
+      // add S neighbor
+      if (r > 0) {
+        col_ind.push_back(v - ncols);
+        ++row_ptr[v + 1];
+      }
+      // add SE neighbor
+      if (order == 2 && r > 0 && c + 1 < ncols) {
+        col_ind.push_back(v - ncols + 1);
+        ++row_ptr[v + 1];
+      }
+      // add W neighbor
+      if (c > 0) {
+        col_ind.push_back(v - 1);
+        ++row_ptr[v + 1];
+      }
+      // add E neighbor
+      if (c + 1 < ncols) {
+        col_ind.push_back(v + 1);
+        ++row_ptr[v + 1];
+      }
+      // add NW neighbor
+      if (order == 2 && r + 1 < nrows && c > 0) {
+        col_ind.push_back(v + ncols - 1);
+        ++row_ptr[v + 1];
+      }
+      // add N neighbor
+      if (r + 1 < nrows) {
+        col_ind.push_back(v + ncols);
+        ++row_ptr[v + 1];
+      }
+      // add NE neighbor
+      if (order == 2 && r + 1 < nrows && c + 1 < ncols) {
+        col_ind.push_back(v + ncols + 1);
+        ++row_ptr[v + 1];
+      }
+    }
+  }
+  return UndirectedGraph(GraphCSR(nvertices, row_ptr, col_ind, weights), false);
+}
 
-UndirectedGraph::UndirectedGraph(const GraphCOO& coo) : csr_(coo) { ValidateUndirected_(); }
+UndirectedGraph::UndirectedGraph(const GraphCSR& csr, bool validate) : csr_(csr) {
+  if (validate) {
+    ValidateUndirected_();
+    ValidateConnected_();
+  }
+}
+
+UndirectedGraph::UndirectedGraph(const GraphCOO& coo) : csr_(coo) {
+  ValidateUndirected_();
+  ValidateConnected_();
+}
 
 std::span<const std::size_t> UndirectedGraph::neighbors(std::size_t vertex) const {
   return csr_.adjacent(vertex);
@@ -29,8 +107,6 @@ GraphCOO UndirectedGraph::SampleSpanningTree(RNG& rng, SpanningTreeMethod method
       return SampleSpanningTreeWilson_(rng);
     case kAldousBroder:
       return SampleSpanningTreeAldousBroder_(rng);
-    case kHybrid:
-      return SampleSpanningTreeHybrid_(rng, k);
     case kFastForward:
       return SampleSpanningTreeFastForward_(rng, k);
     default:
@@ -63,6 +139,9 @@ void UndirectedGraph::UpdateRemaining_(std::vector<std::size_t>& remaining,
 }
 
 GraphCOO UndirectedGraph::SampleSpanningTreeWilson_(RNG& rng) const {
+  if (!is_connected_) {
+    throw std::runtime_error("Wilson's algorithm requires connected graph");
+  }
   // store as COO representation
   std::vector<std::size_t> row_ind;
   std::vector<std::size_t> col_ind;
@@ -92,7 +171,7 @@ GraphCOO UndirectedGraph::SampleSpanningTreeWilson_(RNG& rng) const {
 
   in_tree[root] = 1;
   ++in_tree_count;
-  
+
   // iterate while there exists at least one vertex not yet in the tree
   while (in_tree_count < n) {
     walk.clear();
@@ -141,13 +220,38 @@ GraphCOO UndirectedGraph::SampleSpanningTreeWilson_(RNG& rng) const {
 }
 
 GraphCOO UndirectedGraph::SampleSpanningTreeAldousBroder_(RNG& rng) const {
-  // unimplemented
-  return GraphCOO(0, {}, {}, {});
-}
+  if (!is_connected_) {
+    throw std::runtime_error("Aldous-Broder algorithm requires connected graph");
+  }
+  std::vector<std::size_t> row_ind;
+  std::vector<std::size_t> col_ind;
+  const std::size_t n = nvertices();
+  row_ind.reserve(n - 1);
+  col_ind.reserve(n - 1);
+  std::vector<uint8_t> in_tree(n, 0);
+  std::size_t in_tree_count{0};
 
-GraphCOO UndirectedGraph::SampleSpanningTreeHybrid_(RNG& rng, int k) const {
-  // unimplemented
-  return GraphCOO(0, {}, {}, {});
+  // initialize by sampling root vertex from stationary distribution
+  std::size_t current = SampleRootVertex_(rng);
+  in_tree[current] = 1;
+  ++in_tree_count;
+
+  // perform random walk until all vertices are in the tree
+  while (in_tree_count < n) {
+    std::size_t next = NextVertex_(rng, current);
+    if (!in_tree[next]) {
+      // add edge to tree
+      row_ind.push_back(current);
+      col_ind.push_back(next);
+      in_tree[next] = 1;
+      ++in_tree_count;
+    }
+    current = next;
+  }
+  if (row_ind.size() != n - 1) {
+    throw std::logic_error("Internal error in Aldous-Broder algorithm: incorrect number of edges");
+  }
+  return GraphCOO(nvertices(), row_ind, col_ind);
 }
 
 GraphCOO UndirectedGraph::SampleSpanningTreeFastForward_(RNG& rng, int k) const {
@@ -167,17 +271,41 @@ void UndirectedGraph::ValidateUndirected_() const {
         std::span<const std::size_t> nbrs_v = csr_.adjacent(v);
         auto it = std::lower_bound(nbrs_v.begin(), nbrs_v.end(), u);
         if (it == nbrs_v.end() || *it != u) {
-          throw std::invalid_argument(
-              "Graph is not undirected: missing reverse edge (row_ind = " + std::to_string(v) +
-              ", col_ind = " + std::to_string(u) + ")");
+          throw std::invalid_argument("Graph is not undirected: missing reverse edge (row_ind = " +
+                                      std::to_string(v) + ", col_ind = " + std::to_string(u) + ")");
         }
       }
     }
   }
 }
 
-void UndirectedGraph::ValidateConnected_() const {
-  // unimplemented
+void UndirectedGraph::ValidateConnected_() {
+  const std::size_t n = csr_.nvertices();
+  std::vector<bool> visited(n, false);
+  std::vector<std::size_t> stack;
+  stack.push_back(0);
+  visited[0] = true;
+  std::size_t visit_count{1};
+
+  while (!stack.empty()) {
+    std::size_t current = stack.back();
+    stack.pop_back();
+    std::span<const std::size_t> nbrs = csr_.adjacent(current);
+    for (std::size_t nbr : nbrs) {
+      if (!visited[nbr]) {
+        visited[nbr] = true;
+        ++visit_count;
+        stack.push_back(nbr);
+      }
+    }
+  }
+
+  if (visit_count < n) {
+    is_connected_ = false;
+    std::fprintf(stderr, "Warning: Graph is not connected; spanning tree algorithms may fail.\n");
+  } else {
+    is_connected_ = true;
+  }
 }
 
 }  // namespace mdgm

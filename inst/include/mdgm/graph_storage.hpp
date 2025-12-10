@@ -51,6 +51,16 @@ class GraphCOO {
 class GraphCSR {
  public:
   explicit GraphCSR(const GraphCOO& coo);
+  GraphCSR(const std::size_t nvertices, 
+           const std::vector<std::size_t>& row_ptr,
+           const std::vector<std::size_t>& col_ind,
+           const std::vector<double>& weights);
+  
+  GraphCSR(std::size_t nvertices,
+           const std::vector<std::size_t>& row_ptr,
+           const std::vector<std::size_t>& col_ind)
+      : GraphCSR(nvertices, row_ptr, col_ind,
+                 std::vector<double>(col_ind.size(), 1.0)) {}
 
   ~GraphCSR() = default;
   GraphCSR(const GraphCSR&) = default;

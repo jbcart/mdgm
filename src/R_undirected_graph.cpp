@@ -14,7 +14,6 @@ inline mdgm::SpanningTreeMethod ParseMethod(const std::string& method) {
   using namespace mdgm;
   if (method == "wilson") return kWilson;
   if (method == "aldous_broder") return kAldousBroder;
-  if (method == "hybrid") return kHybrid;
   if (method == "fast_forward") return kFastForward;
   throw std::invalid_argument("Unknown spanning tree method: " + method);
 }
