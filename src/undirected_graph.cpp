@@ -19,14 +19,15 @@ UndirectedGraph GenerateRegularGraph(std::vector<std::size_t> dims, int order) {
   std::size_t nvertices{nrows * ncols};
   std::size_t nedges{};
   if (order == 1) {
-    nedges = nvertices * 2 - nrows - ncols;
-  } else if (order == 2) {
-    nedges = nvertices * 3 - nrows * 2 - ncols * 2 + 1;
+    nedges = 2 * nvertices - nrows - ncols;
+  }
+  else if (order == 2) {
+    nedges = 4 * nvertices - 3 * nrows - 3 * ncols + 2;
   }
   std::vector<std::size_t> row_ptr(nvertices + 1, 0);
   std::vector<std::size_t> col_ind;
-  col_ind.reserve(nedges);
-  std::vector<double> weights(nedges, 1.0);
+  col_ind.reserve(2 * nedges);
+  std::vector<double> weights(2 * nedges, 1.0);
   std::size_t v{};
   for (std::size_t r{0}; r < nrows; ++r) {
     for (std::size_t c{0}; c < ncols; ++c) {
@@ -74,6 +75,7 @@ UndirectedGraph GenerateRegularGraph(std::vector<std::size_t> dims, int order) {
       }
     }
   }
+  // std::vector<double> weights(col_ind.size(), 1.0); // debugging
   return UndirectedGraph(GraphCSR(nvertices, row_ptr, col_ind, weights), false);
 }
 
@@ -81,6 +83,8 @@ UndirectedGraph::UndirectedGraph(const GraphCSR& csr, bool validate) : csr_(csr)
   if (validate) {
     ValidateUndirected_();
     ValidateConnected_();
+  } else {
+    is_connected_ = true;  // assume connected if not validating
   }
 }
 
@@ -302,7 +306,7 @@ void UndirectedGraph::ValidateConnected_() {
 
   if (visit_count < n) {
     is_connected_ = false;
-    std::fprintf(stderr, "Warning: Graph is not connected; spanning tree algorithms may fail.\n");
+    std::fprintf(stderr, "warning: graph is not connected; spanning tree algorithms may fail.\n");
   } else {
     is_connected_ = true;
   }

@@ -52,14 +52,14 @@ TEST(GraphStorage, COOtoCSR) {
   EXPECT_EQ(csr_graph.weights(), expected_weights);
 
   // Check adjacency retrieval
-  auto adj_vertex_0 = csr_graph.adjacent(0);
+  auto adj_0 = csr_graph.adjacent(0);
   std::vector<std::size_t> expected_adj_0 = {1, 3};
-  EXPECT_EQ(std::vector<std::size_t>(adj_vertex_0.begin(), adj_vertex_0.end()), expected_adj_0);
+  EXPECT_EQ(std::vector<std::size_t>(adj_0.begin(), adj_0.end()), expected_adj_0);
 
-  auto adj_weights_0 = csr_graph.adjacent_weights(0);
-  std::vector<double> expected_adj_weights_0 = {1.0, 2.0};
-  EXPECT_EQ(std::vector<double>(adj_weights_0.begin(), adj_weights_0.end()),
-            expected_adj_weights_0);
+  auto adj_w_0 = csr_graph.adjacent_weights(0);
+  std::vector<double> expected_adj_w_0 = {1.0, 2.0};
+  EXPECT_EQ(std::vector<double>(adj_w_0.begin(), adj_w_0.end()),
+            expected_adj_w_0);
 }
 
 TEST(GraphStorage, CSRConstruction) {

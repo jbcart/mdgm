@@ -29,6 +29,7 @@ class UndirectedGraph {
   std::size_t nedges() const noexcept;
 
   GraphCOO SampleSpanningTree(RNG& rng, SpanningTreeMethod method = kWilson, int k = 1000) const;
+  GraphCOO SampleAcyclicOrientation(RNG& rng) const;
 
  private:
   void ValidateUndirected_() const;
@@ -46,5 +47,7 @@ class UndirectedGraph {
   GraphCSR csr_;
   bool is_connected_;
 };
+
+UndirectedGraph GenerateRegularGraph(std::vector<std::size_t> dims, int order);
 
 }  // namespace mdgm
