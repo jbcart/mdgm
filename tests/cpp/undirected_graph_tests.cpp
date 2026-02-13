@@ -192,4 +192,15 @@ TEST(UndirectedGraph, DeterministicRandomness) {
   EXPECT_EQ(tree1.col_ind(), tree2.col_ind());
 }
 
+TEST(UndirectedGraph, AcyclicOrientation) {
+  UndirectedGraph graph = GenerateRegularGraph({3, 3}, 1);
+  RNG rng(42);
+  GraphCOO acyclic_orientation = graph.SampleAcyclicOrientation(rng);
+
+  // Check that the acyclic orientation has the same number of vertices and edges
+  EXPECT_EQ(acyclic_orientation.nvertices(), graph.nvertices());
+  EXPECT_EQ(acyclic_orientation.row_ind().size(), graph.nedges());
+  EXPECT_EQ(acyclic_orientation.col_ind().size(), graph.nedges());
+}
+
 }  // namespace mdgm

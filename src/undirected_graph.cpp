@@ -118,6 +118,29 @@ GraphCOO UndirectedGraph::SampleSpanningTree(RNG& rng, SpanningTreeMethod method
   }
 }
 
+GraphCOO UndirectedGraph::SampleAcyclicOrientation(RNG& rng) const {
+  // random permutation to give ranking of vertices 
+  // i.e. rank[v] < rank[u] means v -> u in the acyclic orientation
+  std::vector<std::size_t> rank = rng.permutation(csr_.nvertices());
+  auto nedges = this->nedges();
+  std::vector<std::size_t> row_ind;
+  std::vector<std::size_t> col_ind;
+  row_ind.reserve(nedges);
+  col_ind.reserve(nedges);
+  std::vector<double> weights(nedges, 1.0);
+  // iterate over all edges, direct from lower to higher ranked vertex
+  for (std::size_t v = 0; v < csr_.nvertices(); ++v) {
+    auto nbrs = csr_.adjacent(v);
+    for (std::size_t u : nbrs) {
+      if (rank[v] < rank[u]) {
+        row_ind.push_back(v);
+        col_ind.push_back(u);
+      }
+    }
+  } 
+  return GraphCOO(csr_.nvertices(), row_ind, col_ind, weights);
+}
+
 std::size_t UndirectedGraph::NextVertex_(RNG& rng, std::size_t current) const {
   std::span<const double> nbr_weights = neighbor_weights(current);
   std::span<const std::size_t> nbrs = neighbors(current);

@@ -48,6 +48,18 @@ class RNG {
     return dist(rng_);
   }
 
+  std::vector<std::size_t> permutation(std::size_t n) {
+    std::vector<std::size_t> perm(n);
+    for (std::size_t i = 0; i < n; ++i) {
+      perm[i] = i;
+    }
+    for (std::size_t i = n - 1; i > 0; --i) {
+      std::size_t j = uniform<std::size_t>(0, i);
+      std::swap(perm[i], perm[j]);
+    }
+    return perm;
+  }
+
   void Reseed(result_type seed) {
     rng_.seed(seed);
   }
