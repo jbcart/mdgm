@@ -10,11 +10,11 @@ ug_from_adj_list(adj_list, ...)
 \item{adj_list}{Adjacency list as a list of integer vectors. The i-th element of the list
 contains the neighbors of vertex i.}
 
-\item{...}{Additional arguments passed to the \code{UndirectedGraph} constructor for setting up the
+\item{...}{Additional arguments passed to the \code{NaturalUndirectedGraph} constructor for setting up the
 C++ mdgm::RNG. Can set the \code{seed} as an integer.}
 }
 \value{
-An \code{UndirectedGraph} object.
+An \code{NaturalUndirectedGraph} object.
 }
 \description{
 Creates an undirected graph from an adjacency list

@@ -1,7 +1,7 @@
 #' @keywords internal
 #' @importFrom R6 R6Class
-UndirectedGraph <- R6::R6Class(
-  classname = "UndirectedGraph",
+NaturalUndirectedGraph <- R6::R6Class(
+  classname = "NaturalUndirectedGraph",
   cloneable = FALSE,
   public = list(
     initialize = function(n, row_idx, col_idx, weights, ...) {
@@ -61,9 +61,9 @@ UndirectedGraph <- R6::R6Class(
 #' @param edges Edge list as a matrix or data frame with two or three columns. The first two columns
 #' represent the vertex indices of each edge. Edges must be represented twice, once for each
 #' direction. The optional third column represents edge weights.
-#' @param ... Additional arguments passed to the `UndirectedGraph` constructor for setting up the 
+#' @param ... Additional arguments passed to the `NaturalUndirectedGraph` constructor for setting up the 
 #' C++ mdgm::RNG. Can set the `seed` as an integer. 
-#' @return An `UndirectedGraph` object.
+#' @return An `NaturalUndirectedGraph` object.
 #' @export
 ug_from_edge_list <- function(n, edges, ...) {
   stopifnot(is.matrix(edges) || is.data.frame(edges))
@@ -75,15 +75,15 @@ ug_from_edge_list <- function(n, edges, ...) {
   } else {
     weights <- rep(1.0, nrow(edges))
   }
-  UndirectedGraph$new(n, row_idx, col_idx, weights, ...)
+  NaturalUndirectedGraph$new(n, row_idx, col_idx, weights, ...)
 }
 
 #' Creates an undirected graph from an adjacency list
 #' 
 #' @param adj_list Adjacency list as a list of integer vectors. The i-th element of the list
 #' contains the neighbors of vertex i.
-#' @return An `UndirectedGraph` object.
-#' @param ... Additional arguments passed to the `UndirectedGraph` constructor for setting up the 
+#' @return An `NaturalUndirectedGraph` object.
+#' @param ... Additional arguments passed to the `NaturalUndirectedGraph` constructor for setting up the 
 #' C++ mdgm::RNG. Can set the `seed` as an integer.
 #' @export
 ug_from_adj_list <- function(adj_list, ...) {
@@ -96,9 +96,9 @@ ug_from_adj_list <- function(adj_list, ...) {
 #'
 #' @param adj_mat Adjacency matrix as a square symmetric matrix. Nonzero entries indicate the edges 
 #' and edge weights. Self-loops are not allowed.
-#' @param ... Additional arguments passed to the `UndirectedGraph` constructor for setting up the 
+#' @param ... Additional arguments passed to the `NaturalUndirectedGraph` constructor for setting up the 
 #' C++ mdgm::RNG. Can set the `seed` as an integer.
-#' @return An `UndirectedGraph` object.
+#' @return An `NaturalUndirectedGraph` object.
 #' @export
 ug_from_adj_mat <- function(adj_mat, ...) {
   stopifnot(is.matrix(adj_mat))

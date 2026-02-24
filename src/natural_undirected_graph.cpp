@@ -1,13 +1,13 @@
 #include <algorithm>
 #include <mdgm/graph_storage.hpp>
+#include <mdgm/natural_undirected_graph.hpp>
 #include <mdgm/rng.hpp>
-#include <mdgm/undirected_graph.hpp>
 #include <stdexcept>
 #include <vector>
 
 namespace mdgm {
 
-UndirectedGraph GenerateRegularGraph(std::vector<std::size_t> dims, int order) {
+NaturalUndirectedGraph GenerateRegularGraph(std::vector<std::size_t> dims, int order) {
   if (dims.size() != 2) {
     throw std::invalid_argument("Only 2D regular graphs are supported");
   }
@@ -20,8 +20,7 @@ UndirectedGraph GenerateRegularGraph(std::vector<std::size_t> dims, int order) {
   std::size_t nedges{};
   if (order == 1) {
     nedges = 2 * nvertices - nrows - ncols;
-  }
-  else if (order == 2) {
+  } else if (order == 2) {
     nedges = 4 * nvertices - 3 * nrows - 3 * ncols + 2;
   }
   std::vector<std::size_t> row_ptr(nvertices + 1, 0);
@@ -76,10 +75,10 @@ UndirectedGraph GenerateRegularGraph(std::vector<std::size_t> dims, int order) {
     }
   }
   // std::vector<double> weights(col_ind.size(), 1.0); // debugging
-  return UndirectedGraph(GraphCSR(nvertices, row_ptr, col_ind, weights), false);
+  return NaturalUndirectedGraph(GraphCSR(nvertices, row_ptr, col_ind, weights), false);
 }
 
-UndirectedGraph::UndirectedGraph(const GraphCSR& csr, bool validate) : csr_(csr) {
+NaturalUndirectedGraph::NaturalUndirectedGraph(const GraphCSR& csr, bool validate) : csr_(csr) {
   if (validate) {
     ValidateUndirected_();
     ValidateConnected_();
@@ -88,24 +87,25 @@ UndirectedGraph::UndirectedGraph(const GraphCSR& csr, bool validate) : csr_(csr)
   }
 }
 
-UndirectedGraph::UndirectedGraph(const GraphCOO& coo) : csr_(coo) {
+NaturalUndirectedGraph::NaturalUndirectedGraph(const GraphCOO& coo) : csr_(coo) {
   ValidateUndirected_();
   ValidateConnected_();
 }
 
-std::span<const std::size_t> UndirectedGraph::neighbors(std::size_t vertex) const {
+std::span<const std::size_t> NaturalUndirectedGraph::neighbors(std::size_t vertex) const {
   return csr_.adjacent(vertex);
 }
 
-std::span<const double> UndirectedGraph::neighbor_weights(std::size_t vertex) const {
+std::span<const double> NaturalUndirectedGraph::neighbor_weights(std::size_t vertex) const {
   return csr_.adjacent_weights(vertex);
 }
 
-std::size_t UndirectedGraph::nvertices() const noexcept { return csr_.nvertices(); }
+std::size_t NaturalUndirectedGraph::nvertices() const noexcept { return csr_.nvertices(); }
 
-std::size_t UndirectedGraph::nedges() const noexcept { return csr_.weights().size() / 2; }
+std::size_t NaturalUndirectedGraph::nedges() const noexcept { return csr_.weights().size() / 2; }
 
-GraphCOO UndirectedGraph::SampleSpanningTree(RNG& rng, SpanningTreeMethod method, int k) const {
+DirectedAcyclicGraph NaturalUndirectedGraph::SampleSpanningTree(RNG& rng, SpanningTreeMethod method,
+                                                                int k) const {
   switch (method) {
     case kWilson:
       return SampleSpanningTreeWilson_(rng);
@@ -118,8 +118,8 @@ GraphCOO UndirectedGraph::SampleSpanningTree(RNG& rng, SpanningTreeMethod method
   }
 }
 
-GraphCOO UndirectedGraph::SampleAcyclicOrientation(RNG& rng) const {
-  // random permutation to give ranking of vertices 
+DirectedAcyclicGraph NaturalUndirectedGraph::SampleAcyclicOrientation(RNG& rng) const {
+  // random permutation to give ranking of vertices
   // i.e. rank[v] < rank[u] means v -> u in the acyclic orientation
   std::vector<std::size_t> rank = rng.permutation(csr_.nvertices());
   auto nedges = this->nedges();
@@ -137,24 +137,26 @@ GraphCOO UndirectedGraph::SampleAcyclicOrientation(RNG& rng) const {
         col_ind.push_back(u);
       }
     }
-  } 
-  return GraphCOO(csr_.nvertices(), row_ind, col_ind, weights);
+  }
+  return DirectedAcyclicGraph(GraphCOO(csr_.nvertices(), row_ind, col_ind, weights),
+                              kAcyclicOrientation);
 }
 
-std::size_t UndirectedGraph::NextVertex_(RNG& rng, std::size_t current) const {
+std::size_t NaturalUndirectedGraph::NextVertex_(RNG& rng, std::size_t current) const {
   std::span<const double> nbr_weights = neighbor_weights(current);
   std::span<const std::size_t> nbrs = neighbors(current);
   return nbrs[rng.discrete(nbr_weights)];
 }
 
-std::size_t UndirectedGraph::SampleRootVertex_(RNG& rng) const {
+std::size_t NaturalUndirectedGraph::SampleRootVertex_(RNG& rng) const {
   // NOTE: This samples a root vertex from the stationary distribution of the random walk along the
   // edges of the graph.
   return csr_.col_ind()[rng.discrete(csr_.weights())];
 }
 
-void UndirectedGraph::UpdateRemaining_(std::vector<std::size_t>& remaining,
-                                       std::vector<std::size_t>& pos, std::size_t vertex) const {
+void NaturalUndirectedGraph::UpdateRemaining_(std::vector<std::size_t>& remaining,
+                                              std::vector<std::size_t>& pos,
+                                              std::size_t vertex) const {
   // swap with last and pop, update pos
   if (pos[vertex] == SIZE_MAX) return;  // already removed
   std::size_t idx = pos[vertex];
@@ -165,7 +167,7 @@ void UndirectedGraph::UpdateRemaining_(std::vector<std::size_t>& remaining,
   pos[vertex] = SIZE_MAX;
 }
 
-GraphCOO UndirectedGraph::SampleSpanningTreeWilson_(RNG& rng) const {
+DirectedAcyclicGraph NaturalUndirectedGraph::SampleSpanningTreeWilson_(RNG& rng) const {
   if (!is_connected_) {
     throw std::runtime_error("Wilson's algorithm requires connected graph");
   }
@@ -243,10 +245,10 @@ GraphCOO UndirectedGraph::SampleSpanningTreeWilson_(RNG& rng) const {
   if (row_ind.size() != n - 1) {
     throw std::logic_error("Internal error in Wilson's algorithm: incorrect number of edges");
   }
-  return GraphCOO(nvertices(), row_ind, col_ind);
+  return DirectedAcyclicGraph(GraphCOO(nvertices(), row_ind, col_ind), kSpanningTree);
 }
 
-GraphCOO UndirectedGraph::SampleSpanningTreeAldousBroder_(RNG& rng) const {
+DirectedAcyclicGraph NaturalUndirectedGraph::SampleSpanningTreeAldousBroder_(RNG& rng) const {
   if (!is_connected_) {
     throw std::runtime_error("Aldous-Broder algorithm requires connected graph");
   }
@@ -278,15 +280,15 @@ GraphCOO UndirectedGraph::SampleSpanningTreeAldousBroder_(RNG& rng) const {
   if (row_ind.size() != n - 1) {
     throw std::logic_error("Internal error in Aldous-Broder algorithm: incorrect number of edges");
   }
-  return GraphCOO(nvertices(), row_ind, col_ind);
+  return DirectedAcyclicGraph(GraphCOO(nvertices(), row_ind, col_ind), kSpanningTree);
 }
 
-GraphCOO UndirectedGraph::SampleSpanningTreeFastForward_(RNG& rng, int k) const {
+DirectedAcyclicGraph NaturalUndirectedGraph::SampleSpanningTreeFastForward_(RNG& rng, int k) const {
   // unimplemented
-  return GraphCOO(0, {}, {}, {});
+  return DirectedAcyclicGraph(GraphCOO(0, {}, {}, {}), kSpanningTree);
 }
 
-void UndirectedGraph::ValidateUndirected_() const {
+void NaturalUndirectedGraph::ValidateUndirected_() const {
   const std::size_t n = csr_.nvertices();
   for (std::size_t u = 0; u < n; ++u) {
     std::span<const std::size_t> nbrs_u = csr_.adjacent(u);
@@ -306,7 +308,7 @@ void UndirectedGraph::ValidateUndirected_() const {
   }
 }
 
-void UndirectedGraph::ValidateConnected_() {
+void NaturalUndirectedGraph::ValidateConnected_() {
   const std::size_t n = csr_.nvertices();
   std::vector<bool> visited(n, false);
   std::vector<std::size_t> stack;

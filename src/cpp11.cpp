@@ -5,39 +5,39 @@
 #include "cpp11/declarations.hpp"
 #include <R_ext/Visibility.h>
 
-// R_undirected_graph.cpp
-cpp11::external_pointer<mdgm::UndirectedGraph> undirected_graph_create_cpp(int nvertices, const cpp11::integers& row, const cpp11::integers& col, const cpp11::doubles& weights);
+// R_natural_undirected_graph.cpp
+cpp11::external_pointer<mdgm::NaturalUndirectedGraph> undirected_graph_create_cpp(int nvertices, const cpp11::integers& row, const cpp11::integers& col, const cpp11::doubles& weights);
 extern "C" SEXP _mdgm_undirected_graph_create_cpp(SEXP nvertices, SEXP row, SEXP col, SEXP weights) {
   BEGIN_CPP11
     return cpp11::as_sexp(undirected_graph_create_cpp(cpp11::as_cpp<cpp11::decay_t<int>>(nvertices), cpp11::as_cpp<cpp11::decay_t<const cpp11::integers&>>(row), cpp11::as_cpp<cpp11::decay_t<const cpp11::integers&>>(col), cpp11::as_cpp<cpp11::decay_t<const cpp11::doubles&>>(weights)));
   END_CPP11
 }
-// R_undirected_graph.cpp
-cpp11::writable::list undirected_graph_sample_spanning_tree_cpp(cpp11::external_pointer<mdgm::UndirectedGraph> g, cpp11::strings method, int k, cpp11::external_pointer<mdgm::RNG> rng);
+// R_natural_undirected_graph.cpp
+cpp11::writable::list undirected_graph_sample_spanning_tree_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> g, cpp11::strings method, int k, cpp11::external_pointer<mdgm::RNG> rng);
 extern "C" SEXP _mdgm_undirected_graph_sample_spanning_tree_cpp(SEXP g, SEXP method, SEXP k, SEXP rng) {
   BEGIN_CPP11
-    return cpp11::as_sexp(undirected_graph_sample_spanning_tree_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::UndirectedGraph>>>(g), cpp11::as_cpp<cpp11::decay_t<cpp11::strings>>(method), cpp11::as_cpp<cpp11::decay_t<int>>(k), cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::RNG>>>(rng)));
+    return cpp11::as_sexp(undirected_graph_sample_spanning_tree_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::NaturalUndirectedGraph>>>(g), cpp11::as_cpp<cpp11::decay_t<cpp11::strings>>(method), cpp11::as_cpp<cpp11::decay_t<int>>(k), cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::RNG>>>(rng)));
   END_CPP11
 }
-// R_undirected_graph.cpp
-cpp11::writable::list undirected_graph_neighbors_cpp(cpp11::external_pointer<mdgm::UndirectedGraph> g, int vertex);
+// R_natural_undirected_graph.cpp
+cpp11::writable::list undirected_graph_neighbors_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> g, int vertex);
 extern "C" SEXP _mdgm_undirected_graph_neighbors_cpp(SEXP g, SEXP vertex) {
   BEGIN_CPP11
-    return cpp11::as_sexp(undirected_graph_neighbors_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::UndirectedGraph>>>(g), cpp11::as_cpp<cpp11::decay_t<int>>(vertex)));
+    return cpp11::as_sexp(undirected_graph_neighbors_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::NaturalUndirectedGraph>>>(g), cpp11::as_cpp<cpp11::decay_t<int>>(vertex)));
   END_CPP11
 }
-// R_undirected_graph.cpp
-int undirected_graph_nvertices_cpp(cpp11::external_pointer<mdgm::UndirectedGraph> g);
+// R_natural_undirected_graph.cpp
+int undirected_graph_nvertices_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> g);
 extern "C" SEXP _mdgm_undirected_graph_nvertices_cpp(SEXP g) {
   BEGIN_CPP11
-    return cpp11::as_sexp(undirected_graph_nvertices_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::UndirectedGraph>>>(g)));
+    return cpp11::as_sexp(undirected_graph_nvertices_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::NaturalUndirectedGraph>>>(g)));
   END_CPP11
 }
-// R_undirected_graph.cpp
-int undirected_graph_nedges_cpp(cpp11::external_pointer<mdgm::UndirectedGraph> g);
+// R_natural_undirected_graph.cpp
+int undirected_graph_nedges_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> g);
 extern "C" SEXP _mdgm_undirected_graph_nedges_cpp(SEXP g) {
   BEGIN_CPP11
-    return cpp11::as_sexp(undirected_graph_nedges_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::UndirectedGraph>>>(g)));
+    return cpp11::as_sexp(undirected_graph_nedges_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::NaturalUndirectedGraph>>>(g)));
   END_CPP11
 }
 // R_utils.cpp

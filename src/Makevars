@@ -6,7 +6,7 @@ PKG_CPPFLAGS = \
 
 OBJECTS = \
   graph_storage.o \
-  undirected_graph.o \
-  R_undirected_graph.o \
+  natural_undirected_graph.o \
+  R_natural_undirected_graph.o \
   R_utils.o \
   cpp11.o 

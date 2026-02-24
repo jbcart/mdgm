@@ -10,11 +10,11 @@ ug_from_adj_mat(adj_mat, ...)
 \item{adj_mat}{Adjacency matrix as a square symmetric matrix. Nonzero entries indicate the edges
 and edge weights. Self-loops are not allowed.}
 
-\item{...}{Additional arguments passed to the \code{UndirectedGraph} constructor for setting up the
+\item{...}{Additional arguments passed to the \code{NaturalUndirectedGraph} constructor for setting up the
 C++ mdgm::RNG. Can set the \code{seed} as an integer.}
 }
 \value{
-An \code{UndirectedGraph} object.
+An \code{NaturalUndirectedGraph} object.
 }
 \description{
 Creates an undirected graph from an adjacency matrix

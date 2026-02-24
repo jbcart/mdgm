@@ -3,16 +3,17 @@
 #include <cstddef>
 #include <mdgm/graph_storage.hpp>
 #include <mdgm/rng.hpp>
-#include <mdgm/undirected_graph.hpp>
+#include <mdgm/natural_undirected_graph.hpp>
+#include <mdgm/directed_acyclic_graph.hpp>
 #include <span>
 #include <vector>
 
 namespace mdgm {
 
-TEST(UndirectedGraph, GenerateRegularGraph) {
+TEST(NaturalUndirectedGraph, GenerateRegularGraph) {
   std::vector<std::size_t> dims = {4, 4};
   int order = 1;
-  UndirectedGraph graph = GenerateRegularGraph(dims, order);
+  NaturalUndirectedGraph graph = GenerateRegularGraph(dims, order);
 
   std:size_t nedges = 0;
   for (std::size_t v = 0; v < graph.nvertices(); ++v) {
@@ -71,7 +72,7 @@ TEST(UndirectedGraph, GenerateRegularGraph) {
   EXPECT_EQ(std::vector<std::size_t>(nbrs_15.begin(), nbrs_15.end()), expected_nbrs_15);
 }
 
-TEST(UndirectedGraph, ValidateUndirected) {
+TEST(NaturalUndirectedGraph, ValidateUndirected) {
   // Create a simple undirected graph in COO format
   std::vector<std::size_t> row_ind = {0, 0, 1, 1, 2, 2};
   std::vector<std::size_t> col_ind = {1, 2, 0, 2, 0, 1};
@@ -79,7 +80,7 @@ TEST(UndirectedGraph, ValidateUndirected) {
   GraphCOO coo(3, row_ind, col_ind, weights);
 
   EXPECT_NO_THROW({
-    UndirectedGraph graph(coo);
+    NaturalUndirectedGraph graph(coo);
   });
 
   // Create a directed graph (missing reverse edges)
@@ -89,12 +90,12 @@ TEST(UndirectedGraph, ValidateUndirected) {
   GraphCOO directed_coo(3, row_ind, col_ind, weights);
 
   EXPECT_THROW({
-    UndirectedGraph graph(directed_coo);
+    NaturalUndirectedGraph graph(directed_coo);
   }, std::invalid_argument);
 
 }
 
-TEST(UndirectedGraph, ValidateConnected) {
+TEST(NaturalUndirectedGraph, ValidateConnected) {
   // Create a connected undirected graph in COO format
   std::vector<std::size_t> row_ind = {0, 0, 1, 1, 2, 2};
   std::vector<std::size_t> col_ind = {1, 2, 0, 2, 0, 1};
@@ -102,7 +103,7 @@ TEST(UndirectedGraph, ValidateConnected) {
   GraphCOO connected_coo(3, row_ind, col_ind, weights);
 
   EXPECT_NO_THROW({
-    UndirectedGraph graph(connected_coo);
+    NaturalUndirectedGraph graph(connected_coo);
   });
 
   // Create a disconnected undirected graph
@@ -113,29 +114,29 @@ TEST(UndirectedGraph, ValidateConnected) {
 
   testing::internal::CaptureStderr();
   EXPECT_NO_THROW({
-    UndirectedGraph graph(disconnected_coo);
+    NaturalUndirectedGraph graph(disconnected_coo);
   });
   std::string output = testing::internal::GetCapturedStderr();
   EXPECT_NE(output.find("warning: graph is not connected"), std::string::npos);
 }
 
-TEST(UndirectedGraph, SingleVertexGraph) {
+TEST(NaturalUndirectedGraph, SingleVertexGraph) {
   std::vector<std::size_t> row_ind = {};
   std::vector<std::size_t> col_ind = {};
   std::vector<double> weights = {};
   GraphCOO coo(1, row_ind, col_ind, weights);
 
   EXPECT_NO_THROW({
-    UndirectedGraph graph(coo);
+    NaturalUndirectedGraph graph(coo);
   });
 
-  UndirectedGraph graph(coo);
+  NaturalUndirectedGraph graph(coo);
   EXPECT_EQ(graph.nvertices(), 1);
   EXPECT_EQ(graph.nedges(), 0);
   EXPECT_EQ(graph.neighbors(0).size(), 0);
 }
 
-TEST(UndirectedGraph, CompleteGraph) {
+TEST(NaturalUndirectedGraph, CompleteGraph) {
   // Complete graph K4: every vertex connected to every other vertex
   std::vector<std::size_t> row_ind = {0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3};
   std::vector<std::size_t> col_ind = {1, 2, 3, 0, 2, 3, 0, 1, 3, 0, 1, 2};
@@ -143,10 +144,10 @@ TEST(UndirectedGraph, CompleteGraph) {
   GraphCOO coo(4, row_ind, col_ind, weights);
 
   EXPECT_NO_THROW({
-    UndirectedGraph graph(coo);
+    NaturalUndirectedGraph graph(coo);
   });
 
-  UndirectedGraph graph(coo);
+  NaturalUndirectedGraph graph(coo);
   EXPECT_EQ(graph.nvertices(), 4);
   EXPECT_EQ(graph.nedges(), 6);
   for (std::size_t v = 0; v < 4; ++v) {
@@ -154,53 +155,70 @@ TEST(UndirectedGraph, CompleteGraph) {
   }
 }
 
-TEST(UndirectedGraph, SpanningTreeSamplers) {
+TEST(NaturalUndirectedGraph, SpanningTreeSamplers) {
   // Test spanning tree for larger graph (4-cycle)
   std::vector<std::size_t> row_ind = {0, 1, 2, 3, 1, 2, 3, 0};
   std::vector<std::size_t> col_ind = {1, 0, 1, 2, 2, 3, 0, 3};
   std::vector<double> weights(8, 1.0);
   GraphCOO coo(4, row_ind, col_ind, weights);
-  UndirectedGraph graph(coo);
+  NaturalUndirectedGraph graph(coo);
 
   RNG rng(42);
-  GraphCOO spanning_tree = graph.SampleSpanningTree(rng, kWilson);
+  DirectedAcyclicGraph spanning_tree = graph.SampleSpanningTree(rng, kWilson);
 
   // Spanning tree must have n-1 edges
   EXPECT_EQ(spanning_tree.nvertices(), 4);
-  EXPECT_EQ(spanning_tree.row_ind().size(), 3);
-  EXPECT_EQ(spanning_tree.col_ind().size(), 3);
+  EXPECT_EQ(spanning_tree.nedges(), 3);
+  for (std::size_t v = 0; v < spanning_tree.nvertices(); ++v) {
+    EXPECT_LE(spanning_tree.parents(v).size(), 1);
+  }
 
   spanning_tree = graph.SampleSpanningTree(rng, kAldousBroder);
 
   // Spanning tree must have n-1 edges
   EXPECT_EQ(spanning_tree.nvertices(), 4);
-  EXPECT_EQ(spanning_tree.row_ind().size(), 3);
-  EXPECT_EQ(spanning_tree.col_ind().size(), 3);
+  EXPECT_EQ(spanning_tree.nedges(), 3);
+  for (std::size_t v = 0; v < spanning_tree.nvertices(); ++v) {
+    EXPECT_LE(spanning_tree.parents(v).size(), 1);
+  }
 }
 
-TEST(UndirectedGraph, DeterministicRandomness) {
-  UndirectedGraph graph = GenerateRegularGraph({3, 3}, 1);
+TEST(NaturalUndirectedGraph, DeterministicRandomness) {
+  NaturalUndirectedGraph graph = GenerateRegularGraph({3, 3}, 1);
 
   RNG rng1(42);
-  GraphCOO tree1 = graph.SampleSpanningTree(rng1, kWilson);
+  DirectedAcyclicGraph tree1 = graph.SampleSpanningTree(rng1, kWilson);
+  DirectedAcyclicGraph ao1 = graph.SampleAcyclicOrientation(rng1);
 
   RNG rng2(42);
-  GraphCOO tree2 = graph.SampleSpanningTree(rng2, kWilson);
+  DirectedAcyclicGraph tree2 = graph.SampleSpanningTree(rng2, kWilson);
+  DirectedAcyclicGraph ao2 = graph.SampleAcyclicOrientation(rng2);
 
   // Same seed should produce same spanning tree
-  EXPECT_EQ(tree1.row_ind(), tree2.row_ind());
-  EXPECT_EQ(tree1.col_ind(), tree2.col_ind());
-}
+  for (std::size_t i = 0; i < tree1.nvertices(); ++i) {
+    for (std::size_t j = 0; j < tree1.children(i).size(); ++j) {
+      EXPECT_EQ(tree1.children(i)[j], tree2.children(i)[j]);
+    }
+    for (std::size_t j = 0; j < tree1.parents(i).size(); ++j) {
+      EXPECT_EQ(tree1.parents(i)[j], tree2.parents(i)[j]);
+    }
+    for (std::size_t j = 0; j < ao1.children(i).size(); ++j) {
+      EXPECT_EQ(ao1.children(i)[j], ao2.children(i)[j]);
+    }
+    for (std::size_t j = 0; j < ao1.parents(i).size(); ++j) {
+      EXPECT_EQ(ao1.parents(i)[j], ao2.parents(i)[j]);
+    }
+  }
+} 
 
-TEST(UndirectedGraph, AcyclicOrientation) {
-  UndirectedGraph graph = GenerateRegularGraph({3, 3}, 1);
+TEST(NaturalUndirectedGraph, AcyclicOrientation) {
+  NaturalUndirectedGraph graph = GenerateRegularGraph({3, 3}, 1);
   RNG rng(42);
-  GraphCOO acyclic_orientation = graph.SampleAcyclicOrientation(rng);
+  DirectedAcyclicGraph acyclic_orientation = graph.SampleAcyclicOrientation(rng);
 
   // Check that the acyclic orientation has the same number of vertices and edges
   EXPECT_EQ(acyclic_orientation.nvertices(), graph.nvertices());
-  EXPECT_EQ(acyclic_orientation.row_ind().size(), graph.nedges());
-  EXPECT_EQ(acyclic_orientation.col_ind().size(), graph.nedges());
+  EXPECT_EQ(acyclic_orientation.nedges(), graph.nedges());
 }
 
 }  // namespace mdgm

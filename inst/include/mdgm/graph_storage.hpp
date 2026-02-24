@@ -41,6 +41,10 @@ class GraphCOO {
   const std::vector<std::size_t>& col_ind() const noexcept { return col_ind_; }
   const std::vector<double>& weights() const noexcept { return weights_; }
 
+  GraphCOO Transpose() const {
+    return GraphCOO(nvertices_, col_ind_, row_ind_, weights_);  
+  }
+
  private:
   std::size_t nvertices_;
   std::vector<std::size_t> row_ind_;

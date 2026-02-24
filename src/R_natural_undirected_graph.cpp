@@ -2,7 +2,7 @@
 #include <cstddef>
 #include <mdgm/graph_storage.hpp>
 #include <mdgm/rng.hpp>
-#include <mdgm/undirected_graph.hpp>
+#include <mdgm/natural_undirected_graph.hpp>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -27,7 +27,7 @@ inline void CheckLengths(const cpp11::integers& row, const cpp11::integers& col)
 }  // namespace
 
 [[cpp11::register]]
-cpp11::external_pointer<mdgm::UndirectedGraph> undirected_graph_create_cpp(
+cpp11::external_pointer<mdgm::NaturalUndirectedGraph> undirected_graph_create_cpp(
     int nvertices, const cpp11::integers& row, const cpp11::integers& col,
     const cpp11::doubles& weights) {
   CheckLengths(row, col);
@@ -43,13 +43,13 @@ cpp11::external_pointer<mdgm::UndirectedGraph> undirected_graph_create_cpp(
     edge_weights[i] = weights[i];
   }
   mdgm::GraphCOO coo(nvertices, row_ind, col_ind, edge_weights);
-  auto graph = std::make_unique<mdgm::UndirectedGraph>(coo);
-  return cpp11::external_pointer<mdgm::UndirectedGraph>(graph.release());
+  auto graph = std::make_unique<mdgm::NaturalUndirectedGraph>(coo);
+  return cpp11::external_pointer<mdgm::NaturalUndirectedGraph>(graph.release());
 }
 
 [[cpp11::register]]
 cpp11::writable::list undirected_graph_sample_spanning_tree_cpp(
-    cpp11::external_pointer<mdgm::UndirectedGraph> g, cpp11::strings method, int k,
+    cpp11::external_pointer<mdgm::NaturalUndirectedGraph> g, cpp11::strings method, int k,
     cpp11::external_pointer<mdgm::RNG> rng) {
   using namespace cpp11::literals;
   auto meth = ParseMethod(static_cast<std::string>(method[0]));
@@ -70,7 +70,7 @@ cpp11::writable::list undirected_graph_sample_spanning_tree_cpp(
 
 [[cpp11::register]]
 cpp11::writable::list undirected_graph_neighbors_cpp(
-    cpp11::external_pointer<mdgm::UndirectedGraph> g, int vertex) {
+    cpp11::external_pointer<mdgm::NaturalUndirectedGraph> g, int vertex) {
   using namespace cpp11::literals;
   if (vertex < 1 || vertex > static_cast<int>(g->nvertices())) {
     cpp11::stop("vertex must be between 1 and nvertices");
@@ -88,11 +88,11 @@ cpp11::writable::list undirected_graph_neighbors_cpp(
 }
 
 [[cpp11::register]]
-int undirected_graph_nvertices_cpp(cpp11::external_pointer<mdgm::UndirectedGraph> g) {
+int undirected_graph_nvertices_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> g) {
   return static_cast<int>(g->nvertices());
 }
 
 [[cpp11::register]]
-int undirected_graph_nedges_cpp(cpp11::external_pointer<mdgm::UndirectedGraph> g) {
+int undirected_graph_nedges_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> g) {
   return static_cast<int>(g->nedges());
 }

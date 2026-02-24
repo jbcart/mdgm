@@ -13,11 +13,11 @@ ug_from_edge_list(n, edges, ...)
 represent the vertex indices of each edge. Edges must be represented twice, once for each
 direction. The optional third column represents edge weights.}
 
-\item{...}{Additional arguments passed to the \code{UndirectedGraph} constructor for setting up the
+\item{...}{Additional arguments passed to the \code{NaturalUndirectedGraph} constructor for setting up the
 C++ mdgm::RNG. Can set the \code{seed} as an integer.}
 }
 \value{
-An \code{UndirectedGraph} object.
+An \code{NaturalUndirectedGraph} object.
 }
 \description{
 Creates an undirected graph from an edge list
