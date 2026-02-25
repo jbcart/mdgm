@@ -17,14 +17,14 @@ struct McmcConfig {
 struct McmcSamples {
   std::vector<int> z;                    // n x J column-major
   std::vector<double> psi;               // length J
-  std::vector<double> eta;               // ncolors x J
+  std::vector<double> theta;             // n_theta x J
   std::vector<std::size_t> dag_data;     // n x J compact DAG storage
   std::size_t psi_accepted;
   std::size_t graph_accepted;
   std::size_t n_iterations;
   std::size_t n_vertices;
   std::size_t n_colors;
-  std::size_t n_eta;  // number of emission params per iteration
+  std::size_t n_theta;  // number of emission params per iteration
 };
 
 McmcSamples RunMcmc(
@@ -32,7 +32,7 @@ McmcSamples RunMcmc(
     const Observations& y,
     const std::vector<int>& z_init,
     double psi_init,
-    const std::vector<double>& eta_init,
+    const std::vector<double>& theta_init,
     const McmcConfig& config,
     RNG& rng);
 

@@ -50,6 +50,32 @@ Graphs can also be constructed from an adjacency matrix, edge list, or
 adjacency list — see the
 [Working with Undirected Graphs](graph-construction.html) vignette.
 
+## Visualizing the graph with igraph
+
+The [igraph](https://r.igraph.org/) package (suggested, not required) provides
+a quick way to visualize the neighborhood structure:
+
+```{r igraph-grid, fig.width = 4, fig.height = 4, eval = requireNamespace("igraph", quietly = TRUE)}
+library(igraph)
+
+# Build igraph object from the NUG edge structure
+n <- nug$nvertices()
+el <- do.call(rbind, lapply(1:n, function(v) {
+  nbrs <- nug$neighbors(v)
+  nbrs <- nbrs[nbrs > v]
+  if (length(nbrs) == 0) return(NULL)
+  cbind(v, nbrs)
+}))
+g <- graph_from_edgelist(el, directed = FALSE)
+
+# Grid layout matching the spatial positions
+coords <- cbind((seq_len(n) - 1) %% 4 + 1, 4 - (seq_len(n) - 1) %/% 4)
+
+plot(g, layout = coords, vertex.size = 20, vertex.label = 1:n,
+     vertex.label.color = "white", vertex.color = "steelblue",
+     edge.color = "grey40", main = "4x4 Grid Graph")
+```
+
 ## Fitting a standalone model
 
 In a standalone model, the spatial field $z$ is observed directly — no emission
@@ -57,10 +83,10 @@ distribution is needed. Here we fit a spanning-tree MDGM to a deterministic
 checkerboard pattern on the 4x4 grid:
 
 ```{r standalone-fit}
-z <- c(1L, 1L, 0L, 0L,
-       1L, 1L, 0L, 0L,
+z <- c(0L, 0L, 0L, 1L,
        0L, 0L, 1L, 1L,
-       0L, 0L, 1L, 1L)
+       1L, 1L, 1L, 0L,
+       1L, 1L, 0L, 0L)
 
 model <- mdgm_model(nug, dag_type = "spanning_tree")
 
@@ -69,7 +95,16 @@ result <- mcmc(model, z_init = z, psi_init = 0.5,
 result$summary()
 ```
 
-Visualize the spatial field as a raster:
+We can color the graph vertices by their field values:
+
+```{r grid-colored, fig.width = 4, fig.height = 4, eval = requireNamespace("igraph", quietly = TRUE)}
+plot(g, layout = coords, vertex.size = 20, vertex.label = 1:n,
+     vertex.color = c("#440154", "#fde725")[z + 1],
+     vertex.label.color = "white", edge.color = "grey40",
+     main = "Spatial Field on Grid")
+```
+
+Or visualize as a raster:
 
 ```{r grid-plot, fig.width = 4, fig.height = 4}
 grid_df <- data.frame(
@@ -103,33 +138,6 @@ Acceptance rates:
 
 ```{r acceptance}
 result$acceptance_rates()
-```
-
-## Visualizing graph structure with igraph
-
-The [igraph](https://r.igraph.org/) package (suggested, not required) can plot
-the neighborhood graph:
-
-```{r igraph-grid, fig.width = 4, fig.height = 4, eval = requireNamespace("igraph", quietly = TRUE)}
-library(igraph)
-
-# Build igraph object from the NUG edge structure
-n <- nug$nvertices()
-el <- do.call(rbind, lapply(1:n, function(v) {
-  nbrs <- nug$neighbors(v)
-  nbrs <- nbrs[nbrs > v]
-  if (length(nbrs) == 0) return(NULL)
-  cbind(v, nbrs)
-}))
-g <- graph_from_edgelist(el, directed = FALSE)
-
-# Grid layout
-coords <- cbind((seq_len(n) - 1) %% 4 + 1, 4 - (seq_len(n) - 1) %/% 4)
-
-plot(g, layout = coords, vertex.size = 20, vertex.label = 1:n,
-     vertex.color = c("#440154", "#fde725")[z + 1],
-     vertex.label.color = "white", edge.color = "grey40",
-     main = "4x4 Grid (NUG)")
 ```
 
 ## Edge inclusion probabilities
@@ -169,11 +177,14 @@ through an emission distribution. Here we use a Bernoulli emission:
 model_h <- mdgm_model(nug, dag_type = "spanning_tree", n_colors = 2L,
                        emission = "bernoulli")
 
+# Simulate 5 Bernoulli observations per vertex (multiple needed for identifiability)
 set.seed(1)
-y <- lapply(1:n, function(i) rbinom(5, 1, ifelse(i <= 8, 0.2, 0.8)))
+p_true <- c(0.2, 0.8)
+y <- lapply(seq_len(n), function(i) rbinom(5, 1, p_true[z[i] + 1]))
 
-result_h <- mcmc(model_h, y = y, z_init = rep(0:1, each = 8), psi_init = 0.5,
-                 eta_init = c(0.3, 0.7), n_iter = 500L, seed = 42L)
+result_h <- mcmc(model_h, y = y, z_init = sample(0:1, n, replace = TRUE),
+                 psi_init = 0.5, theta_init = c(0.3, 0.7),
+                 n_iter = 500L, seed = 42L)
 result_h$summary()
 ```
 

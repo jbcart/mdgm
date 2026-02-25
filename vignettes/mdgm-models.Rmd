@@ -89,16 +89,16 @@ useful when the data are categorical labels on a spatial domain.
 In the hierarchical model, $z$ is a latent field and observations $y_i$ are
 generated through an **emission distribution**:
 
-$$y_{ij} \mid z_i, \eta \sim f(y_{ij} \mid \eta_{z_i})$$
+$$y_{ij} \mid z_i, \theta \sim f(y_{ij} \mid \theta_{z_i})$$
 
 Currently supported emission families:
 
-- **Bernoulli**: $y_{ij} \mid z_i = k \sim \text{Bernoulli}(\eta_k)$, with
-  identifiability constraint $\eta_0 < \eta_1 < \cdots$ enforced via truncated
+- **Bernoulli**: $y_{ij} \mid z_i = k \sim \text{Bernoulli}(p_k)$, with
+  identifiability constraint $p_0 < p_1 < \cdots$ enforced via truncated
   Beta posterior sampling.
 - **Gaussian**: $y_{ij} \mid z_i = k \sim \mathcal{N}(\mu_k, \sigma_k^2)$,
-  with identifiability constraint $\mu_0 < \mu_1 < \cdots$. Conjugate
-  Normal-InverseGamma updates.
+  with identifiability constraint $\mu_0 < \mu_1 < \cdots$. Independent
+  Normal and Inverse-Gamma conjugate updates for $\mu_k$ and $\sigma_k^2$.
 - **Poisson**: $y_{ij} \mid z_i = k \sim \text{Poisson}(\lambda_k)$, with
   identifiability constraint $\lambda_0 < \lambda_1 < \cdots$. Conjugate
   truncated Gamma updates.
@@ -119,11 +119,11 @@ Updates use a Metropolis-Hastings random walk with a normal proposal.
 
 ### Emission parameters
 
-- **Bernoulli**: Each $\eta_k$ has a $\text{Beta}(a, b)$ prior.
+- **Bernoulli**: Each $p_k$ has a $\text{Beta}(a, b)$ prior.
   `emission_prior_params = c(a, b)`.
-- **Gaussian**: Each $(\mu_k, \sigma_k^2)$ has a Normal-InverseGamma prior
-  with hyperparameters $(\mu_0, \kappa_0, \alpha_0, \beta_0)$.
-  `emission_prior_params = c(mu_0, kappa_0, alpha_0, beta_0)`.
+- **Gaussian**: $\mu_k \sim \mathcal{N}(\mu_0, \sigma^2_0)$ and
+  $\sigma_k^2 \sim \text{InverseGamma}(\alpha_0, \beta_0)$, independently.
+  `emission_prior_params = c(mu_0, sigma2_0, alpha_0, beta_0)`.
 - **Poisson**: Each $\lambda_k$ has a $\text{Gamma}(\alpha_0, \beta_0)$ prior
   (rate parameterization). `emission_prior_params = c(alpha_0, beta_0)`.
 
@@ -140,5 +140,5 @@ Each iteration of the MCMC sampler performs:
    order. The full conditional combines the spatial prior with the emission
    likelihood.
 3. **Update** $\psi$ — Metropolis-Hastings with normal random walk proposal.
-4. **Update** $\eta$ (hierarchical only) — Conjugate posterior sampling with
+4. **Update** $\theta$ (hierarchical only) — Conjugate posterior sampling with
    identifiability constraints.

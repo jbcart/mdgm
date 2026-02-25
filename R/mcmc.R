@@ -12,19 +12,21 @@
 #' @param z_init Initial color assignment, an integer vector of length `n`
 #'   with values in `0, ..., n_colors - 1`.
 #' @param psi_init Initial value for the dependence parameter (positive).
-#' @param eta_init Initial emission parameters. For Bernoulli, a numeric
+#' @param theta_init Initial emission parameters. For Bernoulli, a numeric
 #'   vector of length `n_colors` (e.g., `c(0.2, 0.8)`). For Gaussian,
-#'   a vector of length `2 * n_colors` with means then standard deviations
-#'   (e.g., `c(mu_1, mu_2, sigma_1, sigma_2)`). For Poisson, a vector of
+#'   a vector of length `2 * n_colors` with means then variances
+#'   (e.g., `c(mu_1, mu_2, sigma2_1, sigma2_2)`). For Poisson, a vector of
 #'   length `n_colors` with rate parameters. Ignored for standalone models.
 #' @param n_iter Number of MCMC iterations (default 1000).
 #' @param psi_tune Standard deviation of the normal MH proposal for psi
 #'   (default 0.1).
 #' @param emission_prior_params Prior hyperparameters for emission
 #'   parameters. For Bernoulli: `c(a, b)` for `Beta(a, b)` prior.
-#'   For Gaussian: `c(mu_0, kappa_0, alpha_0, beta_0)` for
-#'   Normal-InverseGamma prior. For Poisson: `c(alpha_0, beta_0)` for
-#'   `Gamma(alpha_0, beta_0)` prior. Default `c(1, 1)`.
+#'   For Gaussian: `c(mu_0, sigma2_0, alpha_0, beta_0)` where
+#'   `mu_k ~ N(mu_0, sigma2_0)` and `sigma_k^2 ~ InvGamma(alpha_0, beta_0)`
+#'   independently. For Poisson: `c(alpha_0, beta_0)` for
+#'   `Gamma(alpha_0, beta_0)` prior. Default: `c(1, 1)` for Bernoulli/Poisson,
+#'   `c(0, 10000, 0.01, 0.01)` for Gaussian (non-informative).
 #' @param seed Optional integer seed for reproducibility.
 #' @param nug Optional `NaturalUndirectedGraph` object. If provided, stored
 #'   in the result for use by `edge_inclusion_probs()` and `plot()`.
@@ -47,12 +49,27 @@
 #' }
 #' @export
 mcmc <- function(model, y = NULL, z_init, psi_init,
-                 eta_init = numeric(0),
+                 theta_init = numeric(0),
                  n_iter = 1000L, psi_tune = 0.1,
-                 emission_prior_params = c(1, 1),
+                 emission_prior_params = NULL,
                  seed = NULL,
                  nug = NULL) {
   stopifnot(inherits(model, "MdgmModel"))
+
+  # Set non-informative prior defaults based on emission type
+  if (is.null(emission_prior_params)) {
+    et <- model$emission_type()
+    if (is.null(et)) {
+      emission_prior_params <- c(1, 1)
+    } else {
+      emission_prior_params <- switch(et,
+        bernoulli = c(1, 1),
+        gaussian = c(0, 10000, 0.01, 0.01),
+        poisson = c(1, 0.01),
+        c(1, 1)
+      )
+    }
+  }
 
   n <- model$nvertices()
   z_init <- as.integer(z_init)
@@ -83,7 +100,7 @@ mcmc <- function(model, y = NULL, z_init, psi_init,
     model_ptr,
     as.integer(obs_data), as.integer(obs_ptr),
     z_init, as.double(psi_init),
-    as.double(eta_init),
+    as.double(theta_init),
     as.integer(n_iter), as.double(psi_tune),
     as.double(emission_prior_params),
     rng_ptr

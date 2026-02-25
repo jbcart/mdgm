@@ -11,24 +11,25 @@
 namespace mdgm {
 
 std::vector<double> EmissionLikelihood(
-    std::span<const int> y_i, std::span<const double> eta,
+    std::span<const int> y_i, std::span<const double> theta,
     std::size_t ncolors, FamilyType type) {
   std::vector<double> lik(ncolors, 1.0);
 
   switch (type) {
     case FamilyType::kBernoulli:
       for (std::size_t k = 0; k < ncolors; ++k) {
-        double p = eta[k];
+        double p = theta[k];
         for (int y : y_i) {
           lik[k] *= (y == 1) ? p : (1.0 - p);
         }
       }
       break;
     case FamilyType::kGaussian:
-      // eta layout: [mu_0, ..., mu_{K-1}, sigma_0, ..., sigma_{K-1}]
+      // theta layout: [mu_0, ..., mu_{K-1}, sigma2_0, ..., sigma2_{K-1}]
       for (std::size_t k = 0; k < ncolors; ++k) {
-        double mu = eta[k];
-        double sigma = eta[ncolors + k];
+        double mu = theta[k];
+        double sigma2 = theta[ncolors + k];
+        double sigma = std::sqrt(sigma2);
         for (int y : y_i) {
           double dy = static_cast<double>(y);
           double z = (dy - mu) / sigma;
@@ -38,7 +39,7 @@ std::vector<double> EmissionLikelihood(
       break;
     case FamilyType::kPoisson:
       for (std::size_t k = 0; k < ncolors; ++k) {
-        double lambda = eta[k];
+        double lambda = theta[k];
         for (int y : y_i) {
           // Poisson PMF: lambda^y * exp(-lambda) / y!
           double log_pmf = static_cast<double>(y) * std::log(lambda) - lambda -
@@ -56,34 +57,30 @@ std::vector<double> EmissionLikelihood(
 
 double EmissionLogLikelihood(
     const Observations& y, std::span<const int> z,
-    std::span<const double> eta, FamilyType type) {
+    std::span<const double> theta, FamilyType type) {
   double ll = 0.0;
 
   switch (type) {
     case FamilyType::kBernoulli:
       for (std::size_t i = 0; i < y.nvertices(); ++i) {
         if (y.empty(i)) continue;
-        double p = eta[static_cast<std::size_t>(z[i])];
+        double p = theta[static_cast<std::size_t>(z[i])];
         for (int yij : y[i]) {
           ll += (yij == 1) ? std::log(p) : std::log(1.0 - p);
         }
       }
       break;
     case FamilyType::kGaussian: {
-      std::size_t nc = 0;
-      // Infer ncolors: eta has 2*ncolors elements
-      // We need ncolors, but it's not passed. Infer from z max.
-      // Actually, we need to find ncolors from eta.size() / 2
-      nc = eta.size() / 2;
+      std::size_t nc = theta.size() / 2;
       for (std::size_t i = 0; i < y.nvertices(); ++i) {
         if (y.empty(i)) continue;
         std::size_t k = static_cast<std::size_t>(z[i]);
-        double mu = eta[k];
-        double sigma = eta[nc + k];
+        double mu = theta[k];
+        double sigma2 = theta[nc + k];
         for (int yij : y[i]) {
           double dy = static_cast<double>(yij);
-          double zv = (dy - mu) / sigma;
-          ll += -0.5 * zv * zv - std::log(sigma) - 0.5 * std::log(2.0 * M_PI);
+          ll += -0.5 * std::log(2.0 * M_PI * sigma2) -
+                0.5 * (dy - mu) * (dy - mu) / sigma2;
         }
       }
       break;
@@ -91,7 +88,7 @@ double EmissionLogLikelihood(
     case FamilyType::kPoisson:
       for (std::size_t i = 0; i < y.nvertices(); ++i) {
         if (y.empty(i)) continue;
-        double lambda = eta[static_cast<std::size_t>(z[i])];
+        double lambda = theta[static_cast<std::size_t>(z[i])];
         for (int yij : y[i]) {
           ll += static_cast<double>(yij) * std::log(lambda) - lambda -
                 std::lgamma(static_cast<double>(yij) + 1.0);
@@ -107,9 +104,9 @@ double EmissionLogLikelihood(
 
 std::vector<double> UpdateEmissionParams(
     const Observations& y, std::span<const int> z,
-    std::span<const double> eta, std::span<const double> prior_params,
+    std::span<const double> theta, std::span<const double> prior_params,
     std::size_t ncolors, FamilyType type, RNG& rng) {
-  std::vector<double> new_eta(eta.begin(), eta.end());
+  std::vector<double> new_theta(theta.begin(), theta.end());
 
   switch (type) {
     case FamilyType::kBernoulli: {
@@ -126,26 +123,27 @@ std::vector<double> UpdateEmissionParams(
         }
       }
 
-      // Sequential truncated Beta: eta[0] < eta[1] < ... < eta[K-1]
+      // Sequential truncated Beta: p[0] < p[1] < ... < p[K-1]
       double lower = 0.0;
       for (std::size_t k = 0; k < ncolors; ++k) {
-        double upper = (k + 1 < ncolors) ? new_eta[k + 1] : 1.0;
-        new_eta[k] = rng.truncated_beta(
+        double upper = (k + 1 < ncolors) ? new_theta[k + 1] : 1.0;
+        new_theta[k] = rng.truncated_beta(
             a + successes[k], b + trials[k] - successes[k],
             lower, upper);
-        lower = new_eta[k];
+        lower = new_theta[k];
       }
       break;
     }
     case FamilyType::kGaussian: {
-      // Prior params: {mu_0, kappa_0, alpha_0, beta_0}
-      // Normal-InverseGamma conjugate update with ordering on mu
+      // Prior params: {mu_0, sigma2_0, alpha_0, beta_0}
+      // Independent Normal and InverseGamma priors with ordering on mu
+      // mu_k ~ N(mu_0, sigma2_0), sigma_k^2 ~ IG(alpha_0, beta_0)
       double mu_0 = prior_params[0];
-      double kappa_0 = prior_params[1];
+      double sigma2_0 = prior_params[1];  // prior variance for mu
       double alpha_0 = prior_params[2];
       double beta_0 = prior_params[3];
 
-      // eta layout: [mu_0, ..., mu_{K-1}, sigma_0, ..., sigma_{K-1}]
+      // theta layout: [mu_0, ..., mu_{K-1}, sigma2_0, ..., sigma2_{K-1}]
       // Sufficient statistics per color
       std::vector<double> sum_y(ncolors, 0.0);
       std::vector<double> sum_y2(ncolors, 0.0);
@@ -165,25 +163,27 @@ std::vector<double> UpdateEmissionParams(
       for (std::size_t k = 0; k < ncolors; ++k) {
         double n_k = counts[k];
         double ybar_k = (n_k > 0) ? sum_y[k] / n_k : 0.0;
-        double mu_k = new_eta[k];
+        double mu_k = new_theta[k];
 
-        // Posterior for sigma^2: InverseGamma(alpha_n, beta_n)
+        // Posterior for sigma_k^2: IG(alpha_0 + n_k/2, beta_0 + SS_k/2)
         double alpha_n = alpha_0 + n_k / 2.0;
         double ss = sum_y2[k] - 2.0 * mu_k * sum_y[k] + n_k * mu_k * mu_k;
-        double beta_n = beta_0 + 0.5 * ss +
-                        kappa_0 * n_k * (ybar_k - mu_0) * (ybar_k - mu_0) /
-                            (2.0 * (kappa_0 + n_k));
+        double beta_n = beta_0 + 0.5 * ss;
         double sigma2 = rng.inverse_gamma(alpha_n, beta_n);
-        new_eta[ncolors + k] = std::sqrt(sigma2);
+        new_theta[ncolors + k] = sigma2;
 
-        // Posterior for mu: Normal(mu_n, sigma2 / kappa_n) with ordering
-        double kappa_n = kappa_0 + n_k;
-        double mu_n = (kappa_0 * mu_0 + n_k * ybar_k) / kappa_n;
-        double mu_sd = std::sqrt(sigma2 / kappa_n);
+        // Posterior for mu_k: N(mu_n, sigma_n^2) with ordering
+        // sigma_n^2 = 1 / (1/sigma2_0 + n_k/sigma_k^2)
+        // mu_n = sigma_n^2 * (mu_0/sigma2_0 + sum_y_k/sigma_k^2)
+        double prec_prior = 1.0 / sigma2_0;
+        double prec_lik = n_k / sigma2;
+        double sigma2_n = 1.0 / (prec_prior + prec_lik);
+        double mu_n = sigma2_n * (prec_prior * mu_0 + sum_y[k] / sigma2);
+        double mu_sd = std::sqrt(sigma2_n);
 
-        double lo = (k > 0) ? new_eta[k - 1] : -1e10;
-        double hi = (k + 1 < ncolors) ? new_eta[k + 1] : 1e10;
-        new_eta[k] = rng.truncated_normal(mu_n, mu_sd, lo, hi);
+        double lo = (k > 0) ? new_theta[k - 1] : -1e10;
+        double hi = (k + 1 < ncolors) ? new_theta[k + 1] : 1e10;
+        new_theta[k] = rng.truncated_normal(mu_n, mu_sd, lo, hi);
       }
       break;
     }
@@ -208,9 +208,9 @@ std::vector<double> UpdateEmissionParams(
       for (std::size_t k = 0; k < ncolors; ++k) {
         double alpha_n = alpha_0 + sum_y[k];
         double beta_n = beta_0 + counts[k];
-        double upper = (k + 1 < ncolors) ? new_eta[k + 1] : 1e10;
-        new_eta[k] = rng.truncated_gamma(alpha_n, beta_n, lower, upper);
-        lower = new_eta[k];
+        double upper = (k + 1 < ncolors) ? new_theta[k + 1] : 1e10;
+        new_theta[k] = rng.truncated_gamma(alpha_n, beta_n, lower, upper);
+        lower = new_theta[k];
       }
       break;
     }
@@ -218,7 +218,7 @@ std::vector<double> UpdateEmissionParams(
       throw std::invalid_argument("Unsupported emission family type");
   }
 
-  return new_eta;
+  return new_theta;
 }
 
 }  // namespace mdgm

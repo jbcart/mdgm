@@ -40,6 +40,7 @@ for Discrete Spatial Random Fields. \doi{10.48550/arXiv.2406.15700}
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://jbcart.github.io/mdgm}
   \item \url{https://github.com/jbcart/mdgm}
   \item Report bugs at \url{https://github.com/jbcart/mdgm/issues}
 }

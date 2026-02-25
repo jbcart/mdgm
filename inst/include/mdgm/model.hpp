@@ -26,7 +26,7 @@ class Model {
   // Full conditional for z_i: spatial * emission (if present), normalized
   std::vector<double> ZFullConditional(
       std::span<const int> z, std::size_t vertex, double psi,
-      const Observations& y, std::span<const double> eta) const;
+      const Observations& y, std::span<const double> theta) const;
 
   // Spatial log-likelihood (for beta MH ratio)
   double SpatialLogLikelihood(std::span<const int> z, double psi) const;
@@ -37,7 +37,7 @@ class Model {
   // Update emission params (only valid if has_emission())
   std::vector<double> UpdateEmissionParams(
       const Observations& y, std::span<const int> z,
-      std::span<const double> eta, std::span<const double> prior_params,
+      std::span<const double> theta, std::span<const double> prior_params,
       RNG& rng) const;
 
   // Store current graph sample

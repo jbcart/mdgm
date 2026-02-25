@@ -234,18 +234,18 @@ TEST(EmissionBernoulli, ThreeColorUpdateMaintainsOrdering) {
   y.ptr = {0, 3, 5, 8, 10};
 
   std::vector<int> z = {0, 0, 2, 1};
-  std::vector<double> eta = {0.2, 0.5, 0.8};
+  std::vector<double> theta = {0.2, 0.5, 0.8};
   std::vector<double> prior = {1.0, 1.0};
   RNG rng(42);
 
   for (int iter = 0; iter < 100; ++iter) {
-    eta = UpdateEmissionParams(y, z, eta, prior, 3, FamilyType::kBernoulli, rng);
-    EXPECT_EQ(eta.size(), 3);
+    theta = UpdateEmissionParams(y, z, theta, prior, 3, FamilyType::kBernoulli, rng);
+    EXPECT_EQ(theta.size(), 3);
     // Verify ordering constraint
-    EXPECT_LT(eta[0], eta[1]) << "iter=" << iter;
-    EXPECT_LT(eta[1], eta[2]) << "iter=" << iter;
+    EXPECT_LT(theta[0], theta[1]) << "iter=" << iter;
+    EXPECT_LT(theta[1], theta[2]) << "iter=" << iter;
     // All in [0, 1]
-    for (double e : eta) {
+    for (double e : theta) {
       EXPECT_GE(e, 0.0) << "iter=" << iter;
       EXPECT_LE(e, 1.0) << "iter=" << iter;
     }
@@ -258,15 +258,15 @@ TEST(EmissionBernoulli, FourColorUpdateMaintainsOrdering) {
   y.ptr = {0, 3, 5, 8, 10, 12};
 
   std::vector<int> z = {0, 1, 3, 2, 1};
-  std::vector<double> eta = {0.1, 0.3, 0.6, 0.9};
+  std::vector<double> theta = {0.1, 0.3, 0.6, 0.9};
   std::vector<double> prior = {1.0, 1.0};
   RNG rng(123);
 
   for (int iter = 0; iter < 100; ++iter) {
-    eta = UpdateEmissionParams(y, z, eta, prior, 4, FamilyType::kBernoulli, rng);
-    EXPECT_EQ(eta.size(), 4);
-    for (std::size_t k = 0; k + 1 < eta.size(); ++k) {
-      EXPECT_LT(eta[k], eta[k + 1]) << "iter=" << iter << " k=" << k;
+    theta = UpdateEmissionParams(y, z, theta, prior, 4, FamilyType::kBernoulli, rng);
+    EXPECT_EQ(theta.size(), 4);
+    for (std::size_t k = 0; k + 1 < theta.size(); ++k) {
+      EXPECT_LT(theta[k], theta[k + 1]) << "iter=" << iter << " k=" << k;
     }
   }
 }
@@ -274,9 +274,9 @@ TEST(EmissionBernoulli, FourColorUpdateMaintainsOrdering) {
 TEST(EmissionBernoulli, ThreeColorLikelihoodCorrect) {
   // Single vertex with observations {1, 0}
   std::vector<int> obs = {1, 0};
-  std::vector<double> eta = {0.2, 0.5, 0.8};
+  std::vector<double> theta = {0.2, 0.5, 0.8};
 
-  auto lik = EmissionLikelihood(obs, eta, 3, FamilyType::kBernoulli);
+  auto lik = EmissionLikelihood(obs, theta, 3, FamilyType::kBernoulli);
   EXPECT_EQ(lik.size(), 3);
   // p(y={1,0} | k=0) = 0.2 * 0.8 = 0.16
   EXPECT_NEAR(lik[0], 0.2 * 0.8, 1e-10);
@@ -301,9 +301,9 @@ TEST(HierarchicalModel, ThreeColorZFullConditionalWithEmission) {
   y.ptr = {0, 2, 4, 6};
 
   std::vector<int> z = {0, 1, 2};
-  std::vector<double> eta = {0.2, 0.5, 0.8};
+  std::vector<double> theta = {0.2, 0.5, 0.8};
 
-  auto probs = model.ZFullConditional(z, 1, 1.0, y, eta);
+  auto probs = model.ZFullConditional(z, 1, 1.0, y, theta);
   EXPECT_EQ(probs.size(), 3);
   double sum = 0.0;
   for (double p : probs) sum += p;
@@ -318,14 +318,14 @@ TEST(HierarchicalModel, ThreeColorZFullConditionalWithEmission) {
 TEST(EmissionGaussian, LikelihoodCorrect) {
   // Single vertex with observation y=5
   std::vector<int> obs = {5};
-  // eta: [mu_0, mu_1, sigma_0, sigma_1]
-  std::vector<double> eta = {3.0, 7.0, 1.0, 2.0};
+  // theta: [mu_0, mu_1, sigma2_0, sigma2_1]
+  std::vector<double> theta = {3.0, 7.0, 1.0, 4.0};
 
-  auto lik = EmissionLikelihood(obs, eta, 2, FamilyType::kGaussian);
+  auto lik = EmissionLikelihood(obs, theta, 2, FamilyType::kGaussian);
   EXPECT_EQ(lik.size(), 2);
-  // N(5 | 3, 1) = exp(-2) / sqrt(2*pi)
+  // N(5 | 3, sigma2=1) = exp(-2) / sqrt(2*pi)
   double expected_0 = std::exp(-0.5 * 4.0) / std::sqrt(2.0 * M_PI);
-  // N(5 | 7, 2) = exp(-0.5 * 1) / (2 * sqrt(2*pi))
+  // N(5 | 7, sigma2=4) = exp(-0.5 * 1) / (2 * sqrt(2*pi))
   double expected_1 = std::exp(-0.5 * 1.0) / (2.0 * std::sqrt(2.0 * M_PI));
   EXPECT_NEAR(lik[0], expected_0, 1e-10);
   EXPECT_NEAR(lik[1], expected_1, 1e-10);
@@ -337,19 +337,19 @@ TEST(EmissionGaussian, UpdateMaintainsMuOrdering) {
   y.ptr = {0, 3, 6};
 
   std::vector<int> z = {0, 1};
-  // eta: [mu_0, mu_1, sigma_0, sigma_1]
-  std::vector<double> eta = {2.0, 9.0, 1.0, 1.0};
-  std::vector<double> prior = {0.0, 0.01, 2.0, 1.0};  // mu_0, kappa_0, alpha_0, beta_0
+  // theta: [mu_0, mu_1, sigma2_0, sigma2_1]
+  std::vector<double> theta = {2.0, 9.0, 1.0, 1.0};
+  std::vector<double> prior = {0.0, 10000.0, 2.0, 1.0};  // mu_0, sigma2_0, alpha_0, beta_0
   RNG rng(42);
 
   for (int iter = 0; iter < 50; ++iter) {
-    eta = UpdateEmissionParams(y, z, eta, prior, 2, FamilyType::kGaussian, rng);
-    EXPECT_EQ(eta.size(), 4);
+    theta = UpdateEmissionParams(y, z, theta, prior, 2, FamilyType::kGaussian, rng);
+    EXPECT_EQ(theta.size(), 4);
     // mu ordering: mu[0] < mu[1]
-    EXPECT_LT(eta[0], eta[1]) << "iter=" << iter;
-    // sigma must be positive
-    EXPECT_GT(eta[2], 0.0) << "iter=" << iter;
-    EXPECT_GT(eta[3], 0.0) << "iter=" << iter;
+    EXPECT_LT(theta[0], theta[1]) << "iter=" << iter;
+    // sigma2 must be positive
+    EXPECT_GT(theta[2], 0.0) << "iter=" << iter;
+    EXPECT_GT(theta[3], 0.0) << "iter=" << iter;
   }
 }
 
@@ -357,9 +357,9 @@ TEST(EmissionGaussian, UpdateMaintainsMuOrdering) {
 
 TEST(EmissionPoisson, LikelihoodCorrect) {
   std::vector<int> obs = {3};
-  std::vector<double> eta = {1.0, 5.0};
+  std::vector<double> theta = {1.0, 5.0};
 
-  auto lik = EmissionLikelihood(obs, eta, 2, FamilyType::kPoisson);
+  auto lik = EmissionLikelihood(obs, theta, 2, FamilyType::kPoisson);
   EXPECT_EQ(lik.size(), 2);
   // Pois(3 | 1) = e^{-1} * 1^3 / 3! = e^{-1}/6
   double expected_0 = std::exp(-1.0) / 6.0;
@@ -375,16 +375,16 @@ TEST(EmissionPoisson, UpdateMaintainsOrdering) {
   y.ptr = {0, 3, 6};
 
   std::vector<int> z = {0, 1};
-  std::vector<double> eta = {1.0, 5.0};
+  std::vector<double> theta = {1.0, 5.0};
   std::vector<double> prior = {1.0, 0.1};  // alpha_0, beta_0
   RNG rng(42);
 
   for (int iter = 0; iter < 50; ++iter) {
-    eta = UpdateEmissionParams(y, z, eta, prior, 2, FamilyType::kPoisson, rng);
-    EXPECT_EQ(eta.size(), 2);
-    EXPECT_LT(eta[0], eta[1]) << "iter=" << iter;
-    EXPECT_GT(eta[0], 0.0) << "iter=" << iter;
-    EXPECT_GT(eta[1], 0.0) << "iter=" << iter;
+    theta = UpdateEmissionParams(y, z, theta, prior, 2, FamilyType::kPoisson, rng);
+    EXPECT_EQ(theta.size(), 2);
+    EXPECT_LT(theta[0], theta[1]) << "iter=" << iter;
+    EXPECT_GT(theta[0], 0.0) << "iter=" << iter;
+    EXPECT_GT(theta[1], 0.0) << "iter=" << iter;
   }
 }
 
@@ -394,15 +394,15 @@ TEST(EmissionPoisson, ThreeColorUpdateMaintainsOrdering) {
   y.ptr = {0, 2, 4, 6};
 
   std::vector<int> z = {0, 1, 2};
-  std::vector<double> eta = {0.5, 3.5, 8.5};
+  std::vector<double> theta = {0.5, 3.5, 8.5};
   std::vector<double> prior = {1.0, 0.1};
   RNG rng(42);
 
   for (int iter = 0; iter < 50; ++iter) {
-    eta = UpdateEmissionParams(y, z, eta, prior, 3, FamilyType::kPoisson, rng);
-    EXPECT_EQ(eta.size(), 3);
-    for (std::size_t k = 0; k + 1 < eta.size(); ++k) {
-      EXPECT_LT(eta[k], eta[k + 1]) << "iter=" << iter << " k=" << k;
+    theta = UpdateEmissionParams(y, z, theta, prior, 3, FamilyType::kPoisson, rng);
+    EXPECT_EQ(theta.size(), 3);
+    for (std::size_t k = 0; k + 1 < theta.size(); ++k) {
+      EXPECT_LT(theta[k], theta[k + 1]) << "iter=" << iter << " k=" << k;
     }
   }
 }

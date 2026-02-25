@@ -46,7 +46,7 @@ test_that("hierarchical MCMC runs with Bernoulli emission", {
   result <- mcmc(model, y = y,
                  z_init = c(0L, 0L, 1L, 1L),
                  psi_init = 0.5,
-                 eta_init = c(0.3, 0.7),
+                 theta_init = c(0.3, 0.7),
                  n_iter = 50L,
                  psi_tune = 0.1,
                  emission_prior_params = c(1, 1),
@@ -57,11 +57,11 @@ test_that("hierarchical MCMC runs with Bernoulli emission", {
   # Check emission_params
   ep <- result$emission_params()
   expect_type(ep, "list")
-  expect_named(ep, "eta")
-  expect_equal(dim(ep$eta), c(2L, 50L))
+  expect_named(ep, "p")
+  expect_equal(dim(ep$p), c(2L, 50L))
 
-  # Eta values should be between 0 and 1
-  expect_true(all(ep$eta >= 0 & ep$eta <= 1))
+  # p values should be between 0 and 1
+  expect_true(all(ep$p >= 0 & ep$p <= 1))
 })
 
 test_that("acceptance rates are computed", {
@@ -101,7 +101,7 @@ test_that("diagnostics returns R-hat and ESS", {
   y <- list(c(1L, 0L), c(0L, 0L), c(1L, 1L))
 
   result <- mcmc(model, y = y, z_init = c(0L, 0L, 1L),
-                 psi_init = 0.5, eta_init = c(0.3, 0.7),
+                 psi_init = 0.5, theta_init = c(0.3, 0.7),
                  n_iter = 200L, psi_tune = 0.1,
                  emission_prior_params = c(1, 1), seed = 42L)
 
@@ -110,8 +110,8 @@ test_that("diagnostics returns R-hat and ESS", {
   expect_true("psi" %in% names(diag))
   expect_true(is.finite(diag$psi$rhat))
   expect_true(diag$psi$ess > 0)
-  expect_true("eta" %in% names(diag))
-  expect_length(diag$eta$rhat, 2L)
+  expect_true("p" %in% names(diag))
+  expect_length(diag$p$rhat, 2L)
 })
 
 test_that("standalone MCMC works with n_colors = 3", {
@@ -148,24 +148,24 @@ test_that("hierarchical MCMC works with n_colors = 3 Bernoulli", {
   result <- mcmc(model, y = y,
                  z_init = c(0L, 0L, 2L, 1L),
                  psi_init = 0.5,
-                 eta_init = c(0.2, 0.5, 0.8),
+                 theta_init = c(0.2, 0.5, 0.8),
                  n_iter = 50L,
                  psi_tune = 0.1,
                  emission_prior_params = c(1, 1),
                  seed = 123L)
 
   ep <- result$emission_params()
-  eta_mat <- ep$eta
-  expect_equal(dim(eta_mat), c(3L, 50L))
+  p_mat <- ep$p
+  expect_equal(dim(p_mat), c(3L, 50L))
 
-  # All eta in [0, 1]
-  expect_true(all(eta_mat >= 0 & eta_mat <= 1))
+  # All p in [0, 1]
+  expect_true(all(p_mat >= 0 & p_mat <= 1))
 
-  # Ordering: eta[1,] < eta[2,] < eta[3,] for each iteration
-  for (j in seq_len(ncol(eta_mat))) {
-    expect_true(eta_mat[1, j] < eta_mat[2, j],
+  # Ordering: p[1,] < p[2,] < p[3,] for each iteration
+  for (j in seq_len(ncol(p_mat))) {
+    expect_true(p_mat[1, j] < p_mat[2, j],
                 info = paste("iter", j))
-    expect_true(eta_mat[2, j] < eta_mat[3, j],
+    expect_true(p_mat[2, j] < p_mat[3, j],
                 info = paste("iter", j))
   }
 })
@@ -185,16 +185,16 @@ test_that("hierarchical MCMC works with Gaussian emission", {
   result <- mcmc(model, y = y,
                  z_init = c(0L, 0L, 1L, 1L),
                  psi_init = 0.5,
-                 eta_init = c(2.0, 8.0, 1.0, 1.0),
+                 theta_init = c(2.0, 8.0, 1.0, 1.0),
                  n_iter = 50L,
                  psi_tune = 0.1,
-                 emission_prior_params = c(0, 0.01, 2, 1),
+                 emission_prior_params = c(0, 10000, 2, 1),
                  seed = 123L)
 
   ep <- result$emission_params()
   expect_type(ep, "list")
   expect_true("mu" %in% names(ep))
-  expect_true("sigma" %in% names(ep))
+  expect_true("sigma2" %in% names(ep))
 })
 
 test_that("hierarchical MCMC works with Poisson emission", {
@@ -211,7 +211,7 @@ test_that("hierarchical MCMC works with Poisson emission", {
   result <- mcmc(model, y = y,
                  z_init = c(0L, 0L, 1L, 1L),
                  psi_init = 0.5,
-                 eta_init = c(1.0, 5.0),
+                 theta_init = c(1.0, 5.0),
                  n_iter = 50L,
                  psi_tune = 0.1,
                  emission_prior_params = c(1, 0.1),

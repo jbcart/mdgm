@@ -51,10 +51,10 @@ nug$nvertices()
 nug$nedges()
 
 # Fit a standalone spanning-tree MDGM
-z <- c(1L, 1L, 0L, 0L,
-       1L, 1L, 0L, 0L,
+z <- c(0L, 0L, 0L, 1L,
        0L, 0L, 1L, 1L,
-       0L, 0L, 1L, 1L)
+       1L, 1L, 1L, 0L,
+       1L, 1L, 0L, 0L)
 model <- mdgm_model(nug, dag_type = "spanning_tree")
 result <- mcmc(model, z_init = z, psi_init = 0.5,
                n_iter = 2000L, psi_tune = 1.0, seed = 42L)

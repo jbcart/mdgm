@@ -24,31 +24,31 @@ McmcSamples RunMcmc(
     const Observations& y,
     const std::vector<int>& z_init,
     double psi_init,
-    const std::vector<double>& eta_init,
+    const std::vector<double>& theta_init,
     const McmcConfig& config,
     RNG& rng) {
   const std::size_t n = model.nvertices();
   const std::size_t nc = model.ncolors();
   const std::size_t J = config.n_iterations;
 
-  // Initialize eta
-  std::vector<double> eta(eta_init);
-  if (eta.empty() && model.has_emission()) {
-    eta.resize(nc, 0.5);  // default if not provided
+  // Initialize theta
+  std::vector<double> theta(theta_init);
+  if (theta.empty() && model.has_emission()) {
+    theta.resize(nc, 0.5);  // default if not provided
   }
 
   // Number of emission parameters per iteration
-  const std::size_t n_eta = eta.size();
+  const std::size_t n_theta = theta.size();
 
   // Allocate output storage
   McmcSamples samples;
   samples.n_iterations = J;
   samples.n_vertices = n;
   samples.n_colors = nc;
-  samples.n_eta = n_eta;
+  samples.n_theta = n_theta;
   samples.z.resize(n * J);
   samples.psi.resize(J);
-  samples.eta.resize(model.has_emission() ? n_eta * J : 0);
+  samples.theta.resize(model.has_emission() ? n_theta * J : 0);
   samples.dag_data.resize(n * J);
   samples.psi_accepted = 0;
   samples.graph_accepted = 0;
@@ -59,7 +59,7 @@ McmcSamples RunMcmc(
 
   for (std::size_t i = 0; i < n; ++i) samples.z[i] = z[i];
   samples.psi[0] = psi;
-  for (std::size_t k = 0; k < n_eta; ++k) samples.eta[k] = eta[k];
+  for (std::size_t k = 0; k < n_theta; ++k) samples.theta[k] = theta[k];
   model.StoreDagSample(samples.dag_data, 0);
 
   // MCMC iterations
@@ -73,7 +73,7 @@ McmcSamples RunMcmc(
       auto perm = rng.permutation(n);
       for (std::size_t idx = 0; idx < n; ++idx) {
         std::size_t i = perm[idx];
-        auto probs = model.ZFullConditional(z, i, psi, y, eta);
+        auto probs = model.ZFullConditional(z, i, psi, y, theta);
         z[i] = static_cast<int>(rng.discrete(probs));
       }
     }
@@ -93,15 +93,15 @@ McmcSamples RunMcmc(
 
     // Step 4: Update emission params (only if hierarchical)
     if (model.has_emission()) {
-      eta = model.UpdateEmissionParams(y, z, eta, config.emission_prior_params,
-                                        rng);
+      theta = model.UpdateEmissionParams(y, z, theta,
+                                          config.emission_prior_params, rng);
     }
 
     // Store samples for this iteration
     for (std::size_t i = 0; i < n; ++i) samples.z[i + j * n] = z[i];
     samples.psi[j] = psi;
-    for (std::size_t k = 0; k < n_eta; ++k) {
-      samples.eta[k + j * n_eta] = eta[k];
+    for (std::size_t k = 0; k < n_theta; ++k) {
+      samples.theta[k + j * n_theta] = theta[k];
     }
   }
 

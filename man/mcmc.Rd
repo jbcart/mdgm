@@ -9,10 +9,10 @@ mcmc(
   y = NULL,
   z_init,
   psi_init,
-  eta_init = numeric(0),
+  theta_init = numeric(0),
   n_iter = 1000L,
   psi_tune = 0.1,
-  emission_prior_params = c(1, 1),
+  emission_prior_params = NULL,
   seed = NULL,
   nug = NULL
 )
@@ -30,10 +30,10 @@ with values in \verb{0, ..., n_colors - 1}.}
 
 \item{psi_init}{Initial value for the dependence parameter (positive).}
 
-\item{eta_init}{Initial emission parameters. For Bernoulli, a numeric
+\item{theta_init}{Initial emission parameters. For Bernoulli, a numeric
 vector of length \code{n_colors} (e.g., \code{c(0.2, 0.8)}). For Gaussian,
-a vector of length \code{2 * n_colors} with means then standard deviations
-(e.g., \code{c(mu_1, mu_2, sigma_1, sigma_2)}). For Poisson, a vector of
+a vector of length \code{2 * n_colors} with means then variances
+(e.g., \code{c(mu_1, mu_2, sigma2_1, sigma2_2)}). For Poisson, a vector of
 length \code{n_colors} with rate parameters. Ignored for standalone models.}
 
 \item{n_iter}{Number of MCMC iterations (default 1000).}
@@ -43,9 +43,11 @@ length \code{n_colors} with rate parameters. Ignored for standalone models.}
 
 \item{emission_prior_params}{Prior hyperparameters for emission
 parameters. For Bernoulli: \code{c(a, b)} for \code{Beta(a, b)} prior.
-For Gaussian: \code{c(mu_0, kappa_0, alpha_0, beta_0)} for
-Normal-InverseGamma prior. For Poisson: \code{c(alpha_0, beta_0)} for
-\code{Gamma(alpha_0, beta_0)} prior. Default \code{c(1, 1)}.}
+For Gaussian: \code{c(mu_0, sigma2_0, alpha_0, beta_0)} where
+\code{mu_k ~ N(mu_0, sigma2_0)} and \code{sigma_k^2 ~ InvGamma(alpha_0, beta_0)}
+independently. For Poisson: \code{c(alpha_0, beta_0)} for
+\code{Gamma(alpha_0, beta_0)} prior. Default: \code{c(1, 1)} for Bernoulli/Poisson,
+\code{c(0, 10000, 0.01, 0.01)} for Gaussian (non-informative).}
 
 \item{seed}{Optional integer seed for reproducibility.}
 

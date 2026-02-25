@@ -27,11 +27,11 @@ FamilyType Model::emission_type() const {
 
 std::vector<double> Model::ZFullConditional(
     std::span<const int> z, std::size_t vertex, double psi,
-    const Observations& y, std::span<const double> eta) const {
+    const Observations& y, std::span<const double> theta) const {
   auto probs = spatial_->ZFullConditional(z, vertex, psi);
 
   if (has_emission() && !y.empty(vertex)) {
-    auto lik = EmissionLikelihood(y[vertex], eta, spatial_->ncolors(),
+    auto lik = EmissionLikelihood(y[vertex], theta, spatial_->ncolors(),
                                   *emission_type_);
     for (std::size_t k = 0; k < probs.size(); ++k) {
       probs[k] *= lik[k];
@@ -57,12 +57,12 @@ void Model::UpdateGraph(std::span<const int> z, double psi, RNG& rng) {
 
 std::vector<double> Model::UpdateEmissionParams(
     const Observations& y, std::span<const int> z,
-    std::span<const double> eta, std::span<const double> prior_params,
+    std::span<const double> theta, std::span<const double> prior_params,
     RNG& rng) const {
   if (!has_emission()) {
     throw std::logic_error("Cannot update emission params on standalone model");
   }
-  return mdgm::UpdateEmissionParams(y, z, eta, prior_params,
+  return mdgm::UpdateEmissionParams(y, z, theta, prior_params,
                                      spatial_->ncolors(), *emission_type_, rng);
 }
 

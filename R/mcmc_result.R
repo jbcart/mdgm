@@ -42,33 +42,38 @@ MdgmResult <- R6::R6Class(
     #' @return Named list appropriate to emission type, or `NULL` for
     #'   standalone models.
     emission_params = function(iteration = NULL) {
-      if (is.null(private$.raw$eta)) return(NULL)
+      if (is.null(private$.raw$theta)) return(NULL)
       et <- private$.emission_type
       if (is.null(et)) et <- "bernoulli"  # fallback
 
-      eta_mat <- private$.raw$eta
+      theta_mat <- private$.raw$theta
       if (!is.null(iteration)) {
-        eta_mat <- eta_mat[, iteration, drop = FALSE]
+        theta_mat <- theta_mat[, iteration, drop = FALSE]
       }
-      nc <- nrow(eta_mat)
-      colnames_eta <- paste0("eta_", seq_len(nc))
-      rownames(eta_mat) <- colnames_eta
+      nc <- nrow(theta_mat)
 
       switch(et,
-        bernoulli = list(eta = eta_mat),
+        bernoulli = {
+          rownames(theta_mat) <- paste0("p_", seq_len(nc))
+          list(p = theta_mat)
+        },
         gaussian = {
-          # eta stores mu (first nc rows) and sigma (next nc rows)
+          # theta stores mu (first half) and sigma^2 (second half)
           half <- nc %/% 2L
-          list(
-            mu = eta_mat[seq_len(half), , drop = FALSE],
-            sigma = eta_mat[half + seq_len(half), , drop = FALSE]
-          )
+          mu_mat <- theta_mat[seq_len(half), , drop = FALSE]
+          sigma2_mat <- theta_mat[half + seq_len(half), , drop = FALSE]
+          rownames(mu_mat) <- paste0("mu_", seq_len(half))
+          rownames(sigma2_mat) <- paste0("sigma2_", seq_len(half))
+          list(mu = mu_mat, sigma2 = sigma2_mat)
         },
         poisson = {
-          rownames(eta_mat) <- paste0("lambda_", seq_len(nc))
-          list(lambda = eta_mat)
+          rownames(theta_mat) <- paste0("lambda_", seq_len(nc))
+          list(lambda = theta_mat)
         },
-        list(eta = eta_mat)
+        {
+          rownames(theta_mat) <- paste0("theta_", seq_len(nc))
+          list(theta = theta_mat)
+        }
       )
     },
 
@@ -154,23 +159,23 @@ MdgmResult <- R6::R6Class(
         )
       )
 
-      if (!is.null(private$.raw$eta)) {
-        nc <- nrow(private$.raw$eta)
-        eta_rhat <- numeric(nc)
-        eta_ess <- numeric(nc)
+      if (!is.null(private$.raw$theta)) {
+        nc <- nrow(private$.raw$theta)
+        theta_rhat <- numeric(nc)
+        theta_ess <- numeric(nc)
         for (k in seq_len(nc)) {
-          chain_k <- private$.raw$eta[k, start:J]
-          eta_rhat[k] <- split_rhat(chain_k)
-          eta_ess[k] <- ess(chain_k)
+          chain_k <- private$.raw$theta[k, start:J]
+          theta_rhat[k] <- split_rhat(chain_k)
+          theta_ess[k] <- ess(chain_k)
         }
-        et <- if (!is.null(private$.emission_type)) private$.emission_type else "eta"
+        et <- if (!is.null(private$.emission_type)) private$.emission_type else "theta"
         param_name <- switch(et,
-          bernoulli = "eta",
+          bernoulli = "p",
           poisson = "lambda",
-          gaussian = "mu_sigma",
-          "eta"
+          gaussian = "mu_sigma2",
+          "theta"
         )
-        result[[param_name]] <- list(rhat = eta_rhat, ess = eta_ess)
+        result[[param_name]] <- list(rhat = theta_rhat, ess = theta_ess)
       }
 
       result
@@ -205,26 +210,26 @@ MdgmResult <- R6::R6Class(
         psi_sd = sd(psi_post)
       )
 
-      if (!is.null(private$.raw$eta)) {
-        eta_post <- private$.raw$eta[, start:J, drop = FALSE]
-        eta_means <- rowMeans(eta_post)
-        eta_sds <- apply(eta_post, 1, sd)
+      if (!is.null(private$.raw$theta)) {
+        theta_post <- private$.raw$theta[, start:J, drop = FALSE]
+        theta_means <- rowMeans(theta_post)
+        theta_sds <- apply(theta_post, 1, sd)
         et <- if (!is.null(private$.emission_type)) private$.emission_type else "unknown"
         param_names <- switch(et,
-          bernoulli = paste0("eta_", seq_len(nc)),
+          bernoulli = paste0("p_", seq_len(nc)),
           poisson = paste0("lambda_", seq_len(nc)),
           gaussian = c(paste0("mu_", seq_len(nc %/% 2L)),
-                       paste0("sigma_", seq_len(nc %/% 2L))),
-          paste0("eta_", seq_len(nc))
+                       paste0("sigma2_", seq_len(nc %/% 2L))),
+          paste0("theta_", seq_len(nc))
         )
         cat(sprintf("  Emission type: %s\n", et))
-        for (i in seq_along(eta_means)) {
+        for (i in seq_along(theta_means)) {
           cat(sprintf("  %s posterior mean: %.4f (sd: %.4f)\n",
-                      param_names[i], eta_means[i], eta_sds[i]))
+                      param_names[i], theta_means[i], theta_sds[i]))
         }
         out$emission_type <- et
-        out$emission_param_means <- setNames(eta_means, param_names)
-        out$emission_param_sds <- setNames(eta_sds, param_names)
+        out$emission_param_means <- setNames(theta_means, param_names)
+        out$emission_param_sds <- setNames(theta_sds, param_names)
       }
 
       # Diagnostics
@@ -266,32 +271,34 @@ MdgmResult <- R6::R6Class(
         plots$psi <- p_psi
 
         # Emission params trace plots
-        if (!is.null(private$.raw$eta)) {
-          nc <- nrow(private$.raw$eta)
-          et <- if (!is.null(private$.emission_type)) private$.emission_type else "eta"
+        if (!is.null(private$.raw$theta)) {
+          nc <- nrow(private$.raw$theta)
+          et <- if (!is.null(private$.emission_type)) private$.emission_type else "theta"
           param_names <- switch(et,
-            bernoulli = paste0("eta_", seq_len(nc)),
+            bernoulli = paste0("p_", seq_len(nc)),
             poisson = paste0("lambda_", seq_len(nc)),
-            paste0("eta_", seq_len(nc))
+            gaussian = c(paste0("mu_", seq_len(nc %/% 2L)),
+                         paste0("sigma2_", seq_len(nc %/% 2L))),
+            paste0("theta_", seq_len(nc))
           )
-          eta_post <- private$.raw$eta[, start:J, drop = FALSE]
+          theta_post <- private$.raw$theta[, start:J, drop = FALSE]
           iters <- start:J
           rows <- lapply(seq_len(nc), function(k) {
             data.frame(
               iteration = iters,
-              value = eta_post[k, ],
+              value = theta_post[k, ],
               parameter = param_names[k]
             )
           })
-          eta_df <- do.call(rbind, rows)
-          p_eta <- ggplot2::ggplot(eta_df,
+          theta_df <- do.call(rbind, rows)
+          p_theta <- ggplot2::ggplot(theta_df,
               ggplot2::aes(x = iteration, y = value, color = parameter)) +
             ggplot2::geom_line(alpha = 0.6) +
             ggplot2::labs(title = paste("Trace:", et, "parameters"),
                          x = "Iteration", y = "Value") +
             ggplot2::theme_minimal()
-          print(p_eta)
-          plots$emission <- p_eta
+          print(p_theta)
+          plots$emission <- p_theta
         }
       }
 

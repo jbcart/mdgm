@@ -108,7 +108,7 @@ cpp11::writable::list run_mcmc_cpp(
     cpp11::external_pointer<mdgm::Model> model,
     const cpp11::integers& obs_data, const cpp11::integers& obs_ptr,
     const cpp11::integers& z_init, double psi_init,
-    const cpp11::doubles& eta_init,
+    const cpp11::doubles& theta_init,
     int n_iterations, double psi_tune,
     const cpp11::doubles& emission_prior_params,
     cpp11::external_pointer<mdgm::RNG> rng) {
@@ -120,8 +120,8 @@ cpp11::writable::list run_mcmc_cpp(
   // Build z_init (convert from 0-indexed R integers)
   std::vector<int> z0(z_init.begin(), z_init.end());
 
-  // Build eta_init
-  std::vector<double> eta0(eta_init.begin(), eta_init.end());
+  // Build theta_init
+  std::vector<double> theta0(theta_init.begin(), theta_init.end());
 
   // Build config
   mdgm::McmcConfig config;
@@ -132,13 +132,13 @@ cpp11::writable::list run_mcmc_cpp(
 
   // Run
   mdgm::McmcSamples samples =
-      mdgm::RunMcmc(*model, y, z0, psi_init, eta0, config, *rng);
+      mdgm::RunMcmc(*model, y, z0, psi_init, theta0, config, *rng);
 
   // Convert to R objects
   const std::size_t n = samples.n_vertices;
   const std::size_t J = samples.n_iterations;
   const std::size_t nc = samples.n_colors;
-  const std::size_t n_eta = samples.n_eta;
+  const std::size_t n_theta = samples.n_theta;
 
   // z: integer matrix n x J (column-major, already stored that way)
   cpp11::writable::integers z_r(static_cast<R_xlen_t>(n * J));
@@ -154,18 +154,18 @@ cpp11::writable::list run_mcmc_cpp(
     psi_r[static_cast<R_xlen_t>(j)] = samples.psi[j];
   }
 
-  // eta: numeric matrix n_eta x J (only if emission model present)
-  cpp11::sexp eta_r;
-  if (samples.eta.empty()) {
-    eta_r = R_NilValue;
+  // theta: numeric matrix n_theta x J (only if emission model present)
+  cpp11::sexp theta_r;
+  if (samples.theta.empty()) {
+    theta_r = R_NilValue;
   } else {
-    cpp11::writable::doubles eta_tmp(static_cast<R_xlen_t>(n_eta * J));
-    for (std::size_t i = 0; i < n_eta * J; ++i) {
-      eta_tmp[static_cast<R_xlen_t>(i)] = samples.eta[i];
+    cpp11::writable::doubles theta_tmp(static_cast<R_xlen_t>(n_theta * J));
+    for (std::size_t i = 0; i < n_theta * J; ++i) {
+      theta_tmp[static_cast<R_xlen_t>(i)] = samples.theta[i];
     }
-    eta_tmp.attr("dim") = cpp11::writable::integers({
-        static_cast<int>(n_eta), static_cast<int>(J)});
-    eta_r = eta_tmp;
+    theta_tmp.attr("dim") = cpp11::writable::integers({
+        static_cast<int>(n_theta), static_cast<int>(J)});
+    theta_r = theta_tmp;
   }
 
   // dag_data: integer matrix n x J
@@ -185,7 +185,7 @@ cpp11::writable::list run_mcmc_cpp(
   return cpp11::writable::list({
       "z"_nm = z_r,
       "psi"_nm = psi_r,
-      "eta"_nm = eta_r,
+      "theta"_nm = theta_r,
       "dag"_nm = dag_r,
       "psi_accepted"_nm = static_cast<int>(samples.psi_accepted),
       "graph_accepted"_nm = static_cast<int>(samples.graph_accepted),
