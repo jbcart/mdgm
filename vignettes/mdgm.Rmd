@@ -16,6 +16,7 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(mdgm)
+library(ggplot2)
 ```
 
 ## What is mdgm?
@@ -35,111 +36,150 @@ The approach is described in:
 > for Discrete Spatial Random Fields.
 > [arXiv:2406.15700](https://arxiv.org/abs/2406.15700)
 
-## Installation
+## Building a graph
 
-Install the development version from GitHub:
-
-```r
-# install.packages("remotes")
-remotes::install_github("jbcart/mdgm")
-```
-
-The package requires a C++20 compiler.
-
-## Quick example
-
-The basic workflow is:
-
-1. **Build a graph** — Define the undirected neighborhood structure.
-2. **Specify a model** — Choose the DAG type and (optionally) an emission
-   distribution.
-3. **Run MCMC** — Sample from the posterior.
-4. **Analyze results** — Inspect posterior summaries, edge inclusion
-   probabilities, etc.
-
-### Step 1: Build a graph
-
-Create a 4x4 grid graph using an adjacency matrix with rook neighbors:
+Create a 4x4 grid graph with rook adjacency using `nug_from_grid()`:
 
 ```{r grid-graph}
-n_row <- 4
-n_col <- 4
-n <- n_row * n_col
-A <- matrix(0, n, n)
-for (i in 1:n) {
-  ri <- (i - 1) %/% n_col + 1
-  ci <- (i - 1) %% n_col + 1
-  for (j in 1:n) {
-    rj <- (j - 1) %/% n_col + 1
-    cj <- (j - 1) %% n_col + 1
-    if (abs(ri - rj) + abs(ci - cj) == 1) {
-      A[i, j] <- 1
-    }
-  }
-}
-nug <- nug_from_adj_mat(A, seed = 42L)
+nug <- nug_from_grid(4, 4, seed = 42L)
 nug$nvertices()
 nug$nedges()
 ```
 
-### Step 2: Define a model
+Graphs can also be constructed from an adjacency matrix, edge list, or
+adjacency list — see the
+[Working with Undirected Graphs](graph-construction.html) vignette.
 
-Create a hierarchical model with spanning-tree DAGs and a Bernoulli emission:
+## Fitting a standalone model
 
-```{r model}
-model <- mdgm_model(nug, dag_type = "spanning_tree", n_colors = 2L,
-                     emission = "bernoulli")
-model$has_emission()
-model$ncolors()
-```
+In a standalone model, the spatial field $z$ is observed directly — no emission
+distribution is needed. Here we fit a spanning-tree MDGM to a deterministic
+checkerboard pattern on the 4x4 grid:
 
-For a **standalone** model (where the spatial field is observed directly), omit
-the `emission` argument:
+```{r standalone-fit}
+z <- c(1L, 1L, 0L, 0L,
+       1L, 1L, 0L, 0L,
+       0L, 0L, 1L, 1L,
+       0L, 0L, 1L, 1L)
 
-```r
-model_standalone <- mdgm_model(nug, dag_type = "spanning_tree")
-```
+model <- mdgm_model(nug, dag_type = "spanning_tree")
 
-### Step 3: Run MCMC
-
-Simulate some binary observations and run the sampler:
-
-```{r mcmc}
-set.seed(1)
-# Simulate observations: vertex i gets a few Bernoulli draws
-y <- lapply(1:n, function(i) rbinom(5, 1, ifelse(i <= 8, 0.2, 0.8)))
-
-# Initial values
-z_init <- rep(0:1, each = 8)
-result <- mcmc(model, y = y, z_init = z_init, psi_init = 0.5,
-               eta_init = c(0.3, 0.7), n_iter = 500L, seed = 42L)
-```
-
-### Step 4: Analyze results
-
-```{r results}
+result <- mcmc(model, z_init = z, psi_init = 0.5,
+               n_iter = 2000L, psi_tune = 1.0, seed = 42L)
 result$summary()
 ```
 
-Access posterior samples directly:
+Visualize the spatial field as a raster:
 
-```{r samples}
-# Psi trace
-psi_samples <- result$psi()
-plot(psi_samples, type = "l", xlab = "Iteration", ylab = expression(psi),
-     main = "Psi trace plot")
+```{r grid-plot, fig.width = 4, fig.height = 4}
+grid_df <- data.frame(
+  x = rep(1:4, times = 4),
+  y = rep(4:1, each = 4),
+  z = factor(z)
+)
 
-# Acceptance rates
+ggplot(grid_df, aes(x, y, fill = z)) +
+  geom_raster() +
+  scale_fill_manual(values = c("0" = "#440154", "1" = "#fde725")) +
+  coord_equal() +
+  theme_minimal() +
+  labs(title = "4x4 Spatial Field", fill = "z")
+```
+
+## Posterior diagnostics
+
+Trace plot for the spatial dependence parameter $\psi$:
+
+```{r psi-trace, fig.width = 6, fig.height = 3}
+psi_df <- data.frame(iteration = seq_along(result$psi()), psi = result$psi())
+
+ggplot(psi_df, aes(iteration, psi)) +
+  geom_line(linewidth = 0.3) +
+  theme_minimal() +
+  labs(x = "Iteration", y = expression(psi), title = "Psi trace plot")
+```
+
+Acceptance rates:
+
+```{r acceptance}
 result$acceptance_rates()
 ```
 
-Compute edge inclusion probabilities (discarding the first 100 iterations as
-burn-in):
+## Visualizing graph structure with igraph
 
-```{r edge-probs}
-eip <- result$edge_inclusion_probs(nug, burnin = 100L)
-head(eip[order(-eip$prob), ])
+The [igraph](https://r.igraph.org/) package (suggested, not required) can plot
+the neighborhood graph:
+
+```{r igraph-grid, fig.width = 4, fig.height = 4, eval = requireNamespace("igraph", quietly = TRUE)}
+library(igraph)
+
+# Build igraph object from the NUG edge structure
+n <- nug$nvertices()
+el <- do.call(rbind, lapply(1:n, function(v) {
+  nbrs <- nug$neighbors(v)
+  nbrs <- nbrs[nbrs > v]
+  if (length(nbrs) == 0) return(NULL)
+  cbind(v, nbrs)
+}))
+g <- graph_from_edgelist(el, directed = FALSE)
+
+# Grid layout
+coords <- cbind((seq_len(n) - 1) %% 4 + 1, 4 - (seq_len(n) - 1) %/% 4)
+
+plot(g, layout = coords, vertex.size = 20, vertex.label = 1:n,
+     vertex.color = c("#440154", "#fde725")[z + 1],
+     vertex.label.color = "white", edge.color = "grey40",
+     main = "4x4 Grid (NUG)")
 ```
 
-See the [MDGM Model Specification](mdgm-models.html) vignette for details on
-the statistical model and DAG types.
+## Edge inclusion probabilities
+
+The `edge_inclusion_probs()` method counts how often each undirected edge
+appears in the posterior spanning-tree samples. We can use these proportions to
+scale edge widths:
+
+```{r edge-inclusion, fig.width = 4, fig.height = 4, eval = requireNamespace("igraph", quietly = TRUE)}
+eip <- result$edge_inclusion_probs(nug, burnin = 200L)
+head(eip[order(-eip$prob), ])
+
+# Match edge inclusion probs to igraph edge ordering
+edge_probs <- numeric(ecount(g))
+for (i in seq_len(nrow(eip))) {
+  eid <- get.edge.ids(g, c(eip$vertex1[i], eip$vertex2[i]))
+  edge_probs[eid] <- eip$prob[i]
+}
+
+plot(g, layout = coords, vertex.size = 20, vertex.label = 1:n,
+     vertex.color = c("#440154", "#fde725")[z + 1],
+     vertex.label.color = "white",
+     edge.width = edge_probs * 10,
+     edge.color = "grey30",
+     main = "Edge inclusion probabilities")
+```
+
+Edges between same-colored vertices appear more frequently in the posterior
+spanning trees, reflecting the spatial dependence captured by $\psi$.
+
+## Fitting a hierarchical model
+
+In a hierarchical model, $z$ is a latent field and observations are generated
+through an emission distribution. Here we use a Bernoulli emission:
+
+```{r hierarchical-fit}
+model_h <- mdgm_model(nug, dag_type = "spanning_tree", n_colors = 2L,
+                       emission = "bernoulli")
+
+set.seed(1)
+y <- lapply(1:n, function(i) rbinom(5, 1, ifelse(i <= 8, 0.2, 0.8)))
+
+result_h <- mcmc(model_h, y = y, z_init = rep(0:1, each = 8), psi_init = 0.5,
+                 eta_init = c(0.3, 0.7), n_iter = 500L, seed = 42L)
+result_h$summary()
+```
+
+## Next steps
+
+- **[Working with Undirected Graphs](graph-construction.html)** — Graph
+  constructors, querying structure, and sampling spanning trees.
+- **[MDGM Model Specification](mdgm-models.html)** — DAG types, the spatial
+  field model, emission distributions, and MCMC details.
