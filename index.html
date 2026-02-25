@@ -60,6 +60,7 @@
 </h1></div>
 <!-- badges: start -->
 <!-- badges: end -->
+<p>Full documentation: <a href="https://jbcart.github.io/mdgm/" class="uri">https://jbcart.github.io/mdgm/</a></p>
 <p><strong>mdgm</strong> (Mixture of Directed Graphical Models) provides Bayesian inference for discrete spatial random fields. Instead of working with a Markov random field and its intractable normalizing constant, the MDGM defines a mixture over directed acyclic graphs (DAGs) compatible with an undirected neighborhood graph. Each DAG admits a tractable likelihood, avoiding the partition function entirely.</p>
 <p>See <a href="https://arxiv.org/abs/2406.15700" class="external-link">Carter and Calder (2024)</a> for the full methodological details.</p>
 <div class="section level2">
@@ -95,9 +96,10 @@
 <span><span class="va">result</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; MDGM MCMC Results</span></span>
 <span><span class="co">#&gt;   Vertices: 16, Colors: 2</span></span>
-<span><span class="co">#&gt;   Iterations: 2000</span></span>
+<span><span class="co">#&gt;   Iterations: 2000 (burnin: 0)</span></span>
 <span><span class="co">#&gt;   Psi acceptance rate: 0.471</span></span>
-<span><span class="co">#&gt;   Psi posterior mean: 0.8673</span></span></code></pre></div>
+<span><span class="co">#&gt;   Psi posterior mean: 0.8673 (sd: 0.5505)</span></span>
+<span><span class="co">#&gt;   Psi R-hat: 1.0012, ESS: 259</span></span></code></pre></div>
 <p>See <code><a href="articles/mdgm.html">vignette("mdgm")</a></code> for a full walkthrough including visualization and posterior diagnostics.</p>
 </div>
 <div class="section level2">

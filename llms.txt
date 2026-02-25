@@ -1,5 +1,7 @@
 # mdgm
 
+Full documentation: <https://jbcart.github.io/mdgm/>
+
 **mdgm** (Mixture of Directed Graphical Models) provides Bayesian
 inference for discrete spatial random fields. Instead of working with a
 Markov random field and its intractable normalizing constant, the MDGM
@@ -44,9 +46,10 @@ result <- mcmc(model, z_init = z, psi_init = 0.5,
 result$summary()
 #> MDGM MCMC Results
 #>   Vertices: 16, Colors: 2
-#>   Iterations: 2000
+#>   Iterations: 2000 (burnin: 0)
 #>   Psi acceptance rate: 0.471
-#>   Psi posterior mean: 0.8673
+#>   Psi posterior mean: 0.8673 (sd: 0.5505)
+#>   Psi R-hat: 1.0012, ESS: 259
 ```
 
 See [`vignette("mdgm")`](https://jbcart.github.io/mdgm/articles/mdgm.md)
