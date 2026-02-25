@@ -1,0 +1,37 @@
+url: https://jbcart.github.io/mdgm
+template:
+  bootstrap: 5
+
+reference:
+  - title: Graph Construction
+    desc: Create undirected graphs from various representations.
+    contents:
+      - nug_from_edge_list
+      - nug_from_adj_list
+      - nug_from_adj_mat
+      - nug_from_grid
+
+  - title: Model & Inference
+    desc: Specify MDGM models and run MCMC.
+    contents:
+      - mdgm_model
+      - mcmc
+      - MdgmModel
+      - MdgmResult
+
+navbar:
+  structure:
+    left: [intro, reference, articles]
+    right: [search, github]
+  components:
+    articles:
+      text: Articles
+      menu:
+        - text: Getting Started
+          href: articles/mdgm.html
+        - text: Working with Undirected Graphs
+          href: articles/graph-construction.html
+        - text: MDGM Model Specification
+          href: articles/mdgm-models.html
+        - text: Emission Models
+          href: articles/emission-models.html

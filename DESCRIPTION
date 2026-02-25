@@ -13,7 +13,7 @@ Description: Bayesian inference for discrete spatial random fields using mixture
     construction, MCMC execution, and posterior summaries. Based on Carter and
     Calder (2024) <doi:10.48550/arXiv.2406.15700>.
 License: MIT + file LICENSE
-URL: https://github.com/jbcart/mdgm
+URL: https://jbcart.github.io/mdgm, https://github.com/jbcart/mdgm
 BugReports: https://github.com/jbcart/mdgm/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
