@@ -5,10 +5,11 @@
 #' and (for hierarchical models) emission parameters.
 #'
 #' @param model An [MdgmModel] object created by [mdgm_model()].
-#' @param y Observation data. For hierarchical models, a list of integer
+#' @param y Observation data. For hierarchical models, a list of numeric
 #'   vectors where `y[[i]]` contains the observations for vertex `i`.
-#'   Vertices with no observations should have `integer(0)`. For standalone
-#'   models, pass `NULL` (default).
+#'   For Bernoulli, values should be 0 or 1; for Poisson, non-negative
+#'   integers; for Gaussian, any real values. Vertices with no observations
+#'   should have `numeric(0)`. For standalone models, pass `NULL` (default).
 #' @param z_init Initial color assignment, an integer vector of length `n`
 #'   with values in `0, ..., n_colors - 1`.
 #' @param psi_init Initial value for the dependence parameter (positive).
@@ -77,11 +78,11 @@ mcmc <- function(model, y = NULL, z_init, psi_init,
 
   # Build flat observation storage
   if (is.null(y)) {
-    obs_data <- integer(0)
+    obs_data <- numeric(0)
     obs_ptr <- rep(0L, n + 1L)
   } else {
     stopifnot(is.list(y), length(y) == n)
-    obs_data <- unlist(lapply(y, as.integer))
+    obs_data <- unlist(lapply(y, as.numeric))
     lens <- vapply(y, length, integer(1))
     obs_ptr <- c(0L, cumsum(lens))
   }
@@ -98,7 +99,7 @@ mcmc <- function(model, y = NULL, z_init, psi_init,
 
   raw <- run_mcmc_cpp(
     model_ptr,
-    as.integer(obs_data), as.integer(obs_ptr),
+    as.double(obs_data), as.integer(obs_ptr),
     z_init, as.double(psi_init),
     as.double(theta_init),
     as.integer(n_iter), as.double(psi_tune),

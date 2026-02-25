@@ -20,10 +20,11 @@ mcmc(
 \arguments{
 \item{model}{An \link{MdgmModel} object created by \code{\link[=mdgm_model]{mdgm_model()}}.}
 
-\item{y}{Observation data. For hierarchical models, a list of integer
+\item{y}{Observation data. For hierarchical models, a list of numeric
 vectors where \code{y[[i]]} contains the observations for vertex \code{i}.
-Vertices with no observations should have \code{integer(0)}. For standalone
-models, pass \code{NULL} (default).}
+For Bernoulli, values should be 0 or 1; for Poisson, non-negative
+integers; for Gaussian, any real values. Vertices with no observations
+should have \code{numeric(0)}. For standalone models, pass \code{NULL} (default).}
 
 \item{z_init}{Initial color assignment, an integer vector of length \code{n}
 with values in \verb{0, ..., n_colors - 1}.}

@@ -11,7 +11,7 @@
 namespace mdgm {
 
 std::vector<double> EmissionLikelihood(
-    std::span<const int> y_i, std::span<const double> theta,
+    std::span<const double> y_i, std::span<const double> theta,
     std::size_t ncolors, FamilyType type) {
   std::vector<double> lik(ncolors, 1.0);
 
@@ -19,8 +19,8 @@ std::vector<double> EmissionLikelihood(
     case FamilyType::kBernoulli:
       for (std::size_t k = 0; k < ncolors; ++k) {
         double p = theta[k];
-        for (int y : y_i) {
-          lik[k] *= (y == 1) ? p : (1.0 - p);
+        for (double y : y_i) {
+          lik[k] *= (y == 1.0) ? p : (1.0 - p);
         }
       }
       break;
@@ -30,9 +30,8 @@ std::vector<double> EmissionLikelihood(
         double mu = theta[k];
         double sigma2 = theta[ncolors + k];
         double sigma = std::sqrt(sigma2);
-        for (int y : y_i) {
-          double dy = static_cast<double>(y);
-          double z = (dy - mu) / sigma;
+        for (double y : y_i) {
+          double z = (y - mu) / sigma;
           lik[k] *= std::exp(-0.5 * z * z) / (sigma * std::sqrt(2.0 * M_PI));
         }
       }
@@ -40,10 +39,10 @@ std::vector<double> EmissionLikelihood(
     case FamilyType::kPoisson:
       for (std::size_t k = 0; k < ncolors; ++k) {
         double lambda = theta[k];
-        for (int y : y_i) {
+        for (double y : y_i) {
           // Poisson PMF: lambda^y * exp(-lambda) / y!
-          double log_pmf = static_cast<double>(y) * std::log(lambda) - lambda -
-                           std::lgamma(static_cast<double>(y) + 1.0);
+          double log_pmf = y * std::log(lambda) - lambda -
+                           std::lgamma(y + 1.0);
           lik[k] *= std::exp(log_pmf);
         }
       }
@@ -65,8 +64,8 @@ double EmissionLogLikelihood(
       for (std::size_t i = 0; i < y.nvertices(); ++i) {
         if (y.empty(i)) continue;
         double p = theta[static_cast<std::size_t>(z[i])];
-        for (int yij : y[i]) {
-          ll += (yij == 1) ? std::log(p) : std::log(1.0 - p);
+        for (double yij : y[i]) {
+          ll += (yij == 1.0) ? std::log(p) : std::log(1.0 - p);
         }
       }
       break;
@@ -77,10 +76,9 @@ double EmissionLogLikelihood(
         std::size_t k = static_cast<std::size_t>(z[i]);
         double mu = theta[k];
         double sigma2 = theta[nc + k];
-        for (int yij : y[i]) {
-          double dy = static_cast<double>(yij);
+        for (double yij : y[i]) {
           ll += -0.5 * std::log(2.0 * M_PI * sigma2) -
-                0.5 * (dy - mu) * (dy - mu) / sigma2;
+                0.5 * (yij - mu) * (yij - mu) / sigma2;
         }
       }
       break;
@@ -89,9 +87,9 @@ double EmissionLogLikelihood(
       for (std::size_t i = 0; i < y.nvertices(); ++i) {
         if (y.empty(i)) continue;
         double lambda = theta[static_cast<std::size_t>(z[i])];
-        for (int yij : y[i]) {
-          ll += static_cast<double>(yij) * std::log(lambda) - lambda -
-                std::lgamma(static_cast<double>(yij) + 1.0);
+        for (double yij : y[i]) {
+          ll += yij * std::log(lambda) - lambda -
+                std::lgamma(yij + 1.0);
         }
       }
       break;
@@ -117,9 +115,9 @@ std::vector<double> UpdateEmissionParams(
       std::vector<double> trials(ncolors, 0.0);
       for (std::size_t i = 0; i < y.nvertices(); ++i) {
         std::size_t k = static_cast<std::size_t>(z[i]);
-        for (int yij : y[i]) {
+        for (double yij : y[i]) {
           trials[k] += 1.0;
-          successes[k] += static_cast<double>(yij);
+          successes[k] += yij;
         }
       }
 
@@ -151,10 +149,9 @@ std::vector<double> UpdateEmissionParams(
 
       for (std::size_t i = 0; i < y.nvertices(); ++i) {
         std::size_t k = static_cast<std::size_t>(z[i]);
-        for (int yij : y[i]) {
-          double dy = static_cast<double>(yij);
-          sum_y[k] += dy;
-          sum_y2[k] += dy * dy;
+        for (double yij : y[i]) {
+          sum_y[k] += yij;
+          sum_y2[k] += yij * yij;
           counts[k] += 1.0;
         }
       }
@@ -197,8 +194,8 @@ std::vector<double> UpdateEmissionParams(
 
       for (std::size_t i = 0; i < y.nvertices(); ++i) {
         std::size_t k = static_cast<std::size_t>(z[i]);
-        for (int yij : y[i]) {
-          sum_y[k] += static_cast<double>(yij);
+        for (double yij : y[i]) {
+          sum_y[k] += yij;
           counts[k] += 1.0;
         }
       }

@@ -215,12 +215,13 @@ MdgmResult <- R6::R6Class(
         theta_means <- rowMeans(theta_post)
         theta_sds <- apply(theta_post, 1, sd)
         et <- if (!is.null(private$.emission_type)) private$.emission_type else "unknown"
+        n_theta <- nrow(theta_post)
         param_names <- switch(et,
-          bernoulli = paste0("p_", seq_len(nc)),
-          poisson = paste0("lambda_", seq_len(nc)),
-          gaussian = c(paste0("mu_", seq_len(nc %/% 2L)),
-                       paste0("sigma2_", seq_len(nc %/% 2L))),
-          paste0("theta_", seq_len(nc))
+          bernoulli = paste0("p_", seq_len(n_theta)),
+          poisson = paste0("lambda_", seq_len(n_theta)),
+          gaussian = c(paste0("mu_", seq_len(nc)),
+                       paste0("sigma2_", seq_len(nc))),
+          paste0("theta_", seq_len(n_theta))
         )
         cat(sprintf("  Emission type: %s\n", et))
         for (i in seq_along(theta_means)) {
@@ -244,14 +245,17 @@ MdgmResult <- R6::R6Class(
     #' @description Plot MCMC trace plots and diagnostics.
     #' @param burnin Number of initial iterations to discard (default 0).
     #' @param which Character vector of what to plot: `"trace"` for trace
-    #'   plots of psi and emission params, `"posterior_field"` for posterior
-    #'   mean of the latent field (requires stored graph).
-    #' @return Invisible `NULL`.
+    #'   plots of psi and emission params, `"edge_inclusion"` for edge
+    #'   inclusion probabilities (requires stored graph and igraph),
+    #'   `"posterior_field"` for posterior mode of the latent field
+    #'   (requires stored graph).
+    #' @return Invisible list of ggplot/igraph plot objects.
     plot = function(burnin = 0L, which = "trace") {
       if (!requireNamespace("ggplot2", quietly = TRUE)) {
         stop("ggplot2 is required for plot(). Install it with install.packages('ggplot2').")
       }
-      which <- match.arg(which, c("trace", "posterior_field"), several.ok = TRUE)
+      which <- match.arg(which, c("trace", "edge_inclusion", "posterior_field"),
+                         several.ok = TRUE)
       start <- as.integer(burnin) + 1L
       J <- private$.raw$n_iterations
 
@@ -299,6 +303,52 @@ MdgmResult <- R6::R6Class(
             ggplot2::theme_minimal()
           print(p_theta)
           plots$emission <- p_theta
+        }
+      }
+
+      if ("edge_inclusion" %in% which) {
+        nug <- private$.nug
+        if (is.null(nug)) {
+          message("No graph stored; cannot plot edge inclusion probabilities.")
+        } else if (!requireNamespace("igraph", quietly = TRUE)) {
+          message("igraph is required for edge inclusion plot.")
+        } else {
+          eip <- self$edge_inclusion_probs(burnin = burnin)
+          n_v <- nrow(private$.raw$z)
+
+          # Build igraph object
+          el <- as.matrix(eip[, c("vertex1", "vertex2")])
+          g <- igraph::graph_from_edgelist(el, directed = FALSE)
+
+          # Grid layout if square
+          nside <- as.integer(sqrt(n_v))
+          if (nside * nside == n_v) {
+            coords <- cbind((seq_len(n_v) - 1) %% nside + 1,
+                            nside - (seq_len(n_v) - 1) %/% nside)
+          } else {
+            coords <- igraph::layout_nicely(g)
+          }
+
+          # Color vertices by posterior mode of z
+          z_post <- private$.raw$z[, (as.integer(burnin) + 1L):ncol(private$.raw$z),
+                                    drop = FALSE]
+          nc <- private$.raw$n_colors
+          z_mode <- apply(z_post, 1, function(row) {
+            tbl <- tabulate(row + 1L, nbins = nc)
+            which.max(tbl) - 1L
+          })
+          pal <- if (nc == 2) c("#440154", "#fde725") else
+                   grDevices::hcl.colors(nc, palette = "viridis")
+          vcol <- pal[z_mode + 1L]
+
+          igraph::plot.igraph(g, layout = coords,
+               vertex.size = max(5, 30 / sqrt(n_v) * 2),
+               vertex.label = NA,
+               vertex.color = vcol,
+               edge.width = eip$prob * 8,
+               edge.color = "grey30",
+               main = "Edge inclusion probabilities")
+          plots$edge_inclusion <- eip
         }
       }
 

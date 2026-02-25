@@ -31,9 +31,9 @@ inline mdgm::FamilyType ParseFamilyType(const std::string& type) {
 }
 
 // Build Observations from R flat vectors (data + ptr).
-// ptr is 1-indexed offsets of length nvertices+1; data is flat integer vector.
+// ptr is 0-indexed offsets of length nvertices+1; data is flat numeric vector.
 inline mdgm::Observations BuildObservations(
-    const cpp11::integers& obs_data, const cpp11::integers& obs_ptr) {
+    const cpp11::doubles& obs_data, const cpp11::integers& obs_ptr) {
   mdgm::Observations y;
   y.data.assign(obs_data.begin(), obs_data.end());
   y.ptr.resize(static_cast<std::size_t>(obs_ptr.size()));
@@ -106,7 +106,7 @@ cpp11::sexp model_emission_type_cpp(cpp11::external_pointer<mdgm::Model> model) 
 [[cpp11::register]]
 cpp11::writable::list run_mcmc_cpp(
     cpp11::external_pointer<mdgm::Model> model,
-    const cpp11::integers& obs_data, const cpp11::integers& obs_ptr,
+    const cpp11::doubles& obs_data, const cpp11::integers& obs_ptr,
     const cpp11::integers& z_init, double psi_init,
     const cpp11::doubles& theta_init,
     int n_iterations, double psi_tune,

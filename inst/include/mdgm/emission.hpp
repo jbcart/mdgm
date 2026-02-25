@@ -11,7 +11,7 @@ namespace mdgm {
 
 // Returns likelihood p(y_i | z_i = k, theta) for each color k
 std::vector<double> EmissionLikelihood(
-    std::span<const int> y_i, std::span<const double> theta,
+    std::span<const double> y_i, std::span<const double> theta,
     std::size_t ncolors, FamilyType type);
 
 // Log-likelihood of all observations: sum_i log p(y_i | z_i, theta)

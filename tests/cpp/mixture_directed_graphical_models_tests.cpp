@@ -230,7 +230,7 @@ TEST(EmissionBernoulli, ThreeColorUpdateMaintainsOrdering) {
   // Build observations: 4 vertices, 3 colors
   Observations y;
   // vertex 0: {1, 0, 1}, vertex 1: {0, 0}, vertex 2: {1, 1, 1}, vertex 3: {0, 1}
-  y.data = {1, 0, 1, 0, 0, 1, 1, 1, 0, 1};
+  y.data = {1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0};
   y.ptr = {0, 3, 5, 8, 10};
 
   std::vector<int> z = {0, 0, 2, 1};
@@ -254,7 +254,7 @@ TEST(EmissionBernoulli, ThreeColorUpdateMaintainsOrdering) {
 
 TEST(EmissionBernoulli, FourColorUpdateMaintainsOrdering) {
   Observations y;
-  y.data = {1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0};
+  y.data = {1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0};
   y.ptr = {0, 3, 5, 8, 10, 12};
 
   std::vector<int> z = {0, 1, 3, 2, 1};
@@ -273,7 +273,7 @@ TEST(EmissionBernoulli, FourColorUpdateMaintainsOrdering) {
 
 TEST(EmissionBernoulli, ThreeColorLikelihoodCorrect) {
   // Single vertex with observations {1, 0}
-  std::vector<int> obs = {1, 0};
+  std::vector<double> obs = {1.0, 0.0};
   std::vector<double> theta = {0.2, 0.5, 0.8};
 
   auto lik = EmissionLikelihood(obs, theta, 3, FamilyType::kBernoulli);
@@ -297,7 +297,7 @@ TEST(HierarchicalModel, ThreeColorZFullConditionalWithEmission) {
   Model model(std::move(spatial), FamilyType::kBernoulli);
 
   Observations y;
-  y.data = {1, 1, 0, 0, 1, 0};
+  y.data = {1.0, 1.0, 0.0, 0.0, 1.0, 0.0};
   y.ptr = {0, 2, 4, 6};
 
   std::vector<int> z = {0, 1, 2};
@@ -317,7 +317,7 @@ TEST(HierarchicalModel, ThreeColorZFullConditionalWithEmission) {
 
 TEST(EmissionGaussian, LikelihoodCorrect) {
   // Single vertex with observation y=5
-  std::vector<int> obs = {5};
+  std::vector<double> obs = {5.0};
   // theta: [mu_0, mu_1, sigma2_0, sigma2_1]
   std::vector<double> theta = {3.0, 7.0, 1.0, 4.0};
 
@@ -333,7 +333,7 @@ TEST(EmissionGaussian, LikelihoodCorrect) {
 
 TEST(EmissionGaussian, UpdateMaintainsMuOrdering) {
   Observations y;
-  y.data = {1, 2, 3, 8, 9, 10};
+  y.data = {1.0, 2.0, 3.0, 8.0, 9.0, 10.0};
   y.ptr = {0, 3, 6};
 
   std::vector<int> z = {0, 1};
@@ -356,7 +356,7 @@ TEST(EmissionGaussian, UpdateMaintainsMuOrdering) {
 // --- Poisson emission tests ---
 
 TEST(EmissionPoisson, LikelihoodCorrect) {
-  std::vector<int> obs = {3};
+  std::vector<double> obs = {3.0};
   std::vector<double> theta = {1.0, 5.0};
 
   auto lik = EmissionLikelihood(obs, theta, 2, FamilyType::kPoisson);
@@ -371,7 +371,7 @@ TEST(EmissionPoisson, LikelihoodCorrect) {
 
 TEST(EmissionPoisson, UpdateMaintainsOrdering) {
   Observations y;
-  y.data = {0, 1, 0, 5, 6, 4};
+  y.data = {0.0, 1.0, 0.0, 5.0, 6.0, 4.0};
   y.ptr = {0, 3, 6};
 
   std::vector<int> z = {0, 1};
@@ -390,7 +390,7 @@ TEST(EmissionPoisson, UpdateMaintainsOrdering) {
 
 TEST(EmissionPoisson, ThreeColorUpdateMaintainsOrdering) {
   Observations y;
-  y.data = {0, 1, 3, 4, 8, 9};
+  y.data = {0.0, 1.0, 3.0, 4.0, 8.0, 9.0};
   y.ptr = {0, 2, 4, 6};
 
   std::vector<int> z = {0, 1, 2};

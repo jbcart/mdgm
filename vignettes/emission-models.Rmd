@@ -28,7 +28,7 @@ three emission families:
 | Family | Observation type | Parameters | Prior |
 |:-------|:-----------------|:-----------|:------|
 | Bernoulli | Binary (0/1) | $p_k$ (success probability) | Beta$(a, b)$ |
-| Gaussian | Continuous (integer-valued) | $\mu_k$, $\sigma_k^2$ | Independent Normal, Inverse-Gamma |
+| Gaussian | Continuous | $\mu_k$, $\sigma_k^2$ | Independent Normal, Inverse-Gamma |
 | Poisson | Count | $\lambda_k$ (rate) | Gamma$(\alpha, \beta)$ |
 
 All emission families enforce an **identifiability constraint** on their
@@ -120,12 +120,12 @@ result_b <- mcmc(model_b, y = y_bern,
                  z_init = sample(0:1, n, replace = TRUE),
                  psi_init = 0.5,
                  theta_init = c(0.3, 0.7),
-                 n_iter = 2000L,
+                 n_iter = 5000L,
                  psi_tune = 1.0,
                  seed = 42L,
                  nug = nug)
 
-result_b$summary(burnin = 500L)
+result_b$summary(burnin = 1000L)
 ```
 
 ### Posterior trace plots
@@ -141,18 +141,24 @@ p_df <- data.frame(
 )
 
 ggplot(p_df, aes(iteration, value, color = parameter)) +
-  geom_line(alpha = 0.5) +
+  geom_line(alpha = 0.5, linewidth = 0.3) +
   geom_hline(yintercept = p_true, linetype = "dashed", alpha = 0.5) +
   theme_minimal() +
   labs(title = "Bernoulli emission: p trace",
        x = "Iteration", y = "Value", color = NULL)
 ```
 
+### Edge inclusion probabilities
+
+```{r bernoulli-eip, fig.width = 5, fig.height = 5, eval = requireNamespace("igraph", quietly = TRUE)}
+result_b$plot(burnin = 1000L, which = "edge_inclusion")
+```
+
 ## Gaussian emission
 
-The Gaussian emission models continuous (integer-valued) observations. Each
-observation is drawn from $\mathcal{N}(\mu_{z_i}, \sigma_{z_i}^2)$. A single
-observation per vertex is sufficient for identifiability.
+The Gaussian emission models continuous observations. Each observation is drawn
+from $\mathcal{N}(\mu_{z_i}, \sigma_{z_i}^2)$. A single observation per vertex
+is sufficient for identifiability.
 
 The priors on $\mu_k$ and $\sigma_k^2$ are independent:
 $$\mu_k \sim \mathcal{N}(\mu_0, \sigma^2_0), \qquad \sigma_k^2 \sim \text{InverseGamma}(\alpha_0, \beta_0)$$
@@ -171,14 +177,13 @@ sigma2_true <- c(9, 9)
 
 # Single observation per vertex
 y_gauss <- lapply(seq_len(n), function(i) {
-  as.integer(round(rnorm(1, mu_true[z_true[i] + 1],
-                         sqrt(sigma2_true[z_true[i] + 1]))))
+  rnorm(1, mu_true[z_true[i] + 1], sqrt(sigma2_true[z_true[i] + 1]))
 })
 
 # Visualize the observations
 obs_df <- data.frame(
   x = rep(1:8, 8), y = rep(8:1, each = 8),
-  value = vapply(y_gauss, `[`, integer(1), 1)
+  value = vapply(y_gauss, `[`, numeric(1), 1)
 )
 ggplot(obs_df, aes(x, y, fill = value)) +
   geom_tile(color = "white", linewidth = 0.3) +
@@ -199,12 +204,12 @@ result_g <- mcmc(model_g, y = y_gauss,
                  z_init = sample(0:1, n, replace = TRUE),
                  psi_init = 0.5,
                  theta_init = c(4, 14, 9, 9),
-                 n_iter = 2000L,
+                 n_iter = 5000L,
                  psi_tune = 1.0,
                  seed = 42L,
                  nug = nug)
 
-result_g$summary(burnin = 500L)
+result_g$summary(burnin = 1000L)
 ```
 
 ### Posterior emission parameters
@@ -220,7 +225,7 @@ mu_df <- data.frame(
 )
 
 ggplot(mu_df, aes(iteration, value, color = parameter)) +
-  geom_line(alpha = 0.5) +
+  geom_line(alpha = 0.5, linewidth = 0.3) +
   geom_hline(yintercept = mu_true, linetype = "dashed", alpha = 0.5) +
   theme_minimal() +
   labs(title = "Gaussian emission: mu trace",
@@ -235,11 +240,17 @@ sigma2_df <- data.frame(
 )
 
 ggplot(sigma2_df, aes(iteration, value, color = parameter)) +
-  geom_line(alpha = 0.5) +
+  geom_line(alpha = 0.5, linewidth = 0.3) +
   geom_hline(yintercept = sigma2_true, linetype = "dashed", alpha = 0.5) +
   theme_minimal() +
   labs(title = "Gaussian emission: sigma2 trace",
        x = "Iteration", y = "Value", color = NULL)
+```
+
+### Edge inclusion probabilities
+
+```{r gaussian-eip, fig.width = 5, fig.height = 5, eval = requireNamespace("igraph", quietly = TRUE)}
+result_g$plot(burnin = 1000L, which = "edge_inclusion")
 ```
 
 ## Poisson emission
@@ -262,12 +273,12 @@ lambda_true <- c(4, 10)
 
 # Single count per vertex
 y_pois <- lapply(seq_len(n), function(i) {
-  as.integer(rpois(1, lambda_true[z_true[i] + 1]))
+  rpois(1, lambda_true[z_true[i] + 1])
 })
 
 obs_df_p <- data.frame(
   x = rep(1:8, 8), y = rep(8:1, each = 8),
-  value = vapply(y_pois, `[`, integer(1), 1)
+  value = vapply(y_pois, `[`, numeric(1), 1)
 )
 ggplot(obs_df_p, aes(x, y, fill = value)) +
   geom_tile(color = "white", linewidth = 0.3) +
@@ -286,12 +297,12 @@ result_p <- mcmc(model_p, y = y_pois,
                  z_init = sample(0:1, n, replace = TRUE),
                  psi_init = 0.5,
                  theta_init = c(3, 8),
-                 n_iter = 2000L,
+                 n_iter = 5000L,
                  psi_tune = 1.0,
                  seed = 42L,
                  nug = nug)
 
-result_p$summary(burnin = 500L)
+result_p$summary(burnin = 1000L)
 ```
 
 ### Posterior trace plots
@@ -307,11 +318,17 @@ lambda_df <- data.frame(
 )
 
 ggplot(lambda_df, aes(iteration, value, color = parameter)) +
-  geom_line(alpha = 0.5) +
+  geom_line(alpha = 0.5, linewidth = 0.3) +
   geom_hline(yintercept = lambda_true, linetype = "dashed", alpha = 0.5) +
   theme_minimal() +
   labs(title = "Poisson emission: lambda trace",
        x = "Iteration", y = "Value", color = NULL)
+```
+
+### Edge inclusion probabilities
+
+```{r poisson-eip, fig.width = 5, fig.height = 5, eval = requireNamespace("igraph", quietly = TRUE)}
+result_p$plot(burnin = 1000L, which = "edge_inclusion")
 ```
 
 ## Comparing latent field recovery
@@ -320,7 +337,7 @@ For all three emission types, the posterior mode of the latent field should
 recover the true spatial pattern:
 
 ```{r field-recovery, fig.width = 7, fig.height = 3.5}
-burnin <- 500L
+burnin <- 1000L
 
 recover_field <- function(result, burnin) {
   z_post <- result$z()
