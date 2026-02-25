@@ -102,6 +102,82 @@ ggplot(psi_df, aes(iteration, psi)) +
 
 <img src="man/figures/README-psi-trace-1.png" width="100%" />
 
+## Visualizing graph structure with igraph
+
+The [igraph](https://r.igraph.org/) package (suggested, not required)
+can plot the neighborhood graph. First, the raw grid:
+
+``` r
+library(igraph)
+#> 
+#> Attaching package: 'igraph'
+#> The following objects are masked from 'package:stats':
+#> 
+#>     decompose, spectrum
+#> The following object is masked from 'package:base':
+#> 
+#>     union
+
+# Build igraph object from the NUG edge structure
+n <- nug$nvertices()
+el <- do.call(rbind, lapply(1:n, function(v) {
+  nbrs <- nug$neighbors(v)
+  nbrs <- nbrs[nbrs > v]
+  if (length(nbrs) == 0) return(NULL)
+  cbind(v, nbrs)
+}))
+g <- graph_from_edgelist(el, directed = FALSE)
+
+# Grid layout
+coords <- cbind((seq_len(n) - 1) %% 4 + 1, 4 - (seq_len(n) - 1) %/% 4)
+
+plot(g, layout = coords, vertex.size = 20, vertex.label = 1:n,
+     vertex.color = c("#440154", "#fde725")[z + 1],
+     vertex.label.color = "white", edge.color = "grey40",
+     main = "4x4 Grid (NUG)")
+```
+
+<img src="man/figures/README-igraph-grid-1.png" width="100%" />
+
+## Edge inclusion probabilities
+
+The `edge_inclusion_probs()` method counts how often each undirected
+edge appears in the posterior spanning-tree samples. We can use these
+proportions to scale edge widths:
+
+``` r
+eip <- result$edge_inclusion_probs(nug, burnin = 200L)
+head(eip[order(-eip$prob), ])
+#>    vertex1 vertex2      prob
+#> 24      15      16 0.7338889
+#> 1        1       2 0.7322222
+#> 5        3       4 0.7255556
+#> 2        1       5 0.7194444
+#> 22      13      14 0.7150000
+#> 16       9      13 0.7127778
+
+# Match edge inclusion probs to igraph edge ordering
+edge_probs <- numeric(ecount(g))
+for (i in seq_len(nrow(eip))) {
+  eid <- get.edge.ids(g, c(eip$vertex1[i], eip$vertex2[i]))
+  edge_probs[eid] <- eip$prob[i]
+}
+#> Warning: `get.edge.ids()` was deprecated in igraph 2.1.0.
+#> ℹ Please use `get_edge_ids()` instead.
+#> This warning is displayed once every 8 hours.
+#> Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+#> generated.
+
+plot(g, layout = coords, vertex.size = 20, vertex.label = 1:n,
+     vertex.color = c("#440154", "#fde725")[z + 1],
+     vertex.label.color = "white",
+     edge.width = edge_probs * 10,
+     edge.color = "grey30",
+     main = "Edge inclusion probabilities")
+```
+
+<img src="man/figures/README-edge-inclusion-1.png" width="100%" />
+
 ## C++ unit tests
 
 The C++ core ships with GoogleTest unit tests under `tests/cpp/`. Build
