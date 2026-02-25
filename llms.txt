@@ -36,10 +36,10 @@ nug$nedges()
 #> [1] 24
 
 # Fit a standalone spanning-tree MDGM
-z <- c(1L, 1L, 0L, 0L,
-       1L, 1L, 0L, 0L,
+z <- c(0L, 0L, 0L, 1L,
        0L, 0L, 1L, 1L,
-       0L, 0L, 1L, 1L)
+       1L, 1L, 1L, 0L,
+       1L, 1L, 0L, 0L)
 model <- mdgm_model(nug, dag_type = "spanning_tree")
 result <- mcmc(model, z_init = z, psi_init = 0.5,
                n_iter = 2000L, psi_tune = 1.0, seed = 42L)
@@ -47,9 +47,9 @@ result$summary()
 #> MDGM MCMC Results
 #>   Vertices: 16, Colors: 2
 #>   Iterations: 2000 (burnin: 0)
-#>   Psi acceptance rate: 0.471
-#>   Psi posterior mean: 0.8673 (sd: 0.5505)
-#>   Psi R-hat: 1.0012, ESS: 259
+#>   Psi acceptance rate: 0.462
+#>   Psi posterior mean: 0.8447 (sd: 0.5658)
+#>   Psi R-hat: 1.0035, ESS: 308
 ```
 
 See [`vignette("mdgm")`](https://jbcart.github.io/mdgm/articles/mdgm.md)

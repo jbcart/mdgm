@@ -106,71 +106,12 @@ or adjacency list — see the <a href="graph-construction.html">Working
 with Undirected Graphs</a> vignette.</p>
 </div>
 <div class="section level2">
-<h2 id="fitting-a-standalone-model">Fitting a standalone model<a class="anchor" aria-label="anchor" href="#fitting-a-standalone-model"></a>
-</h2>
-<p>In a standalone model, the spatial field
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math>
-is observed directly — no emission distribution is needed. Here we fit a
-spanning-tree MDGM to a deterministic checkerboard pattern on the 4x4
-grid:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">z</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1L</span>, <span class="fl">1L</span>, <span class="fl">0L</span>, <span class="fl">0L</span>,</span>
-<span>       <span class="fl">1L</span>, <span class="fl">1L</span>, <span class="fl">0L</span>, <span class="fl">0L</span>,</span>
-<span>       <span class="fl">0L</span>, <span class="fl">0L</span>, <span class="fl">1L</span>, <span class="fl">1L</span>,</span>
-<span>       <span class="fl">0L</span>, <span class="fl">0L</span>, <span class="fl">1L</span>, <span class="fl">1L</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mdgm_model.html">mdgm_model</a></span><span class="op">(</span><span class="va">nug</span>, dag_type <span class="op">=</span> <span class="st">"spanning_tree"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mcmc.html">mcmc</a></span><span class="op">(</span><span class="va">model</span>, z_init <span class="op">=</span> <span class="va">z</span>, psi_init <span class="op">=</span> <span class="fl">0.5</span>,</span>
-<span>               n_iter <span class="op">=</span> <span class="fl">2000L</span>, psi_tune <span class="op">=</span> <span class="fl">1.0</span>, seed <span class="op">=</span> <span class="fl">42L</span><span class="op">)</span></span>
-<span><span class="va">result</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; MDGM MCMC Results</span></span>
-<span><span class="co">#&gt;   Vertices: 16, Colors: 2</span></span>
-<span><span class="co">#&gt;   Iterations: 2000 (burnin: 0)</span></span>
-<span><span class="co">#&gt;   Psi acceptance rate: 0.471</span></span>
-<span><span class="co">#&gt;   Psi posterior mean: 0.8641 (sd: 0.5137)</span></span>
-<span><span class="co">#&gt;   Psi R-hat: 1.0052, ESS: 228</span></span></code></pre></div>
-<p>Visualize the spatial field as a raster:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">grid_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, times <span class="op">=</span> <span class="fl">4</span><span class="op">)</span>,</span>
-<span>  y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">4</span><span class="op">:</span><span class="fl">1</span>, each <span class="op">=</span> <span class="fl">4</span><span class="op">)</span>,</span>
-<span>  z <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">z</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">grid_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, fill <span class="op">=</span> <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_raster</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"0"</span> <span class="op">=</span> <span class="st">"#440154"</span>, <span class="st">"1"</span> <span class="op">=</span> <span class="st">"#fde725"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_equal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"4x4 Spatial Field"</span>, fill <span class="op">=</span> <span class="st">"z"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mdgm_files/figure-html/grid-plot-1.png" class="r-plt" alt="" width="384"></p>
-</div>
-<div class="section level2">
-<h2 id="posterior-diagnostics">Posterior diagnostics<a class="anchor" aria-label="anchor" href="#posterior-diagnostics"></a>
-</h2>
-<p>Trace plot for the spatial dependence parameter
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ψ</mi><annotation encoding="application/x-tex">\psi</annotation></semantics></math>:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">psi_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>iteration <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="fu">psi</span><span class="op">(</span><span class="op">)</span><span class="op">)</span>, psi <span class="op">=</span> <span class="va">result</span><span class="op">$</span><span class="fu">psi</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">psi_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">iteration</span>, <span class="va">psi</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>linewidth <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Iteration"</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">psi</span><span class="op">)</span>, title <span class="op">=</span> <span class="st">"Psi trace plot"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mdgm_files/figure-html/psi-trace-1.png" class="r-plt" alt="" width="576"></p>
-<p>Acceptance rates:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">result</span><span class="op">$</span><span class="fu">acceptance_rates</span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt;       psi     graph </span></span>
-<span><span class="co">#&gt; 0.4712356 0.0000000</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="visualizing-graph-structure-with-igraph">Visualizing graph structure with igraph<a class="anchor" aria-label="anchor" href="#visualizing-graph-structure-with-igraph"></a>
+<h2 id="visualizing-the-graph-with-igraph">Visualizing the graph with igraph<a class="anchor" aria-label="anchor" href="#visualizing-the-graph-with-igraph"></a>
 </h2>
 <p>The <a href="https://r.igraph.org/" class="external-link">igraph</a> package (suggested,
-not required) can plot the neighborhood graph:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+not required) provides a quick way to visualize the neighborhood
+structure:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r.igraph.org/" class="external-link">igraph</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Attaching package: 'igraph'</span></span>
@@ -191,14 +132,80 @@ not required) can plot the neighborhood graph:</p>
 <span><span class="op">}</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">g</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r.igraph.org/reference/graph_from_edgelist.html" class="external-link">graph_from_edgelist</a></span><span class="op">(</span><span class="va">el</span>, directed <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Grid layout</span></span>
+<span><span class="co"># Grid layout matching the spatial positions</span></span>
 <span><span class="va">coords</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">4</span> <span class="op">+</span> <span class="fl">1</span>, <span class="fl">4</span> <span class="op">-</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%/%</a></span> <span class="fl">4</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">g</span>, layout <span class="op">=</span> <span class="va">coords</span>, vertex.size <span class="op">=</span> <span class="fl">20</span>, vertex.label <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="va">n</span>,</span>
+<span>     vertex.label.color <span class="op">=</span> <span class="st">"white"</span>, vertex.color <span class="op">=</span> <span class="st">"steelblue"</span>,</span>
+<span>     edge.color <span class="op">=</span> <span class="st">"grey40"</span>, main <span class="op">=</span> <span class="st">"4x4 Grid Graph"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="mdgm_files/figure-html/igraph-grid-1.png" class="r-plt" alt="" width="384"></p>
+</div>
+<div class="section level2">
+<h2 id="fitting-a-standalone-model">Fitting a standalone model<a class="anchor" aria-label="anchor" href="#fitting-a-standalone-model"></a>
+</h2>
+<p>In a standalone model, the spatial field
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math>
+is observed directly — no emission distribution is needed. Here we fit a
+spanning-tree MDGM to a deterministic checkerboard pattern on the 4x4
+grid:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">z</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0L</span>, <span class="fl">0L</span>, <span class="fl">0L</span>, <span class="fl">1L</span>,</span>
+<span>       <span class="fl">0L</span>, <span class="fl">0L</span>, <span class="fl">1L</span>, <span class="fl">1L</span>,</span>
+<span>       <span class="fl">1L</span>, <span class="fl">1L</span>, <span class="fl">1L</span>, <span class="fl">0L</span>,</span>
+<span>       <span class="fl">1L</span>, <span class="fl">1L</span>, <span class="fl">0L</span>, <span class="fl">0L</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mdgm_model.html">mdgm_model</a></span><span class="op">(</span><span class="va">nug</span>, dag_type <span class="op">=</span> <span class="st">"spanning_tree"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mcmc.html">mcmc</a></span><span class="op">(</span><span class="va">model</span>, z_init <span class="op">=</span> <span class="va">z</span>, psi_init <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>               n_iter <span class="op">=</span> <span class="fl">2000L</span>, psi_tune <span class="op">=</span> <span class="fl">1.0</span>, seed <span class="op">=</span> <span class="fl">42L</span><span class="op">)</span></span>
+<span><span class="va">result</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; MDGM MCMC Results</span></span>
+<span><span class="co">#&gt;   Vertices: 16, Colors: 2</span></span>
+<span><span class="co">#&gt;   Iterations: 2000 (burnin: 0)</span></span>
+<span><span class="co">#&gt;   Psi acceptance rate: 0.478</span></span>
+<span><span class="co">#&gt;   Psi posterior mean: 0.8446 (sd: 0.5612)</span></span>
+<span><span class="co">#&gt;   Psi R-hat: 1.0013, ESS: 272</span></span></code></pre></div>
+<p>We can color the graph vertices by their field values:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">g</span>, layout <span class="op">=</span> <span class="va">coords</span>, vertex.size <span class="op">=</span> <span class="fl">20</span>, vertex.label <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="va">n</span>,</span>
 <span>     vertex.color <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#440154"</span>, <span class="st">"#fde725"</span><span class="op">)</span><span class="op">[</span><span class="va">z</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span>,</span>
 <span>     vertex.label.color <span class="op">=</span> <span class="st">"white"</span>, edge.color <span class="op">=</span> <span class="st">"grey40"</span>,</span>
-<span>     main <span class="op">=</span> <span class="st">"4x4 Grid (NUG)"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="mdgm_files/figure-html/igraph-grid-1.png" class="r-plt" alt="" width="384"></p>
+<span>     main <span class="op">=</span> <span class="st">"Spatial Field on Grid"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="mdgm_files/figure-html/grid-colored-1.png" class="r-plt" alt="" width="384"></p>
+<p>Or visualize as a raster:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">grid_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, times <span class="op">=</span> <span class="fl">4</span><span class="op">)</span>,</span>
+<span>  y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">4</span><span class="op">:</span><span class="fl">1</span>, each <span class="op">=</span> <span class="fl">4</span><span class="op">)</span>,</span>
+<span>  z <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">z</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">grid_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, fill <span class="op">=</span> <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_raster</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"0"</span> <span class="op">=</span> <span class="st">"#440154"</span>, <span class="st">"1"</span> <span class="op">=</span> <span class="st">"#fde725"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_equal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"4x4 Spatial Field"</span>, fill <span class="op">=</span> <span class="st">"z"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="mdgm_files/figure-html/grid-plot-1.png" class="r-plt" alt="" width="384"></p>
+</div>
+<div class="section level2">
+<h2 id="posterior-diagnostics">Posterior diagnostics<a class="anchor" aria-label="anchor" href="#posterior-diagnostics"></a>
+</h2>
+<p>Trace plot for the spatial dependence parameter
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ψ</mi><annotation encoding="application/x-tex">\psi</annotation></semantics></math>:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">psi_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>iteration <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="fu">psi</span><span class="op">(</span><span class="op">)</span><span class="op">)</span>, psi <span class="op">=</span> <span class="va">result</span><span class="op">$</span><span class="fu">psi</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">psi_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">iteration</span>, <span class="va">psi</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>linewidth <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Iteration"</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/expression.html" class="external-link">expression</a></span><span class="op">(</span><span class="va">psi</span><span class="op">)</span>, title <span class="op">=</span> <span class="st">"Psi trace plot"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="mdgm_files/figure-html/psi-trace-1.png" class="r-plt" alt="" width="576"></p>
+<p>Acceptance rates:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">result</span><span class="op">$</span><span class="fu">acceptance_rates</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       psi     graph </span></span>
+<span><span class="co">#&gt; 0.4777389 0.0000000</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="edge-inclusion-probabilities">Edge inclusion probabilities<a class="anchor" aria-label="anchor" href="#edge-inclusion-probabilities"></a>
@@ -206,16 +213,16 @@ not required) can plot the neighborhood graph:</p>
 <p>The <code>edge_inclusion_probs()</code> method counts how often each
 undirected edge appears in the posterior spanning-tree samples. We can
 use these proportions to scale edge widths:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">eip</span> <span class="op">&lt;-</span> <span class="va">result</span><span class="op">$</span><span class="fu">edge_inclusion_probs</span><span class="op">(</span><span class="va">nug</span>, burnin <span class="op">=</span> <span class="fl">200L</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">eip</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="op">-</span><span class="va">eip</span><span class="op">$</span><span class="va">prob</span><span class="op">)</span>, <span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    vertex1 vertex2      prob</span></span>
-<span><span class="co">#&gt; 1        1       2 0.7388889</span></span>
-<span><span class="co">#&gt; 2        1       5 0.7261111</span></span>
-<span><span class="co">#&gt; 22      13      14 0.7255556</span></span>
-<span><span class="co">#&gt; 5        3       4 0.7238889</span></span>
-<span><span class="co">#&gt; 7        4       8 0.7127778</span></span>
-<span><span class="co">#&gt; 21      12      16 0.7105556</span></span>
+<span><span class="co">#&gt; 7        4       8 0.8116667</span></span>
+<span><span class="co">#&gt; 21      12      16 0.8111111</span></span>
+<span><span class="co">#&gt; 24      15      16 0.7794444</span></span>
+<span><span class="co">#&gt; 3        2       3 0.7700000</span></span>
+<span><span class="co">#&gt; 1        1       2 0.7238889</span></span>
+<span><span class="co">#&gt; 2        1       5 0.7177778</span></span>
 <span></span>
 <span><span class="co"># Match edge inclusion probs to igraph edge ordering</span></span>
 <span><span class="va">edge_probs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fu"><a href="https://r.igraph.org/reference/gsize.html" class="external-link">ecount</a></span><span class="op">(</span><span class="va">g</span><span class="op">)</span><span class="op">)</span></span>
@@ -247,25 +254,28 @@ posterior spanning trees, reflecting the spatial dependence captured by
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math>
 is a latent field and observations are generated through an emission
 distribution. Here we use a Bernoulli emission:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model_h</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mdgm_model.html">mdgm_model</a></span><span class="op">(</span><span class="va">nug</span>, dag_type <span class="op">=</span> <span class="st">"spanning_tree"</span>, n_colors <span class="op">=</span> <span class="fl">2L</span>,</span>
 <span>                       emission <span class="op">=</span> <span class="st">"bernoulli"</span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># Simulate 5 Bernoulli observations per vertex (multiple needed for identifiability)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
-<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">n</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">i</span> <span class="op">&lt;=</span> <span class="fl">8</span>, <span class="fl">0.2</span>, <span class="fl">0.8</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">p_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.2</span>, <span class="fl">0.8</span><span class="op">)</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">1</span>, <span class="va">p_true</span><span class="op">[</span><span class="va">z</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">result_h</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mcmc.html">mcmc</a></span><span class="op">(</span><span class="va">model_h</span>, y <span class="op">=</span> <span class="va">y</span>, z_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, each <span class="op">=</span> <span class="fl">8</span><span class="op">)</span>, psi_init <span class="op">=</span> <span class="fl">0.5</span>,</span>
-<span>                 eta_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">0.7</span><span class="op">)</span>, n_iter <span class="op">=</span> <span class="fl">500L</span>, seed <span class="op">=</span> <span class="fl">42L</span><span class="op">)</span></span>
+<span><span class="va">result_h</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mcmc.html">mcmc</a></span><span class="op">(</span><span class="va">model_h</span>, y <span class="op">=</span> <span class="va">y</span>, z_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>                 psi_init <span class="op">=</span> <span class="fl">0.5</span>, theta_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">0.7</span><span class="op">)</span>,</span>
+<span>                 n_iter <span class="op">=</span> <span class="fl">500L</span>, seed <span class="op">=</span> <span class="fl">42L</span><span class="op">)</span></span>
 <span><span class="va">result_h</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; MDGM MCMC Results</span></span>
 <span><span class="co">#&gt;   Vertices: 16, Colors: 2</span></span>
 <span><span class="co">#&gt;   Iterations: 500 (burnin: 0)</span></span>
-<span><span class="co">#&gt;   Psi acceptance rate: 0.938</span></span>
-<span><span class="co">#&gt;   Psi posterior mean: 0.9437 (sd: 0.5550)</span></span>
+<span><span class="co">#&gt;   Psi acceptance rate: 0.896</span></span>
+<span><span class="co">#&gt;   Psi posterior mean: 0.6269 (sd: 0.5127)</span></span>
 <span><span class="co">#&gt;   Emission type: bernoulli</span></span>
-<span><span class="co">#&gt;   eta_1 posterior mean: 0.1992 (sd: 0.0621)</span></span>
-<span><span class="co">#&gt;   eta_2 posterior mean: 0.8088 (sd: 0.0700)</span></span>
-<span><span class="co">#&gt;   Psi R-hat: 2.2812, ESS: 3</span></span></code></pre></div>
+<span><span class="co">#&gt;   p_1 posterior mean: 0.2284 (sd: 0.0792)</span></span>
+<span><span class="co">#&gt;   p_2 posterior mean: 0.8089 (sd: 0.0675)</span></span>
+<span><span class="co">#&gt;   Psi R-hat: 1.0124, ESS: 6</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="next-steps">Next steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>

@@ -38,6 +38,8 @@ Models for Discrete Spatial Random Fields.
 
 Useful links:
 
+- <https://jbcart.github.io/mdgm>
+
 - <https://github.com/jbcart/mdgm>
 
 - Report bugs at <https://github.com/jbcart/mdgm/issues>

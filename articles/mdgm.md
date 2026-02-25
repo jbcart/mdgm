@@ -41,6 +41,42 @@ adjacency list — see the [Working with Undirected
 Graphs](https://jbcart.github.io/mdgm/articles/graph-construction.md)
 vignette.
 
+## Visualizing the graph with igraph
+
+The [igraph](https://r.igraph.org/) package (suggested, not required)
+provides a quick way to visualize the neighborhood structure:
+
+``` r
+library(igraph)
+#> 
+#> Attaching package: 'igraph'
+#> The following objects are masked from 'package:stats':
+#> 
+#>     decompose, spectrum
+#> The following object is masked from 'package:base':
+#> 
+#>     union
+
+# Build igraph object from the NUG edge structure
+n <- nug$nvertices()
+el <- do.call(rbind, lapply(1:n, function(v) {
+  nbrs <- nug$neighbors(v)
+  nbrs <- nbrs[nbrs > v]
+  if (length(nbrs) == 0) return(NULL)
+  cbind(v, nbrs)
+}))
+g <- graph_from_edgelist(el, directed = FALSE)
+
+# Grid layout matching the spatial positions
+coords <- cbind((seq_len(n) - 1) %% 4 + 1, 4 - (seq_len(n) - 1) %/% 4)
+
+plot(g, layout = coords, vertex.size = 20, vertex.label = 1:n,
+     vertex.label.color = "white", vertex.color = "steelblue",
+     edge.color = "grey40", main = "4x4 Grid Graph")
+```
+
+![](mdgm_files/figure-html/igraph-grid-1.png)
+
 ## Fitting a standalone model
 
 In a standalone model, the spatial field $z$ is observed directly — no
@@ -48,10 +84,10 @@ emission distribution is needed. Here we fit a spanning-tree MDGM to a
 deterministic checkerboard pattern on the 4x4 grid:
 
 ``` r
-z <- c(1L, 1L, 0L, 0L,
-       1L, 1L, 0L, 0L,
+z <- c(0L, 0L, 0L, 1L,
        0L, 0L, 1L, 1L,
-       0L, 0L, 1L, 1L)
+       1L, 1L, 1L, 0L,
+       1L, 1L, 0L, 0L)
 
 model <- mdgm_model(nug, dag_type = "spanning_tree")
 
@@ -61,12 +97,23 @@ result$summary()
 #> MDGM MCMC Results
 #>   Vertices: 16, Colors: 2
 #>   Iterations: 2000 (burnin: 0)
-#>   Psi acceptance rate: 0.471
-#>   Psi posterior mean: 0.8641 (sd: 0.5137)
-#>   Psi R-hat: 1.0052, ESS: 228
+#>   Psi acceptance rate: 0.478
+#>   Psi posterior mean: 0.8446 (sd: 0.5612)
+#>   Psi R-hat: 1.0013, ESS: 272
 ```
 
-Visualize the spatial field as a raster:
+We can color the graph vertices by their field values:
+
+``` r
+plot(g, layout = coords, vertex.size = 20, vertex.label = 1:n,
+     vertex.color = c("#440154", "#fde725")[z + 1],
+     vertex.label.color = "white", edge.color = "grey40",
+     main = "Spatial Field on Grid")
+```
+
+![](mdgm_files/figure-html/grid-colored-1.png)
+
+Or visualize as a raster:
 
 ``` r
 grid_df <- data.frame(
@@ -105,45 +152,8 @@ Acceptance rates:
 ``` r
 result$acceptance_rates()
 #>       psi     graph 
-#> 0.4712356 0.0000000
+#> 0.4777389 0.0000000
 ```
-
-## Visualizing graph structure with igraph
-
-The [igraph](https://r.igraph.org/) package (suggested, not required)
-can plot the neighborhood graph:
-
-``` r
-library(igraph)
-#> 
-#> Attaching package: 'igraph'
-#> The following objects are masked from 'package:stats':
-#> 
-#>     decompose, spectrum
-#> The following object is masked from 'package:base':
-#> 
-#>     union
-
-# Build igraph object from the NUG edge structure
-n <- nug$nvertices()
-el <- do.call(rbind, lapply(1:n, function(v) {
-  nbrs <- nug$neighbors(v)
-  nbrs <- nbrs[nbrs > v]
-  if (length(nbrs) == 0) return(NULL)
-  cbind(v, nbrs)
-}))
-g <- graph_from_edgelist(el, directed = FALSE)
-
-# Grid layout
-coords <- cbind((seq_len(n) - 1) %% 4 + 1, 4 - (seq_len(n) - 1) %/% 4)
-
-plot(g, layout = coords, vertex.size = 20, vertex.label = 1:n,
-     vertex.color = c("#440154", "#fde725")[z + 1],
-     vertex.label.color = "white", edge.color = "grey40",
-     main = "4x4 Grid (NUG)")
-```
-
-![](mdgm_files/figure-html/igraph-grid-1.png)
 
 ## Edge inclusion probabilities
 
@@ -155,12 +165,12 @@ proportions to scale edge widths:
 eip <- result$edge_inclusion_probs(nug, burnin = 200L)
 head(eip[order(-eip$prob), ])
 #>    vertex1 vertex2      prob
-#> 1        1       2 0.7388889
-#> 2        1       5 0.7261111
-#> 22      13      14 0.7255556
-#> 5        3       4 0.7238889
-#> 7        4       8 0.7127778
-#> 21      12      16 0.7105556
+#> 7        4       8 0.8116667
+#> 21      12      16 0.8111111
+#> 24      15      16 0.7794444
+#> 3        2       3 0.7700000
+#> 1        1       2 0.7238889
+#> 2        1       5 0.7177778
 
 # Match edge inclusion probs to igraph edge ordering
 edge_probs <- numeric(ecount(g))
@@ -198,21 +208,24 @@ emission:
 model_h <- mdgm_model(nug, dag_type = "spanning_tree", n_colors = 2L,
                        emission = "bernoulli")
 
+# Simulate 5 Bernoulli observations per vertex (multiple needed for identifiability)
 set.seed(1)
-y <- lapply(1:n, function(i) rbinom(5, 1, ifelse(i <= 8, 0.2, 0.8)))
+p_true <- c(0.2, 0.8)
+y <- lapply(seq_len(n), function(i) rbinom(5, 1, p_true[z[i] + 1]))
 
-result_h <- mcmc(model_h, y = y, z_init = rep(0:1, each = 8), psi_init = 0.5,
-                 eta_init = c(0.3, 0.7), n_iter = 500L, seed = 42L)
+result_h <- mcmc(model_h, y = y, z_init = sample(0:1, n, replace = TRUE),
+                 psi_init = 0.5, theta_init = c(0.3, 0.7),
+                 n_iter = 500L, seed = 42L)
 result_h$summary()
 #> MDGM MCMC Results
 #>   Vertices: 16, Colors: 2
 #>   Iterations: 500 (burnin: 0)
-#>   Psi acceptance rate: 0.938
-#>   Psi posterior mean: 0.9437 (sd: 0.5550)
+#>   Psi acceptance rate: 0.896
+#>   Psi posterior mean: 0.6269 (sd: 0.5127)
 #>   Emission type: bernoulli
-#>   eta_1 posterior mean: 0.1992 (sd: 0.0621)
-#>   eta_2 posterior mean: 0.8088 (sd: 0.0700)
-#>   Psi R-hat: 2.2812, ESS: 3
+#>   p_1 posterior mean: 0.2284 (sd: 0.0792)
+#>   p_2 posterior mean: 0.8089 (sd: 0.0675)
+#>   Psi R-hat: 1.0124, ESS: 6
 ```
 
 ## Next steps

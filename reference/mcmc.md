@@ -12,10 +12,10 @@ mcmc(
   y = NULL,
   z_init,
   psi_init,
-  eta_init = numeric(0),
+  theta_init = numeric(0),
   n_iter = 1000L,
   psi_tune = 0.1,
-  emission_prior_params = c(1, 1),
+  emission_prior_params = NULL,
   seed = NULL,
   nug = NULL
 )
@@ -45,12 +45,12 @@ mcmc(
 
   Initial value for the dependence parameter (positive).
 
-- eta_init:
+- theta_init:
 
   Initial emission parameters. For Bernoulli, a numeric vector of length
   `n_colors` (e.g., `c(0.2, 0.8)`). For Gaussian, a vector of length
-  `2 * n_colors` with means then standard deviations (e.g.,
-  `c(mu_1, mu_2, sigma_1, sigma_2)`). For Poisson, a vector of length
+  `2 * n_colors` with means then variances (e.g.,
+  `c(mu_1, mu_2, sigma2_1, sigma2_2)`). For Poisson, a vector of length
   `n_colors` with rate parameters. Ignored for standalone models.
 
 - n_iter:
@@ -65,9 +65,11 @@ mcmc(
 
   Prior hyperparameters for emission parameters. For Bernoulli:
   `c(a, b)` for `Beta(a, b)` prior. For Gaussian:
-  `c(mu_0, kappa_0, alpha_0, beta_0)` for Normal-InverseGamma prior. For
+  `c(mu_0, sigma2_0, alpha_0, beta_0)` where `mu_k ~ N(mu_0, sigma2_0)`
+  and `sigma_k^2 ~ InvGamma(alpha_0, beta_0)` independently. For
   Poisson: `c(alpha_0, beta_0)` for `Gamma(alpha_0, beta_0)` prior.
-  Default `c(1, 1)`.
+  Default: `c(1, 1)` for Bernoulli/Poisson, `c(0, 10000, 0.01, 0.01)`
+  for Gaussian (non-informative).
 
 - seed:
 

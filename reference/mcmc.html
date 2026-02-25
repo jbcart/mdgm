@@ -57,10 +57,10 @@ and (for hierarchical models) emission parameters.</p>
 <span>  y <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">z_init</span>,</span>
 <span>  <span class="va">psi_init</span>,</span>
-<span>  eta_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
+<span>  theta_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  n_iter <span class="op">=</span> <span class="fl">1000L</span>,</span>
 <span>  psi_tune <span class="op">=</span> <span class="fl">0.1</span>,</span>
-<span>  emission_prior_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  emission_prior_params <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  nug <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -90,11 +90,11 @@ with values in <code>0, ..., n_colors - 1</code>.</p></dd>
 <dd><p>Initial value for the dependence parameter (positive).</p></dd>
 
 
-<dt id="arg-eta-init">eta_init<a class="anchor" aria-label="anchor" href="#arg-eta-init"></a></dt>
+<dt id="arg-theta-init">theta_init<a class="anchor" aria-label="anchor" href="#arg-theta-init"></a></dt>
 <dd><p>Initial emission parameters. For Bernoulli, a numeric
 vector of length <code>n_colors</code> (e.g., <code>c(0.2, 0.8)</code>). For Gaussian,
-a vector of length <code>2 * n_colors</code> with means then standard deviations
-(e.g., <code>c(mu_1, mu_2, sigma_1, sigma_2)</code>). For Poisson, a vector of
+a vector of length <code>2 * n_colors</code> with means then variances
+(e.g., <code>c(mu_1, mu_2, sigma2_1, sigma2_2)</code>). For Poisson, a vector of
 length <code>n_colors</code> with rate parameters. Ignored for standalone models.</p></dd>
 
 
@@ -110,9 +110,11 @@ length <code>n_colors</code> with rate parameters. Ignored for standalone models
 <dt id="arg-emission-prior-params">emission_prior_params<a class="anchor" aria-label="anchor" href="#arg-emission-prior-params"></a></dt>
 <dd><p>Prior hyperparameters for emission
 parameters. For Bernoulli: <code>c(a, b)</code> for <code>Beta(a, b)</code> prior.
-For Gaussian: <code>c(mu_0, kappa_0, alpha_0, beta_0)</code> for
-Normal-InverseGamma prior. For Poisson: <code>c(alpha_0, beta_0)</code> for
-<code>Gamma(alpha_0, beta_0)</code> prior. Default <code>c(1, 1)</code>.</p></dd>
+For Gaussian: <code>c(mu_0, sigma2_0, alpha_0, beta_0)</code> where
+<code>mu_k ~ N(mu_0, sigma2_0)</code> and <code>sigma_k^2 ~ InvGamma(alpha_0, beta_0)</code>
+independently. For Poisson: <code>c(alpha_0, beta_0)</code> for
+<code>Gamma(alpha_0, beta_0)</code> prior. Default: <code>c(1, 1)</code> for Bernoulli/Poisson,
+<code>c(0, 10000, 0.01, 0.01)</code> for Gaussian (non-informative).</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>

@@ -1,0 +1,58 @@
+# TODO
+
+## Errors / Bugs
+
+the output of the MCMC doesn’t appear correct, for the gaussian emission
+the names are missing and perhaps in the incorrect spot (mu_1 and
+sigma_1, where I think it should be mu_1, mu_2) — **Fixed**:
+`emission_params()` now returns `mu` matrix with rownames
+`mu_1, mu_2, ...` and `sigma2` matrix with rownames
+`sigma2_1, sigma2_2, ...`
+
+Can we change the prior to be independent normal and inverse gamma? also
+how are your truncating to impose the identifiability constraint for the
+normal-inverse-gamma? Follow up on this one with me. — **Fixed**: Prior
+is now independent Normal and InverseGamma. Identifiability via
+truncated Normal on mu ordering `mu_1 < mu_2 < ... < mu_K`.
+
+Let all prior defaults be non-informative, no suggesting we double dip
+and see what the data indicate (normal(0, sigma), sigma=100 for example)
+— **Fixed**: Defaults are now `NULL` with auto-detection: Bernoulli
+`c(1,1)`, Gaussian `c(0, 10000, 0.01, 0.01)`, Poisson `c(1, 0.01)`.
+
+can we show how to plot a graph earlier on in the vignette and then plot
+the examples of different graphs with igraph? I personally like the
+visuals. — **Fixed**: igraph visualization now appears right after
+“Building a graph”, before model fitting.
+
+is the sort necessary for the neighbors functions in R, I believe the
+cpp code already sorts the neighbors. — **Verified**: C++ GraphCSR sorts
+neighbors during construction; no R-side sort needed.
+
+## Changes / Improvements
+
+Instead of “eta” I would like the call all the parameters associated
+with the emission distribution “theta”, then the emission specific
+distribution parameters can be labeled to match standard conventions. I
+like that in the vignettes you use psi for the spatial field parameters,
+right now this is only psi, but in the future will include the
+covariates. — **Done**: `theta` used generically throughout C++ and R
+internals. R output uses `p` (Bernoulli), `mu`/`sigma2` (Gaussian),
+`lambda` (Poisson).
+
+for the examples can we draw data from an MRF distribution or perhaps
+have some other clustered data generating distribution? lets work
+together on this. — **Done**: Small grids (4x4) use hand-picked
+irregular patterns (diagonal split). Larger grids (8x8 in emission
+vignette) use region growing from random seeds for organic, blocky
+clusters. Gaussian and Poisson use overlapping emission distributions
+and single obs per vertex. Bernoulli keeps 5 replicates for
+identifiability.
+
+did you previously check the output to the R code I had written earlier?
+the file now lives in @~/Repos/AHDC-carter/spatial-ddd/code/ —
+**Checked**: Output structure matches the earlier R implementation. Both
+use: parent vector DAG storage (n x J), sequential truncated Beta for
+Bernoulli ordering, half-Cauchy prior on psi, same edge inclusion
+probability calculation. The R package generalizes to K colors and
+multiple emission families.

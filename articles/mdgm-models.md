@@ -80,18 +80,19 @@ domain.
 In the hierarchical model, $z$ is a latent field and observations
 $y_{i}$ are generated through an **emission distribution**:
 
-$$y_{ij} \mid z_{i},\eta \sim f\left( y_{ij} \mid \eta_{z_{i}} \right)$$
+$$y_{ij} \mid z_{i},\theta \sim f\left( y_{ij} \mid \theta_{z_{i}} \right)$$
 
 Currently supported emission families:
 
 - **Bernoulli**:
-  $y_{ij} \mid z_{i} = k \sim \text{Bernoulli}\left( \eta_{k} \right)$,
-  with identifiability constraint $\eta_{0} < \eta_{1} < \cdots$
-  enforced via truncated Beta posterior sampling.
+  $y_{ij} \mid z_{i} = k \sim \text{Bernoulli}\left( p_{k} \right)$,
+  with identifiability constraint $p_{0} < p_{1} < \cdots$ enforced via
+  truncated Beta posterior sampling.
 - **Gaussian**:
   $y_{ij} \mid z_{i} = k \sim \mathcal{N}\left( \mu_{k},\sigma_{k}^{2} \right)$,
   with identifiability constraint $\mu_{0} < \mu_{1} < \cdots$.
-  Conjugate Normal-InverseGamma updates.
+  Independent Normal and Inverse-Gamma conjugate updates for $\mu_{k}$
+  and $\sigma_{k}^{2}$.
 - **Poisson**:
   $y_{ij} \mid z_{i} = k \sim \text{Poisson}\left( \lambda_{k} \right)$,
   with identifiability constraint $\lambda_{0} < \lambda_{1} < \cdots$.
@@ -114,12 +115,13 @@ Updates use a Metropolis-Hastings random walk with a normal proposal.
 
 ### Emission parameters
 
-- **Bernoulli**: Each $\eta_{k}$ has a $\text{Beta}(a,b)$ prior.
+- **Bernoulli**: Each $p_{k}$ has a $\text{Beta}(a,b)$ prior.
   `emission_prior_params = c(a, b)`.
-- **Gaussian**: Each $\left( \mu_{k},\sigma_{k}^{2} \right)$ has a
-  Normal-InverseGamma prior with hyperparameters
-  $\left( \mu_{0},\kappa_{0},\alpha_{0},\beta_{0} \right)$.
-  `emission_prior_params = c(mu_0, kappa_0, alpha_0, beta_0)`.
+- **Gaussian**:
+  $\mu_{k} \sim \mathcal{N}\left( \mu_{0},\sigma_{0}^{2} \right)$ and
+  $\sigma_{k}^{2} \sim \text{InverseGamma}\left( \alpha_{0},\beta_{0} \right)$,
+  independently.
+  `emission_prior_params = c(mu_0, sigma2_0, alpha_0, beta_0)`.
 - **Poisson**: Each $\lambda_{k}$ has a
   $\text{Gamma}\left( \alpha_{0},\beta_{0} \right)$ prior (rate
   parameterization). `emission_prior_params = c(alpha_0, beta_0)`.
@@ -139,5 +141,5 @@ Each iteration of the MCMC sampler performs:
     the emission likelihood.
 3.  **Update** $\psi$ — Metropolis-Hastings with normal random walk
     proposal.
-4.  **Update** $\eta$ (hierarchical only) — Conjugate posterior sampling
-    with identifiability constraints.
+4.  **Update** $\theta$ (hierarchical only) — Conjugate posterior
+    sampling with identifiability constraints.

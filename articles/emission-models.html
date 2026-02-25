@@ -98,7 +98,7 @@ mdgm package supports three emission families:</p>
 <td align="left">Bernoulli</td>
 <td align="left">Binary (0/1)</td>
 <td align="left">
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>η</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\eta_k</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>p</mi><mi>k</mi></msub><annotation encoding="application/x-tex">p_k</annotation></semantics></math>
 (success probability)</td>
 <td align="left">Beta<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(a, b)</annotation></semantics></math>
 </td>
@@ -108,9 +108,9 @@ mdgm package supports three emission families:</p>
 <td align="left">Continuous (integer-valued)</td>
 <td align="left">
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\mu_k</annotation></semantics></math>,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>σ</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\sigma_k</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup><annotation encoding="application/x-tex">\sigma_k^2</annotation></semantics></math>
 </td>
-<td align="left">Normal-InverseGamma</td>
+<td align="left">Independent Normal, Inverse-Gamma</td>
 </tr>
 <tr class="odd">
 <td align="left">Poisson</td>
@@ -125,13 +125,65 @@ mdgm package supports three emission families:</p>
 </table>
 <p>All emission families enforce an <strong>identifiability
 constraint</strong> on their location parameters:
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>η</mi><mn>0</mn></msub><mo>&lt;</mo><msub><mi>η</mi><mn>1</mn></msub><mo>&lt;</mo><mi>⋯</mi></mrow><annotation encoding="application/x-tex">\eta_0 &lt; \eta_1 &lt; \cdots</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mn>0</mn></msub><mo>&lt;</mo><msub><mi>p</mi><mn>1</mn></msub><mo>&lt;</mo><mi>⋯</mi></mrow><annotation encoding="application/x-tex">p_0 &lt; p_1 &lt; \cdots</annotation></semantics></math>
 (Bernoulli),
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mn>0</mn></msub><mo>&lt;</mo><msub><mi>μ</mi><mn>1</mn></msub><mo>&lt;</mo><mi>⋯</mi></mrow><annotation encoding="application/x-tex">\mu_0 &lt; \mu_1 &lt; \cdots</annotation></semantics></math>
 (Gaussian), or
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mn>0</mn></msub><mo>&lt;</mo><msub><mi>λ</mi><mn>1</mn></msub><mo>&lt;</mo><mi>⋯</mi></mrow><annotation encoding="application/x-tex">\lambda_0 &lt; \lambda_1 &lt; \cdots</annotation></semantics></math>
 (Poisson). This is achieved via truncated conjugate posterior
 sampling.</p>
+</div>
+<div class="section level2">
+<h2 id="simulating-a-spatial-field">Simulating a spatial field<a class="anchor" aria-label="anchor" href="#simulating-a-spatial-field"></a>
+</h2>
+<p>For the examples below we use a simple region-growing algorithm to
+generate irregular spatial clusters on a grid graph. Starting from
+random seed vertices, regions expand outward one cell at a time,
+producing blocky but asymmetric patterns:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">grow_regions</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">nug</span>, <span class="va">n_colors</span>, <span class="va">seed</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">seed</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="va">seed</span><span class="op">)</span></span>
+<span>  <span class="va">n</span> <span class="op">&lt;-</span> <span class="va">nug</span><span class="op">$</span><span class="fu">nvertices</span><span class="op">(</span><span class="op">)</span></span>
+<span>  <span class="va">z</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="cn">NA_integer_</span>, <span class="va">n</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># Plant one seed per color</span></span>
+<span>  <span class="va">seeds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">n</span>, <span class="va">n_colors</span><span class="op">)</span></span>
+<span>  <span class="kw">for</span> <span class="op">(</span><span class="va">k</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">seeds</span><span class="op">)</span><span class="op">)</span> <span class="va">z</span><span class="op">[</span><span class="va">seeds</span><span class="op">[</span><span class="va">k</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">k</span> <span class="op">-</span> <span class="fl">1L</span></span>
+<span></span>
+<span>  <span class="co"># Grow: repeatedly claim a random unclaimed neighbor</span></span>
+<span>  <span class="kw">repeat</span> <span class="op">{</span></span>
+<span>    <span class="va">boundary</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">z</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="va">candidates</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
+<span>    <span class="kw">for</span> <span class="op">(</span><span class="va">v</span> <span class="kw">in</span> <span class="va">boundary</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="va">nbrs</span> <span class="op">&lt;-</span> <span class="va">nug</span><span class="op">$</span><span class="fu">neighbors</span><span class="op">(</span><span class="va">v</span><span class="op">)</span></span>
+<span>      <span class="va">candidates</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">candidates</span>, <span class="va">nbrs</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">z</span><span class="op">[</span><span class="va">nbrs</span><span class="op">]</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span>    <span class="va">candidates</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">candidates</span><span class="op">)</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">candidates</span><span class="op">)</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span> <span class="kw">break</span></span>
+<span></span>
+<span>    <span class="va">pick</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">candidates</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span>    <span class="va">claimed</span> <span class="op">&lt;-</span> <span class="va">nug</span><span class="op">$</span><span class="fu">neighbors</span><span class="op">(</span><span class="va">pick</span><span class="op">)</span></span>
+<span>    <span class="va">claimed</span> <span class="op">&lt;-</span> <span class="va">claimed</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">z</span><span class="op">[</span><span class="va">claimed</span><span class="op">]</span><span class="op">)</span><span class="op">]</span></span>
+<span>    <span class="va">z</span><span class="op">[</span><span class="va">pick</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">z</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">claimed</span>, <span class="fl">1</span><span class="op">)</span><span class="op">]</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="va">z</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">nug</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nug_from_grid.html">nug_from_grid</a></span><span class="op">(</span><span class="fl">8</span>, <span class="fl">8</span>, seed <span class="op">=</span> <span class="fl">42L</span><span class="op">)</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="va">nug</span><span class="op">$</span><span class="fu">nvertices</span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">z_true</span> <span class="op">&lt;-</span> <span class="fu">grow_regions</span><span class="op">(</span><span class="va">nug</span>, n_colors <span class="op">=</span> <span class="fl">2</span>, seed <span class="op">=</span> <span class="fl">7</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">grid_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">8</span>, <span class="fl">8</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">8</span><span class="op">:</span><span class="fl">1</span>, each <span class="op">=</span> <span class="fl">8</span><span class="op">)</span>,</span>
+<span>  z <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">z_true</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">grid_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, fill <span class="op">=</span> <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"white"</span>, linewidth <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"0"</span> <span class="op">=</span> <span class="st">"#440154"</span>, <span class="st">"1"</span> <span class="op">=</span> <span class="st">"#fde725"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_equal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Simulated spatial field (region growing)"</span>, fill <span class="op">=</span> <span class="st">"z"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="emission-models_files/figure-html/sim-field-1.png" class="r-plt" alt="" width="384"></p>
 </div>
 <div class="section level2">
 <h2 id="bernoulli-emission">Bernoulli emission<a class="anchor" aria-label="anchor" href="#bernoulli-emission"></a>
@@ -141,68 +193,63 @@ sampling.</p>
 can have multiple replicate observations
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mrow><mi>i</mi><mn>1</mn></mrow></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>y</mi><mrow><mi>i</mi><msub><mi>m</mi><mi>i</mi></msub></mrow></msub></mrow><annotation encoding="application/x-tex">y_{i1}, \ldots, y_{im_i}</annotation></semantics></math>,
 each drawn independently from
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Bernoulli</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>η</mi><msub><mi>z</mi><mi>i</mi></msub></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{Bernoulli}(\eta_{z_i})</annotation></semantics></math>.</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Bernoulli</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>p</mi><msub><mi>z</mi><mi>i</mi></msub></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{Bernoulli}(p_{z_i})</annotation></semantics></math>.
+Multiple replicates per vertex are needed for identifiability in the
+Bernoulli case.</p>
 <div class="section level3">
-<h3 id="example-binary-disease-indicators-on-a-grid">Example: binary disease indicators on a grid<a class="anchor" aria-label="anchor" href="#example-binary-disease-indicators-on-a-grid"></a>
+<h3 id="example-binary-indicators-on-a-grid">Example: binary indicators on a grid<a class="anchor" aria-label="anchor" href="#example-binary-indicators-on-a-grid"></a>
 </h3>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">nug</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nug_from_grid.html">nug_from_grid</a></span><span class="op">(</span><span class="fl">6</span>, <span class="fl">6</span>, seed <span class="op">=</span> <span class="fl">42L</span><span class="op">)</span></span>
-<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="va">nug</span><span class="op">$</span><span class="fu">nvertices</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p>Simulate a latent field and binary observations:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
-<span><span class="co"># True latent field: left half = 0, right half = 1</span></span>
-<span><span class="va">z_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, each <span class="op">=</span> <span class="va">n</span> <span class="op">/</span> <span class="fl">2</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># True emission probabilities</span></span>
-<span><span class="va">eta_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.2</span>, <span class="fl">0.8</span><span class="op">)</span></span>
+<span><span class="va">p_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">0.7</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 5 replicate observations per vertex</span></span>
-<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">1</span>, <span class="va">eta_true</span><span class="op">[</span><span class="va">z_true</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">y_bern</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">1</span>, <span class="va">p_true</span><span class="op">[</span><span class="va">z_true</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
 <p>Fit the model:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mdgm_model.html">mdgm_model</a></span><span class="op">(</span><span class="va">nug</span>, dag_type <span class="op">=</span> <span class="st">"spanning_tree"</span>,</span>
-<span>                     n_colors <span class="op">=</span> <span class="fl">2L</span>, emission <span class="op">=</span> <span class="st">"bernoulli"</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">model_b</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mdgm_model.html">mdgm_model</a></span><span class="op">(</span><span class="va">nug</span>, dag_type <span class="op">=</span> <span class="st">"spanning_tree"</span>,</span>
+<span>                       n_colors <span class="op">=</span> <span class="fl">2L</span>, emission <span class="op">=</span> <span class="st">"bernoulli"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mcmc.html">mcmc</a></span><span class="op">(</span><span class="va">model</span>, y <span class="op">=</span> <span class="va">y</span>,</span>
-<span>               z_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
-<span>               psi_init <span class="op">=</span> <span class="fl">0.5</span>,</span>
-<span>               eta_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">0.7</span><span class="op">)</span>,</span>
-<span>               n_iter <span class="op">=</span> <span class="fl">2000L</span>,</span>
-<span>               psi_tune <span class="op">=</span> <span class="fl">1.0</span>,</span>
-<span>               emission_prior_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span>               seed <span class="op">=</span> <span class="fl">42L</span>,</span>
-<span>               nug <span class="op">=</span> <span class="va">nug</span><span class="op">)</span></span>
+<span><span class="va">result_b</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mcmc.html">mcmc</a></span><span class="op">(</span><span class="va">model_b</span>, y <span class="op">=</span> <span class="va">y_bern</span>,</span>
+<span>                 z_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>                 psi_init <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>                 theta_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">0.7</span><span class="op">)</span>,</span>
+<span>                 n_iter <span class="op">=</span> <span class="fl">2000L</span>,</span>
+<span>                 psi_tune <span class="op">=</span> <span class="fl">1.0</span>,</span>
+<span>                 seed <span class="op">=</span> <span class="fl">42L</span>,</span>
+<span>                 nug <span class="op">=</span> <span class="va">nug</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">result</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span>burnin <span class="op">=</span> <span class="fl">500L</span><span class="op">)</span></span>
+<span><span class="va">result_b</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span>burnin <span class="op">=</span> <span class="fl">500L</span><span class="op">)</span></span>
 <span><span class="co">#&gt; MDGM MCMC Results</span></span>
-<span><span class="co">#&gt;   Vertices: 36, Colors: 2</span></span>
+<span><span class="co">#&gt;   Vertices: 64, Colors: 2</span></span>
 <span><span class="co">#&gt;   Iterations: 2000 (burnin: 500)</span></span>
-<span><span class="co">#&gt;   Psi acceptance rate: 0.650</span></span>
-<span><span class="co">#&gt;   Psi posterior mean: 3.1057 (sd: 1.1578)</span></span>
+<span><span class="co">#&gt;   Psi acceptance rate: 0.465</span></span>
+<span><span class="co">#&gt;   Psi posterior mean: 2.2008 (sd: 1.3132)</span></span>
 <span><span class="co">#&gt;   Emission type: bernoulli</span></span>
-<span><span class="co">#&gt;   eta_1 posterior mean: 0.1606 (sd: 0.0400)</span></span>
-<span><span class="co">#&gt;   eta_2 posterior mean: 0.8197 (sd: 0.0401)</span></span>
-<span><span class="co">#&gt;   Psi R-hat: 1.0025, ESS: 91</span></span></code></pre></div>
+<span><span class="co">#&gt;   p_1 posterior mean: 0.4141 (sd: 0.1506)</span></span>
+<span><span class="co">#&gt;   p_2 posterior mean: 0.7350 (sd: 0.0432)</span></span>
+<span><span class="co">#&gt;   Psi R-hat: 1.0953, ESS: 11</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="posterior-trace-plots">Posterior trace plots<a class="anchor" aria-label="anchor" href="#posterior-trace-plots"></a>
 </h3>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ep</span> <span class="op">&lt;-</span> <span class="va">result</span><span class="op">$</span><span class="fu">emission_params</span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">eta_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  iteration <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">2000</span>, <span class="fl">2</span><span class="op">)</span>,</span>
-<span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ep</span><span class="op">$</span><span class="va">eta</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span>, <span class="va">ep</span><span class="op">$</span><span class="va">eta</span><span class="op">[</span><span class="fl">2</span>, <span class="op">]</span><span class="op">)</span>,</span>
-<span>  parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"eta_1"</span>, <span class="st">"eta_2"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">2000</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ep_b</span> <span class="op">&lt;-</span> <span class="va">result_b</span><span class="op">$</span><span class="fu">emission_params</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">n_iter</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">ep_b</span><span class="op">$</span><span class="va">p</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">p_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  iteration <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_iter</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ep_b</span><span class="op">$</span><span class="va">p</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span>, <span class="va">ep_b</span><span class="op">$</span><span class="va">p</span><span class="op">[</span><span class="fl">2</span>, <span class="op">]</span><span class="op">)</span>,</span>
+<span>  parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"p_1"</span>, <span class="st">"p_2"</span><span class="op">)</span>, each <span class="op">=</span> <span class="va">n_iter</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">eta_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">iteration</span>, <span class="va">value</span>, color <span class="op">=</span> <span class="va">parameter</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">p_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">iteration</span>, <span class="va">value</span>, color <span class="op">=</span> <span class="va">parameter</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="va">eta_true</span>, linetype <span class="op">=</span> <span class="st">"dashed"</span>, alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="va">p_true</span>, linetype <span class="op">=</span> <span class="st">"dashed"</span>, alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Bernoulli emission: eta trace"</span>,</span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Bernoulli emission: p trace"</span>,</span>
 <span>       x <span class="op">=</span> <span class="st">"Iteration"</span>, y <span class="op">=</span> <span class="st">"Value"</span>, color <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
 <p><img src="emission-models_files/figure-html/bernoulli-trace-1.png" class="r-plt" alt="" width="576"></p>
 </div>
@@ -212,68 +259,85 @@ each drawn independently from
 </h2>
 <p>The Gaussian emission models continuous (integer-valued)
 observations. Each observation is drawn from
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><msub><mi>z</mi><mi>i</mi></msub></msub><mo>,</mo><msubsup><mi>σ</mi><msub><mi>z</mi><mi>i</mi></msub><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{N}(\mu_{z_i}, \sigma_{z_i}^2)</annotation></semantics></math>.</p>
-<p>The prior is a Normal-InverseGamma:
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>k</mi></msub><mo>∣</mo><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mn>0</mn></msub><mo>,</mo><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup><mi>/</mi><msub><mi>κ</mi><mn>0</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu_k \mid \sigma_k^2 \sim \mathcal{N}(\mu_0, \sigma_k^2 / \kappa_0)</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><msub><mi>z</mi><mi>i</mi></msub></msub><mo>,</mo><msubsup><mi>σ</mi><msub><mi>z</mi><mi>i</mi></msub><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{N}(\mu_{z_i}, \sigma_{z_i}^2)</annotation></semantics></math>.
+A single observation per vertex is sufficient for identifiability.</p>
+<p>The priors on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\mu_k</annotation></semantics></math>
 and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup><mo>∼</mo><mtext mathvariant="normal">InverseGamma</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>α</mi><mn>0</mn></msub><mo>,</mo><msub><mi>β</mi><mn>0</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\sigma_k^2 \sim \text{InverseGamma}(\alpha_0, \beta_0)</annotation></semantics></math>.</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup><annotation encoding="application/x-tex">\sigma_k^2</annotation></semantics></math>
+are independent:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>k</mi></msub><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mn>0</mn></msub><mo>,</mo><msubsup><mi>σ</mi><mn>0</mn><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup><mo>∼</mo><mtext mathvariant="normal">InverseGamma</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>α</mi><mn>0</mn></msub><mo>,</mo><msub><mi>β</mi><mn>0</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu_k \sim \mathcal{N}(\mu_0, \sigma^2_0), \qquad \sigma_k^2 \sim \text{InverseGamma}(\alpha_0, \beta_0)</annotation></semantics></math>
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>σ</mi><mn>0</mn><mn>2</mn></msubsup><annotation encoding="application/x-tex">\sigma^2_0</annotation></semantics></math>
+is the prior variance for the mean.</p>
 <div class="section level3">
 <h3 id="example-spatial-temperature-field">Example: spatial temperature field<a class="anchor" aria-label="anchor" href="#example-spatial-temperature-field"></a>
 </h3>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">nug_g</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nug_from_grid.html">nug_from_grid</a></span><span class="op">(</span><span class="fl">6</span>, <span class="fl">6</span>, seed <span class="op">=</span> <span class="fl">42L</span><span class="op">)</span></span>
-<span><span class="va">n_g</span> <span class="op">&lt;-</span> <span class="va">nug_g</span><span class="op">$</span><span class="fu">nvertices</span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span>
-<span><span class="co"># Two spatial clusters: cold (left) and warm (right)</span></span>
-<span><span class="va">z_true_g</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, each <span class="op">=</span> <span class="va">n_g</span> <span class="op">/</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="va">mu_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">25</span><span class="op">)</span></span>
-<span><span class="va">sigma_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># 3 replicate observations per vertex (rounded to integers for storage)</span></span>
-<span><span class="va">y_g</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_g</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">3</span>, <span class="va">mu_true</span><span class="op">[</span><span class="va">z_true_g</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span>,</span>
-<span>                         <span class="va">sigma_true</span><span class="op">[</span><span class="va">z_true_g</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
-<p>Fit with Gaussian emission:</p>
+<p>Here we use overlapping emission distributions — the two groups
+differ in mean but share similar spread, making classification rely on
+both the emission signal and the spatial structure:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model_g</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mdgm_model.html">mdgm_model</a></span><span class="op">(</span><span class="va">nug_g</span>, dag_type <span class="op">=</span> <span class="st">"spanning_tree"</span>,</span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">mu_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">12</span><span class="op">)</span></span>
+<span><span class="va">sigma2_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">9</span>, <span class="fl">9</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Single observation per vertex</span></span>
+<span><span class="va">y_gauss</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">mu_true</span><span class="op">[</span><span class="va">z_true</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span>,</span>
+<span>                         <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">sigma2_true</span><span class="op">[</span><span class="va">z_true</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Visualize the observations</span></span>
+<span><span class="va">obs_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">8</span>, <span class="fl">8</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">8</span><span class="op">:</span><span class="fl">1</span>, each <span class="op">=</span> <span class="fl">8</span><span class="op">)</span>,</span>
+<span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">y_gauss</span>, <span class="va">`[`</span>, <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">obs_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, fill <span class="op">=</span> <span class="va">value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"white"</span>, linewidth <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_fill_gradient2</a></span><span class="op">(</span>low <span class="op">=</span> <span class="st">"#440154"</span>, mid <span class="op">=</span> <span class="st">"#21918c"</span>, high <span class="op">=</span> <span class="st">"#fde725"</span>,</span>
+<span>                       midpoint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">obs_df</span><span class="op">$</span><span class="va">value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_equal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Observed temperatures (single obs per vertex)"</span>, fill <span class="op">=</span> <span class="st">"y"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="emission-models_files/figure-html/gaussian-sim-1.png" class="r-plt" alt="" width="480"></p>
+<p>Fit with Gaussian emission:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">model_g</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mdgm_model.html">mdgm_model</a></span><span class="op">(</span><span class="va">nug</span>, dag_type <span class="op">=</span> <span class="st">"spanning_tree"</span>,</span>
 <span>                       n_colors <span class="op">=</span> <span class="fl">2L</span>, emission <span class="op">=</span> <span class="st">"gaussian"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># eta_init: c(mu_1, mu_2, sigma_1, sigma_2)</span></span>
-<span><span class="va">result_g</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mcmc.html">mcmc</a></span><span class="op">(</span><span class="va">model_g</span>, y <span class="op">=</span> <span class="va">y_g</span>,</span>
-<span>                 z_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, <span class="va">n_g</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span><span class="co"># theta_init: c(mu_1, mu_2, sigma2_1, sigma2_2)</span></span>
+<span><span class="va">result_g</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mcmc.html">mcmc</a></span><span class="op">(</span><span class="va">model_g</span>, y <span class="op">=</span> <span class="va">y_gauss</span>,</span>
+<span>                 z_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
 <span>                 psi_init <span class="op">=</span> <span class="fl">0.5</span>,</span>
-<span>                 eta_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">12</span>, <span class="fl">22</span>, <span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span>,</span>
+<span>                 theta_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">14</span>, <span class="fl">9</span>, <span class="fl">9</span><span class="op">)</span>,</span>
 <span>                 n_iter <span class="op">=</span> <span class="fl">2000L</span>,</span>
 <span>                 psi_tune <span class="op">=</span> <span class="fl">1.0</span>,</span>
-<span>                 emission_prior_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.01</span>, <span class="fl">2</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>                 seed <span class="op">=</span> <span class="fl">42L</span>,</span>
-<span>                 nug <span class="op">=</span> <span class="va">nug_g</span><span class="op">)</span></span>
+<span>                 nug <span class="op">=</span> <span class="va">nug</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">result_g</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span>burnin <span class="op">=</span> <span class="fl">500L</span><span class="op">)</span></span>
 <span><span class="co">#&gt; MDGM MCMC Results</span></span>
-<span><span class="co">#&gt;   Vertices: 36, Colors: 2</span></span>
+<span><span class="co">#&gt;   Vertices: 64, Colors: 2</span></span>
 <span><span class="co">#&gt;   Iterations: 2000 (burnin: 500)</span></span>
-<span><span class="co">#&gt;   Psi acceptance rate: 0.644</span></span>
-<span><span class="co">#&gt;   Psi posterior mean: 3.2391 (sd: 1.0457)</span></span>
+<span><span class="co">#&gt;   Psi acceptance rate: 0.513</span></span>
+<span><span class="co">#&gt;   Psi posterior mean: 2.9534 (sd: 1.3112)</span></span>
 <span><span class="co">#&gt;   Emission type: gaussian</span></span>
-<span><span class="co">#&gt;   mu_1 posterior mean: 10.2123 (sd: 0.3045)</span></span>
-<span><span class="co">#&gt;   sigma_1 posterior mean: 24.7006 (sd: 0.4767)</span></span>
-<span><span class="co">#&gt;   NA posterior mean: 2.2668 (sd: 0.2140)</span></span>
-<span><span class="co">#&gt;   NA posterior mean: 3.5253 (sd: 0.3376)</span></span>
-<span><span class="co">#&gt;   Psi R-hat: 0.9999, ESS: 156</span></span></code></pre></div>
+<span><span class="co">#&gt;   mu_1 posterior mean: 2.6923 (sd: 2.0341)</span></span>
+<span><span class="co">#&gt;   sigma2_1 posterior mean: 12.6376 (sd: 0.6073)</span></span>
+<span><span class="co">#&gt;   NA posterior mean: 10.7035 (sd: 11.4432)</span></span>
+<span><span class="co">#&gt;   NA posterior mean: 12.2790 (sd: 3.0145)</span></span>
+<span><span class="co">#&gt;   Psi R-hat: 1.0001, ESS: 51</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="posterior-emission-parameters">Posterior emission parameters<a class="anchor" aria-label="anchor" href="#posterior-emission-parameters"></a>
 </h3>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ep_g</span> <span class="op">&lt;-</span> <span class="va">result_g</span><span class="op">$</span><span class="fu">emission_params</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">n_iter_g</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">ep_g</span><span class="op">$</span><span class="va">mu</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">mu_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  iteration <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">2000</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span>  iteration <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_iter_g</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span>,</span>
 <span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ep_g</span><span class="op">$</span><span class="va">mu</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span>, <span class="va">ep_g</span><span class="op">$</span><span class="va">mu</span><span class="op">[</span><span class="fl">2</span>, <span class="op">]</span><span class="op">)</span>,</span>
-<span>  parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mu_1"</span>, <span class="st">"mu_2"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">2000</span><span class="op">)</span></span>
+<span>  parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mu_1"</span>, <span class="st">"mu_2"</span><span class="op">)</span>, each <span class="op">=</span> <span class="va">n_iter_g</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mu_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">iteration</span>, <span class="va">value</span>, color <span class="op">=</span> <span class="va">parameter</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -283,20 +347,20 @@ and
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Gaussian emission: mu trace"</span>,</span>
 <span>       x <span class="op">=</span> <span class="st">"Iteration"</span>, y <span class="op">=</span> <span class="st">"Value"</span>, color <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
 <p><img src="emission-models_files/figure-html/gaussian-trace-1.png" class="r-plt" alt="" width="576"></p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sigma_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  iteration <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">2000</span>, <span class="fl">2</span><span class="op">)</span>,</span>
-<span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ep_g</span><span class="op">$</span><span class="va">sigma</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span>, <span class="va">ep_g</span><span class="op">$</span><span class="va">sigma</span><span class="op">[</span><span class="fl">2</span>, <span class="op">]</span><span class="op">)</span>,</span>
-<span>  parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sigma_1"</span>, <span class="st">"sigma_2"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">2000</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sigma2_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  iteration <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_iter_g</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ep_g</span><span class="op">$</span><span class="va">sigma2</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span>, <span class="va">ep_g</span><span class="op">$</span><span class="va">sigma2</span><span class="op">[</span><span class="fl">2</span>, <span class="op">]</span><span class="op">)</span>,</span>
+<span>  parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sigma2_1"</span>, <span class="st">"sigma2_2"</span><span class="op">)</span>, each <span class="op">=</span> <span class="va">n_iter_g</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sigma_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">iteration</span>, <span class="va">value</span>, color <span class="op">=</span> <span class="va">parameter</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sigma2_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">iteration</span>, <span class="va">value</span>, color <span class="op">=</span> <span class="va">parameter</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="va">sigma_true</span>, linetype <span class="op">=</span> <span class="st">"dashed"</span>, alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="va">sigma2_true</span>, linetype <span class="op">=</span> <span class="st">"dashed"</span>, alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Gaussian emission: sigma trace"</span>,</span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Gaussian emission: sigma2 trace"</span>,</span>
 <span>       x <span class="op">=</span> <span class="st">"Iteration"</span>, y <span class="op">=</span> <span class="st">"Value"</span>, color <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
-<p><img src="emission-models_files/figure-html/gaussian-sigma-trace-1.png" class="r-plt" alt="" width="576"></p>
+<p><img src="emission-models_files/figure-html/gaussian-sigma2-trace-1.png" class="r-plt" alt="" width="576"></p>
 </div>
 </div>
 <div class="section level2">
@@ -304,7 +368,9 @@ and
 </h2>
 <p>The Poisson emission models count data. Each observation is drawn
 from
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Poisson</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>λ</mi><msub><mi>z</mi><mi>i</mi></msub></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{Poisson}(\lambda_{z_i})</annotation></semantics></math>.</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Poisson</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>λ</mi><msub><mi>z</mi><mi>i</mi></msub></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{Poisson}(\lambda_{z_i})</annotation></semantics></math>.
+As with the Gaussian case, a single observation per vertex is sufficient
+for identifiability.</p>
 <p>The prior is a Gamma distribution:
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mi>k</mi></msub><mo>∼</mo><mtext mathvariant="normal">Gamma</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>α</mi><mn>0</mn></msub><mo>,</mo><msub><mi>β</mi><mn>0</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\lambda_k \sim \text{Gamma}(\alpha_0, \beta_0)</annotation></semantics></math>
 with rate parameterization (mean
@@ -312,55 +378,63 @@ with rate parameterization (mean
 <div class="section level3">
 <h3 id="example-spatial-species-counts">Example: spatial species counts<a class="anchor" aria-label="anchor" href="#example-spatial-species-counts"></a>
 </h3>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">nug_p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nug_from_grid.html">nug_from_grid</a></span><span class="op">(</span><span class="fl">6</span>, <span class="fl">6</span>, seed <span class="op">=</span> <span class="fl">42L</span><span class="op">)</span></span>
-<span><span class="va">n_p</span> <span class="op">&lt;-</span> <span class="va">nug_p</span><span class="op">$</span><span class="fu">nvertices</span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co"># Two habitats: sparse (left) and abundant (right)</span></span>
-<span><span class="va">z_true_p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, each <span class="op">=</span> <span class="va">n_p</span> <span class="op">/</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="va">lambda_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">10</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># 4 replicate counts per vertex</span></span>
-<span><span class="va">y_p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_p</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">rpois</a></span><span class="op">(</span><span class="fl">4</span>, <span class="va">lambda_true</span><span class="op">[</span><span class="va">z_true_p</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
-<p>Fit with Poisson emission:</p>
+<p>We again use overlapping rates so that the spatial structure
+contributes meaningfully to classification:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model_p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mdgm_model.html">mdgm_model</a></span><span class="op">(</span><span class="va">nug_p</span>, dag_type <span class="op">=</span> <span class="st">"spanning_tree"</span>,</span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
+<span><span class="va">lambda_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">10</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Single count per vertex</span></span>
+<span><span class="va">y_pois</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">rpois</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">lambda_true</span><span class="op">[</span><span class="va">z_true</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">obs_df_p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">8</span>, <span class="fl">8</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">8</span><span class="op">:</span><span class="fl">1</span>, each <span class="op">=</span> <span class="fl">8</span><span class="op">)</span>,</span>
+<span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">y_pois</span>, <span class="va">`[`</span>, <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">obs_df_p</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, fill <span class="op">=</span> <span class="va">value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"white"</span>, linewidth <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_fill_gradient</a></span><span class="op">(</span>low <span class="op">=</span> <span class="st">"#440154"</span>, high <span class="op">=</span> <span class="st">"#fde725"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_equal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Observed counts (single obs per vertex)"</span>, fill <span class="op">=</span> <span class="st">"y"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="emission-models_files/figure-html/poisson-sim-1.png" class="r-plt" alt="" width="480"></p>
+<p>Fit with Poisson emission:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">model_p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mdgm_model.html">mdgm_model</a></span><span class="op">(</span><span class="va">nug</span>, dag_type <span class="op">=</span> <span class="st">"spanning_tree"</span>,</span>
 <span>                       n_colors <span class="op">=</span> <span class="fl">2L</span>, emission <span class="op">=</span> <span class="st">"poisson"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">result_p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mcmc.html">mcmc</a></span><span class="op">(</span><span class="va">model_p</span>, y <span class="op">=</span> <span class="va">y_p</span>,</span>
-<span>                 z_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, <span class="va">n_p</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span><span class="va">result_p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mcmc.html">mcmc</a></span><span class="op">(</span><span class="va">model_p</span>, y <span class="op">=</span> <span class="va">y_pois</span>,</span>
+<span>                 z_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
 <span>                 psi_init <span class="op">=</span> <span class="fl">0.5</span>,</span>
-<span>                 eta_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">8</span><span class="op">)</span>,</span>
+<span>                 theta_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">8</span><span class="op">)</span>,</span>
 <span>                 n_iter <span class="op">=</span> <span class="fl">2000L</span>,</span>
 <span>                 psi_tune <span class="op">=</span> <span class="fl">1.0</span>,</span>
-<span>                 emission_prior_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0.1</span><span class="op">)</span>,</span>
 <span>                 seed <span class="op">=</span> <span class="fl">42L</span>,</span>
-<span>                 nug <span class="op">=</span> <span class="va">nug_p</span><span class="op">)</span></span>
+<span>                 nug <span class="op">=</span> <span class="va">nug</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">result_p</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span>burnin <span class="op">=</span> <span class="fl">500L</span><span class="op">)</span></span>
 <span><span class="co">#&gt; MDGM MCMC Results</span></span>
-<span><span class="co">#&gt;   Vertices: 36, Colors: 2</span></span>
+<span><span class="co">#&gt;   Vertices: 64, Colors: 2</span></span>
 <span><span class="co">#&gt;   Iterations: 2000 (burnin: 500)</span></span>
-<span><span class="co">#&gt;   Psi acceptance rate: 0.664</span></span>
-<span><span class="co">#&gt;   Psi posterior mean: 3.3126 (sd: 1.1022)</span></span>
+<span><span class="co">#&gt;   Psi acceptance rate: 0.437</span></span>
+<span><span class="co">#&gt;   Psi posterior mean: 1.8821 (sd: 1.2732)</span></span>
 <span><span class="co">#&gt;   Emission type: poisson</span></span>
-<span><span class="co">#&gt;   lambda_1 posterior mean: 1.7821 (sd: 0.1595)</span></span>
-<span><span class="co">#&gt;   lambda_2 posterior mean: 9.6655 (sd: 0.3693)</span></span>
-<span><span class="co">#&gt;   Psi R-hat: 1.0010, ESS: 110</span></span></code></pre></div>
+<span><span class="co">#&gt;   lambda_1 posterior mean: 5.4345 (sd: 1.7691)</span></span>
+<span><span class="co">#&gt;   lambda_2 posterior mean: 9.9390 (sd: 0.8308)</span></span>
+<span><span class="co">#&gt;   Psi R-hat: 1.0040, ESS: 29</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="posterior-trace-plots-1">Posterior trace plots<a class="anchor" aria-label="anchor" href="#posterior-trace-plots-1"></a>
 </h3>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ep_p</span> <span class="op">&lt;-</span> <span class="va">result_p</span><span class="op">$</span><span class="fu">emission_params</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">n_iter_p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">ep_p</span><span class="op">$</span><span class="va">lambda</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">lambda_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  iteration <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">2000</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span>  iteration <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_iter_p</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span>,</span>
 <span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ep_p</span><span class="op">$</span><span class="va">lambda</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span>, <span class="va">ep_p</span><span class="op">$</span><span class="va">lambda</span><span class="op">[</span><span class="fl">2</span>, <span class="op">]</span><span class="op">)</span>,</span>
-<span>  parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lambda_1"</span>, <span class="st">"lambda_2"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">2000</span><span class="op">)</span></span>
+<span>  parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lambda_1"</span>, <span class="st">"lambda_2"</span><span class="op">)</span>, each <span class="op">=</span> <span class="va">n_iter_p</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">lambda_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">iteration</span>, <span class="va">value</span>, color <span class="op">=</span> <span class="va">parameter</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -376,32 +450,39 @@ with rate parameterization (mean
 <h2 id="comparing-latent-field-recovery">Comparing latent field recovery<a class="anchor" aria-label="anchor" href="#comparing-latent-field-recovery"></a>
 </h2>
 <p>For all three emission types, the posterior mode of the latent field
-should recover the true spatial pattern. Here we compare using the
-Poisson example:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+should recover the true spatial pattern:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">burnin</span> <span class="op">&lt;-</span> <span class="fl">500L</span></span>
-<span><span class="va">z_post</span> <span class="op">&lt;-</span> <span class="va">result_p</span><span class="op">$</span><span class="fu">z</span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">z_post_burn</span> <span class="op">&lt;-</span> <span class="va">z_post</span><span class="op">[</span>, <span class="op">(</span><span class="va">burnin</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">z_post</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
-<span><span class="co"># Posterior mode per vertex</span></span>
-<span><span class="va">z_mode</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">z_post_burn</span>, <span class="fl">1</span>, <span class="kw">function</span><span class="op">(</span><span class="va">row</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">tbl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tabulate.html" class="external-link">tabulate</a></span><span class="op">(</span><span class="va">row</span> <span class="op">+</span> <span class="fl">1L</span>, nbins <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/which.min.html" class="external-link">which.max</a></span><span class="op">(</span><span class="va">tbl</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1L</span></span>
-<span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="va">recover_field</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">result</span>, <span class="va">burnin</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">z_post</span> <span class="op">&lt;-</span> <span class="va">result</span><span class="op">$</span><span class="fu">z</span><span class="op">(</span><span class="op">)</span></span>
+<span>  <span class="va">z_burn</span> <span class="op">&lt;-</span> <span class="va">z_post</span><span class="op">[</span>, <span class="op">(</span><span class="va">burnin</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">z_post</span><span class="op">)</span><span class="op">]</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">z_burn</span>, <span class="fl">1</span>, <span class="kw">function</span><span class="op">(</span><span class="va">row</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">tbl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tabulate.html" class="external-link">tabulate</a></span><span class="op">(</span><span class="va">row</span> <span class="op">+</span> <span class="fl">1L</span>, nbins <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/which.min.html" class="external-link">which.max</a></span><span class="op">(</span><span class="va">tbl</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1L</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">z_mode_b</span> <span class="op">&lt;-</span> <span class="fu">recover_field</span><span class="op">(</span><span class="va">result_b</span>, <span class="va">burnin</span><span class="op">)</span></span>
+<span><span class="va">z_mode_g</span> <span class="op">&lt;-</span> <span class="fu">recover_field</span><span class="op">(</span><span class="va">result_g</span>, <span class="va">burnin</span><span class="op">)</span></span>
+<span><span class="va">z_mode_p</span> <span class="op">&lt;-</span> <span class="fu">recover_field</span><span class="op">(</span><span class="va">result_p</span>, <span class="va">burnin</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">field_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">6</span>, <span class="fl">6</span><span class="op">)</span>,</span>
-<span>  y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">6</span><span class="op">:</span><span class="fl">1</span>, each <span class="op">=</span> <span class="fl">6</span><span class="op">)</span>,</span>
-<span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">z_true_p</span>, <span class="va">z_mode</span><span class="op">)</span>,</span>
-<span>  panel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"True field"</span>, <span class="st">"Posterior mode"</span><span class="op">)</span>, each <span class="op">=</span> <span class="va">n_p</span><span class="op">)</span></span>
+<span>  x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">8</span>, <span class="fl">8</span><span class="op">)</span>, <span class="fl">4</span><span class="op">)</span>,</span>
+<span>  y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">8</span><span class="op">:</span><span class="fl">1</span>, each <span class="op">=</span> <span class="fl">8</span><span class="op">)</span>, <span class="fl">4</span><span class="op">)</span>,</span>
+<span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">z_true</span>, <span class="va">z_mode_b</span>, <span class="va">z_mode_g</span>, <span class="va">z_mode_p</span><span class="op">)</span>,</span>
+<span>  panel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"True field"</span>, <span class="st">"Bernoulli"</span>, <span class="st">"Gaussian"</span>, <span class="st">"Poisson"</span><span class="op">)</span>,</span>
+<span>              each <span class="op">=</span> <span class="va">n</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">field_df</span><span class="op">$</span><span class="va">panel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">field_df</span><span class="op">$</span><span class="va">panel</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"True field"</span>, <span class="st">"Posterior mode"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">field_df</span><span class="op">$</span><span class="va">panel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">field_df</span><span class="op">$</span><span class="va">panel</span>,</span>
+<span>                         levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"True field"</span>, <span class="st">"Bernoulli"</span>,</span>
+<span>                                    <span class="st">"Gaussian"</span>, <span class="st">"Poisson"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">field_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">value</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_d</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"white"</span>, linewidth <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"0"</span> <span class="op">=</span> <span class="st">"#440154"</span>, <span class="st">"1"</span> <span class="op">=</span> <span class="st">"#fde725"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_equal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">panel</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">panel</span>, nrow <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"z"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="emission-models_files/figure-html/field-recovery-1.png" class="r-plt" alt="" width="672"></p>
@@ -440,14 +521,14 @@ concentration)</td>
 <strong>Bernoulli</strong> <code>c(a, b)</code>: Use
 <code>c(1, 1)</code> (uniform) as a default. Increase <code>a</code> and
 <code>b</code> to shrink
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>η</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\eta_k</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>p</mi><mi>k</mi></msub><annotation encoding="application/x-tex">p_k</annotation></semantics></math>
 toward 0.5 if you expect weak signal.</li>
 <li>
 <strong>Gaussian</strong>
-<code>c(mu_0, kappa_0, alpha_0, beta_0)</code>: Set <code>mu_0</code>
-near the data mean, <code>kappa_0</code> small (e.g., 0.01) for weak
-location prior, and <code>alpha_0 = 2</code>, <code>beta_0</code> near
-the expected variance for a weakly informative scale prior.</li>
+<code>c(mu_0, sigma2_0, alpha_0, beta_0)</code>: Set <code>mu_0</code>
+near the data mean, <code>sigma2_0</code> large (e.g., 10000) for a
+vague location prior, and <code>alpha_0 = 2</code>, <code>beta_0</code>
+near the expected variance for a weakly informative scale prior.</li>
 <li>
 <strong>Poisson</strong> <code>c(alpha_0, beta_0)</code>: The prior
 mean is <code>alpha_0 / beta_0</code>. Use <code>c(1, 0.1)</code> for a

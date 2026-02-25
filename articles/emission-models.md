@@ -11,90 +11,138 @@ In a hierarchical MDGM, the spatial field $z$ is latent and observations
 $y$ are generated through an **emission distribution**. The mdgm package
 supports three emission families:
 
-| Family    | Observation type            | Parameters                       | Prior                 |
-|:----------|:----------------------------|:---------------------------------|:----------------------|
-| Bernoulli | Binary (0/1)                | $\eta_{k}$ (success probability) | Beta$(a,b)$           |
-| Gaussian  | Continuous (integer-valued) | $\mu_{k}$, $\sigma_{k}$          | Normal-InverseGamma   |
-| Poisson   | Count                       | $\lambda_{k}$ (rate)             | Gamma$(\alpha,\beta)$ |
+| Family    | Observation type            | Parameters                    | Prior                             |
+|:----------|:----------------------------|:------------------------------|:----------------------------------|
+| Bernoulli | Binary (0/1)                | $p_{k}$ (success probability) | Beta$(a,b)$                       |
+| Gaussian  | Continuous (integer-valued) | $\mu_{k}$, $\sigma_{k}^{2}$   | Independent Normal, Inverse-Gamma |
+| Poisson   | Count                       | $\lambda_{k}$ (rate)          | Gamma$(\alpha,\beta)$             |
 
 All emission families enforce an **identifiability constraint** on their
-location parameters: $\eta_{0} < \eta_{1} < \cdots$ (Bernoulli),
+location parameters: $p_{0} < p_{1} < \cdots$ (Bernoulli),
 $\mu_{0} < \mu_{1} < \cdots$ (Gaussian), or
 $\lambda_{0} < \lambda_{1} < \cdots$ (Poisson). This is achieved via
 truncated conjugate posterior sampling.
+
+## Simulating a spatial field
+
+For the examples below we use a simple region-growing algorithm to
+generate irregular spatial clusters on a grid graph. Starting from
+random seed vertices, regions expand outward one cell at a time,
+producing blocky but asymmetric patterns:
+
+``` r
+grow_regions <- function(nug, n_colors, seed = NULL) {
+  if (!is.null(seed)) set.seed(seed)
+  n <- nug$nvertices()
+  z <- rep(NA_integer_, n)
+
+  # Plant one seed per color
+  seeds <- sample(n, n_colors)
+  for (k in seq_along(seeds)) z[seeds[k]] <- k - 1L
+
+  # Grow: repeatedly claim a random unclaimed neighbor
+  repeat {
+    boundary <- which(!is.na(z))
+    candidates <- integer(0)
+    for (v in boundary) {
+      nbrs <- nug$neighbors(v)
+      candidates <- c(candidates, nbrs[is.na(z[nbrs])])
+    }
+    candidates <- unique(candidates)
+    if (length(candidates) == 0) break
+
+    pick <- sample(candidates, 1)
+    claimed <- nug$neighbors(pick)
+    claimed <- claimed[!is.na(z[claimed])]
+    z[pick] <- z[sample(claimed, 1)]
+  }
+  z
+}
+```
+
+``` r
+nug <- nug_from_grid(8, 8, seed = 42L)
+n <- nug$nvertices()
+
+z_true <- grow_regions(nug, n_colors = 2, seed = 7)
+
+grid_df <- data.frame(
+  x = rep(1:8, 8), y = rep(8:1, each = 8),
+  z = factor(z_true)
+)
+ggplot(grid_df, aes(x, y, fill = z)) +
+  geom_tile(color = "white", linewidth = 0.3) +
+  scale_fill_manual(values = c("0" = "#440154", "1" = "#fde725")) +
+  coord_equal() + theme_minimal() +
+  labs(title = "Simulated spatial field (region growing)", fill = "z")
+```
+
+![](emission-models_files/figure-html/sim-field-1.png)
 
 ## Bernoulli emission
 
 The Bernoulli emission models binary observations. Each vertex $i$ can
 have multiple replicate observations $y_{i1},\ldots,y_{im_{i}}$, each
-drawn independently from $\text{Bernoulli}\left( \eta_{z_{i}} \right)$.
+drawn independently from $\text{Bernoulli}\left( p_{z_{i}} \right)$.
+Multiple replicates per vertex are needed for identifiability in the
+Bernoulli case.
 
-### Example: binary disease indicators on a grid
-
-``` r
-nug <- nug_from_grid(6, 6, seed = 42L)
-n <- nug$nvertices()
-```
-
-Simulate a latent field and binary observations:
+### Example: binary indicators on a grid
 
 ``` r
 set.seed(1)
-# True latent field: left half = 0, right half = 1
-z_true <- rep(0:1, each = n / 2)
-
-# True emission probabilities
-eta_true <- c(0.2, 0.8)
+p_true <- c(0.3, 0.7)
 
 # 5 replicate observations per vertex
-y <- lapply(seq_len(n), function(i) {
-  rbinom(5, 1, eta_true[z_true[i] + 1])
+y_bern <- lapply(seq_len(n), function(i) {
+  rbinom(5, 1, p_true[z_true[i] + 1])
 })
 ```
 
 Fit the model:
 
 ``` r
-model <- mdgm_model(nug, dag_type = "spanning_tree",
-                     n_colors = 2L, emission = "bernoulli")
+model_b <- mdgm_model(nug, dag_type = "spanning_tree",
+                       n_colors = 2L, emission = "bernoulli")
 
-result <- mcmc(model, y = y,
-               z_init = sample(0:1, n, replace = TRUE),
-               psi_init = 0.5,
-               eta_init = c(0.3, 0.7),
-               n_iter = 2000L,
-               psi_tune = 1.0,
-               emission_prior_params = c(1, 1),
-               seed = 42L,
-               nug = nug)
+result_b <- mcmc(model_b, y = y_bern,
+                 z_init = sample(0:1, n, replace = TRUE),
+                 psi_init = 0.5,
+                 theta_init = c(0.3, 0.7),
+                 n_iter = 2000L,
+                 psi_tune = 1.0,
+                 seed = 42L,
+                 nug = nug)
 
-result$summary(burnin = 500L)
+result_b$summary(burnin = 500L)
 #> MDGM MCMC Results
-#>   Vertices: 36, Colors: 2
+#>   Vertices: 64, Colors: 2
 #>   Iterations: 2000 (burnin: 500)
-#>   Psi acceptance rate: 0.650
-#>   Psi posterior mean: 3.1057 (sd: 1.1578)
+#>   Psi acceptance rate: 0.465
+#>   Psi posterior mean: 2.2008 (sd: 1.3132)
 #>   Emission type: bernoulli
-#>   eta_1 posterior mean: 0.1606 (sd: 0.0400)
-#>   eta_2 posterior mean: 0.8197 (sd: 0.0401)
-#>   Psi R-hat: 1.0025, ESS: 91
+#>   p_1 posterior mean: 0.4141 (sd: 0.1506)
+#>   p_2 posterior mean: 0.7350 (sd: 0.0432)
+#>   Psi R-hat: 1.0953, ESS: 11
 ```
 
 ### Posterior trace plots
 
 ``` r
-ep <- result$emission_params()
-eta_df <- data.frame(
-  iteration = rep(1:2000, 2),
-  value = c(ep$eta[1, ], ep$eta[2, ]),
-  parameter = rep(c("eta_1", "eta_2"), each = 2000)
+ep_b <- result_b$emission_params()
+n_iter <- ncol(ep_b$p)
+
+p_df <- data.frame(
+  iteration = rep(seq_len(n_iter), 2),
+  value = c(ep_b$p[1, ], ep_b$p[2, ]),
+  parameter = rep(c("p_1", "p_2"), each = n_iter)
 )
 
-ggplot(eta_df, aes(iteration, value, color = parameter)) +
+ggplot(p_df, aes(iteration, value, color = parameter)) +
   geom_line(alpha = 0.5) +
-  geom_hline(yintercept = eta_true, linetype = "dashed", alpha = 0.5) +
+  geom_hline(yintercept = p_true, linetype = "dashed", alpha = 0.5) +
   theme_minimal() +
-  labs(title = "Bernoulli emission: eta trace",
+  labs(title = "Bernoulli emission: p trace",
        x = "Iteration", y = "Value", color = NULL)
 ```
 
@@ -104,72 +152,85 @@ ggplot(eta_df, aes(iteration, value, color = parameter)) +
 
 The Gaussian emission models continuous (integer-valued) observations.
 Each observation is drawn from
-$\mathcal{N}\left( \mu_{z_{i}},\sigma_{z_{i}}^{2} \right)$.
+$\mathcal{N}\left( \mu_{z_{i}},\sigma_{z_{i}}^{2} \right)$. A single
+observation per vertex is sufficient for identifiability.
 
-The prior is a Normal-InverseGamma:
-$\mu_{k} \mid \sigma_{k}^{2} \sim \mathcal{N}\left( \mu_{0},\sigma_{k}^{2}/\kappa_{0} \right)$
-and
-$\sigma_{k}^{2} \sim \text{InverseGamma}\left( \alpha_{0},\beta_{0} \right)$.
+The priors on $\mu_{k}$ and $\sigma_{k}^{2}$ are independent:
+$$\mu_{k} \sim \mathcal{N}\left( \mu_{0},\sigma_{0}^{2} \right),\qquad\sigma_{k}^{2} \sim \text{InverseGamma}\left( \alpha_{0},\beta_{0} \right)$$
+where $\sigma_{0}^{2}$ is the prior variance for the mean.
 
 ### Example: spatial temperature field
 
+Here we use overlapping emission distributions — the two groups differ
+in mean but share similar spread, making classification rely on both the
+emission signal and the spatial structure:
+
 ``` r
-nug_g <- nug_from_grid(6, 6, seed = 42L)
-n_g <- nug_g$nvertices()
-
 set.seed(2)
-# Two spatial clusters: cold (left) and warm (right)
-z_true_g <- rep(0:1, each = n_g / 2)
-mu_true <- c(10, 25)
-sigma_true <- c(2, 3)
+mu_true <- c(5, 12)
+sigma2_true <- c(9, 9)
 
-# 3 replicate observations per vertex (rounded to integers for storage)
-y_g <- lapply(seq_len(n_g), function(i) {
-  as.integer(round(rnorm(3, mu_true[z_true_g[i] + 1],
-                         sigma_true[z_true_g[i] + 1])))
+# Single observation per vertex
+y_gauss <- lapply(seq_len(n), function(i) {
+  as.integer(round(rnorm(1, mu_true[z_true[i] + 1],
+                         sqrt(sigma2_true[z_true[i] + 1]))))
 })
+
+# Visualize the observations
+obs_df <- data.frame(
+  x = rep(1:8, 8), y = rep(8:1, each = 8),
+  value = vapply(y_gauss, `[`, integer(1), 1)
+)
+ggplot(obs_df, aes(x, y, fill = value)) +
+  geom_tile(color = "white", linewidth = 0.3) +
+  scale_fill_gradient2(low = "#440154", mid = "#21918c", high = "#fde725",
+                       midpoint = mean(obs_df$value)) +
+  coord_equal() + theme_minimal() +
+  labs(title = "Observed temperatures (single obs per vertex)", fill = "y")
 ```
+
+![](emission-models_files/figure-html/gaussian-sim-1.png)
 
 Fit with Gaussian emission:
 
 ``` r
-model_g <- mdgm_model(nug_g, dag_type = "spanning_tree",
+model_g <- mdgm_model(nug, dag_type = "spanning_tree",
                        n_colors = 2L, emission = "gaussian")
 
-# eta_init: c(mu_1, mu_2, sigma_1, sigma_2)
-result_g <- mcmc(model_g, y = y_g,
-                 z_init = sample(0:1, n_g, replace = TRUE),
+# theta_init: c(mu_1, mu_2, sigma2_1, sigma2_2)
+result_g <- mcmc(model_g, y = y_gauss,
+                 z_init = sample(0:1, n, replace = TRUE),
                  psi_init = 0.5,
-                 eta_init = c(12, 22, 3, 3),
+                 theta_init = c(4, 14, 9, 9),
                  n_iter = 2000L,
                  psi_tune = 1.0,
-                 emission_prior_params = c(0, 0.01, 2, 1),
                  seed = 42L,
-                 nug = nug_g)
+                 nug = nug)
 
 result_g$summary(burnin = 500L)
 #> MDGM MCMC Results
-#>   Vertices: 36, Colors: 2
+#>   Vertices: 64, Colors: 2
 #>   Iterations: 2000 (burnin: 500)
-#>   Psi acceptance rate: 0.644
-#>   Psi posterior mean: 3.2391 (sd: 1.0457)
+#>   Psi acceptance rate: 0.513
+#>   Psi posterior mean: 2.9534 (sd: 1.3112)
 #>   Emission type: gaussian
-#>   mu_1 posterior mean: 10.2123 (sd: 0.3045)
-#>   sigma_1 posterior mean: 24.7006 (sd: 0.4767)
-#>   NA posterior mean: 2.2668 (sd: 0.2140)
-#>   NA posterior mean: 3.5253 (sd: 0.3376)
-#>   Psi R-hat: 0.9999, ESS: 156
+#>   mu_1 posterior mean: 2.6923 (sd: 2.0341)
+#>   sigma2_1 posterior mean: 12.6376 (sd: 0.6073)
+#>   NA posterior mean: 10.7035 (sd: 11.4432)
+#>   NA posterior mean: 12.2790 (sd: 3.0145)
+#>   Psi R-hat: 1.0001, ESS: 51
 ```
 
 ### Posterior emission parameters
 
 ``` r
 ep_g <- result_g$emission_params()
+n_iter_g <- ncol(ep_g$mu)
 
 mu_df <- data.frame(
-  iteration = rep(1:2000, 2),
+  iteration = rep(seq_len(n_iter_g), 2),
   value = c(ep_g$mu[1, ], ep_g$mu[2, ]),
-  parameter = rep(c("mu_1", "mu_2"), each = 2000)
+  parameter = rep(c("mu_1", "mu_2"), each = n_iter_g)
 )
 
 ggplot(mu_df, aes(iteration, value, color = parameter)) +
@@ -183,26 +244,27 @@ ggplot(mu_df, aes(iteration, value, color = parameter)) +
 ![](emission-models_files/figure-html/gaussian-trace-1.png)
 
 ``` r
-sigma_df <- data.frame(
-  iteration = rep(1:2000, 2),
-  value = c(ep_g$sigma[1, ], ep_g$sigma[2, ]),
-  parameter = rep(c("sigma_1", "sigma_2"), each = 2000)
+sigma2_df <- data.frame(
+  iteration = rep(seq_len(n_iter_g), 2),
+  value = c(ep_g$sigma2[1, ], ep_g$sigma2[2, ]),
+  parameter = rep(c("sigma2_1", "sigma2_2"), each = n_iter_g)
 )
 
-ggplot(sigma_df, aes(iteration, value, color = parameter)) +
+ggplot(sigma2_df, aes(iteration, value, color = parameter)) +
   geom_line(alpha = 0.5) +
-  geom_hline(yintercept = sigma_true, linetype = "dashed", alpha = 0.5) +
+  geom_hline(yintercept = sigma2_true, linetype = "dashed", alpha = 0.5) +
   theme_minimal() +
-  labs(title = "Gaussian emission: sigma trace",
+  labs(title = "Gaussian emission: sigma2 trace",
        x = "Iteration", y = "Value", color = NULL)
 ```
 
-![](emission-models_files/figure-html/gaussian-sigma-trace-1.png)
+![](emission-models_files/figure-html/gaussian-sigma2-trace-1.png)
 
 ## Poisson emission
 
 The Poisson emission models count data. Each observation is drawn from
-$\text{Poisson}\left( \lambda_{z_{i}} \right)$.
+$\text{Poisson}\left( \lambda_{z_{i}} \right)$. As with the Gaussian
+case, a single observation per vertex is sufficient for identifiability.
 
 The prior is a Gamma distribution:
 $\lambda_{k} \sim \text{Gamma}\left( \alpha_{0},\beta_{0} \right)$ with
@@ -210,58 +272,68 @@ rate parameterization (mean $= \alpha_{0}/\beta_{0}$).
 
 ### Example: spatial species counts
 
+We again use overlapping rates so that the spatial structure contributes
+meaningfully to classification:
+
 ``` r
-nug_p <- nug_from_grid(6, 6, seed = 42L)
-n_p <- nug_p$nvertices()
-
 set.seed(3)
-# Two habitats: sparse (left) and abundant (right)
-z_true_p <- rep(0:1, each = n_p / 2)
-lambda_true <- c(2, 10)
+lambda_true <- c(4, 10)
 
-# 4 replicate counts per vertex
-y_p <- lapply(seq_len(n_p), function(i) {
-  as.integer(rpois(4, lambda_true[z_true_p[i] + 1]))
+# Single count per vertex
+y_pois <- lapply(seq_len(n), function(i) {
+  as.integer(rpois(1, lambda_true[z_true[i] + 1]))
 })
+
+obs_df_p <- data.frame(
+  x = rep(1:8, 8), y = rep(8:1, each = 8),
+  value = vapply(y_pois, `[`, integer(1), 1)
+)
+ggplot(obs_df_p, aes(x, y, fill = value)) +
+  geom_tile(color = "white", linewidth = 0.3) +
+  scale_fill_gradient(low = "#440154", high = "#fde725") +
+  coord_equal() + theme_minimal() +
+  labs(title = "Observed counts (single obs per vertex)", fill = "y")
 ```
+
+![](emission-models_files/figure-html/poisson-sim-1.png)
 
 Fit with Poisson emission:
 
 ``` r
-model_p <- mdgm_model(nug_p, dag_type = "spanning_tree",
+model_p <- mdgm_model(nug, dag_type = "spanning_tree",
                        n_colors = 2L, emission = "poisson")
 
-result_p <- mcmc(model_p, y = y_p,
-                 z_init = sample(0:1, n_p, replace = TRUE),
+result_p <- mcmc(model_p, y = y_pois,
+                 z_init = sample(0:1, n, replace = TRUE),
                  psi_init = 0.5,
-                 eta_init = c(3, 8),
+                 theta_init = c(3, 8),
                  n_iter = 2000L,
                  psi_tune = 1.0,
-                 emission_prior_params = c(1, 0.1),
                  seed = 42L,
-                 nug = nug_p)
+                 nug = nug)
 
 result_p$summary(burnin = 500L)
 #> MDGM MCMC Results
-#>   Vertices: 36, Colors: 2
+#>   Vertices: 64, Colors: 2
 #>   Iterations: 2000 (burnin: 500)
-#>   Psi acceptance rate: 0.664
-#>   Psi posterior mean: 3.3126 (sd: 1.1022)
+#>   Psi acceptance rate: 0.437
+#>   Psi posterior mean: 1.8821 (sd: 1.2732)
 #>   Emission type: poisson
-#>   lambda_1 posterior mean: 1.7821 (sd: 0.1595)
-#>   lambda_2 posterior mean: 9.6655 (sd: 0.3693)
-#>   Psi R-hat: 1.0010, ESS: 110
+#>   lambda_1 posterior mean: 5.4345 (sd: 1.7691)
+#>   lambda_2 posterior mean: 9.9390 (sd: 0.8308)
+#>   Psi R-hat: 1.0040, ESS: 29
 ```
 
 ### Posterior trace plots
 
 ``` r
 ep_p <- result_p$emission_params()
+n_iter_p <- ncol(ep_p$lambda)
 
 lambda_df <- data.frame(
-  iteration = rep(1:2000, 2),
+  iteration = rep(seq_len(n_iter_p), 2),
   value = c(ep_p$lambda[1, ], ep_p$lambda[2, ]),
-  parameter = rep(c("lambda_1", "lambda_2"), each = 2000)
+  parameter = rep(c("lambda_1", "lambda_2"), each = n_iter_p)
 )
 
 ggplot(lambda_df, aes(iteration, value, color = parameter)) +
@@ -277,33 +349,40 @@ ggplot(lambda_df, aes(iteration, value, color = parameter)) +
 ## Comparing latent field recovery
 
 For all three emission types, the posterior mode of the latent field
-should recover the true spatial pattern. Here we compare using the
-Poisson example:
+should recover the true spatial pattern:
 
 ``` r
 burnin <- 500L
-z_post <- result_p$z()
-z_post_burn <- z_post[, (burnin + 1):ncol(z_post)]
 
-# Posterior mode per vertex
-z_mode <- apply(z_post_burn, 1, function(row) {
-  tbl <- tabulate(row + 1L, nbins = 2)
-  which.max(tbl) - 1L
-})
+recover_field <- function(result, burnin) {
+  z_post <- result$z()
+  z_burn <- z_post[, (burnin + 1):ncol(z_post)]
+  apply(z_burn, 1, function(row) {
+    tbl <- tabulate(row + 1L, nbins = 2)
+    which.max(tbl) - 1L
+  })
+}
+
+z_mode_b <- recover_field(result_b, burnin)
+z_mode_g <- recover_field(result_g, burnin)
+z_mode_p <- recover_field(result_p, burnin)
 
 field_df <- data.frame(
-  x = rep(1:6, 6),
-  y = rep(6:1, each = 6),
-  value = c(z_true_p, z_mode),
-  panel = rep(c("True field", "Posterior mode"), each = n_p)
+  x = rep(rep(1:8, 8), 4),
+  y = rep(rep(8:1, each = 8), 4),
+  value = c(z_true, z_mode_b, z_mode_g, z_mode_p),
+  panel = rep(c("True field", "Bernoulli", "Gaussian", "Poisson"),
+              each = n)
 )
-field_df$panel <- factor(field_df$panel, levels = c("True field", "Posterior mode"))
+field_df$panel <- factor(field_df$panel,
+                         levels = c("True field", "Bernoulli",
+                                    "Gaussian", "Poisson"))
 
 ggplot(field_df, aes(x, y, fill = factor(value))) +
-  geom_tile() +
-  scale_fill_viridis_d() +
+  geom_tile(color = "white", linewidth = 0.2) +
+  scale_fill_manual(values = c("0" = "#440154", "1" = "#fde725")) +
   coord_equal() +
-  facet_wrap(~panel) +
+  facet_wrap(~panel, nrow = 1) +
   theme_minimal() +
   labs(fill = "z")
 ```
@@ -321,11 +400,11 @@ ggplot(field_df, aes(x, y, fill = factor(value))) +
 ## Prior tuning tips
 
 - **Bernoulli** `c(a, b)`: Use `c(1, 1)` (uniform) as a default.
-  Increase `a` and `b` to shrink $\eta_{k}$ toward 0.5 if you expect
-  weak signal.
-- **Gaussian** `c(mu_0, kappa_0, alpha_0, beta_0)`: Set `mu_0` near the
-  data mean, `kappa_0` small (e.g., 0.01) for weak location prior, and
-  `alpha_0 = 2`, `beta_0` near the expected variance for a weakly
+  Increase `a` and `b` to shrink $p_{k}$ toward 0.5 if you expect weak
+  signal.
+- **Gaussian** `c(mu_0, sigma2_0, alpha_0, beta_0)`: Set `mu_0` near the
+  data mean, `sigma2_0` large (e.g., 10000) for a vague location prior,
+  and `alpha_0 = 2`, `beta_0` near the expected variance for a weakly
   informative scale prior.
 - **Poisson** `c(alpha_0, beta_0)`: The prior mean is
   `alpha_0 / beta_0`. Use `c(1, 0.1)` for a diffuse prior with mean 10,
