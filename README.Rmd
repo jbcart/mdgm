@@ -18,6 +18,8 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
+Full documentation: <https://jbcart.github.io/mdgm/>
+
 **mdgm** (Mixture of Directed Graphical Models) provides Bayesian inference for
 discrete spatial random fields. Instead of working with a Markov random field
 and its intractable normalizing constant, the MDGM defines a mixture over
