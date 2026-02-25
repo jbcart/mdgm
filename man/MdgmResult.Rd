@@ -18,11 +18,13 @@ the accessor methods below.
 \item \href{#method-MdgmResult-new}{\code{MdgmResult$new()}}
 \item \href{#method-MdgmResult-z}{\code{MdgmResult$z()}}
 \item \href{#method-MdgmResult-psi}{\code{MdgmResult$psi()}}
-\item \href{#method-MdgmResult-eta}{\code{MdgmResult$eta()}}
+\item \href{#method-MdgmResult-emission_params}{\code{MdgmResult$emission_params()}}
 \item \href{#method-MdgmResult-dag}{\code{MdgmResult$dag()}}
 \item \href{#method-MdgmResult-edge_inclusion_probs}{\code{MdgmResult$edge_inclusion_probs()}}
 \item \href{#method-MdgmResult-acceptance_rates}{\code{MdgmResult$acceptance_rates()}}
+\item \href{#method-MdgmResult-diagnostics}{\code{MdgmResult$diagnostics()}}
 \item \href{#method-MdgmResult-summary}{\code{MdgmResult$summary()}}
+\item \href{#method-MdgmResult-plot}{\code{MdgmResult$plot()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -31,13 +33,17 @@ the accessor methods below.
 \subsection{Method \code{new()}}{
 Create a new MdgmResult. Use \code{\link[=mcmc]{mcmc()}} instead.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MdgmResult$new(raw)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{MdgmResult$new(raw, emission_type = NULL, nug = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{raw}}{List of raw MCMC output from C++.}
+
+\item{\code{emission_type}}{Character string or NULL.}
+
+\item{\code{nug}}{A \code{NaturalUndirectedGraph} or NULL.}
 }
 \if{html}{\out{</div>}}
 }
@@ -77,25 +83,24 @@ Numeric vector of length \code{J}.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-MdgmResult-eta"></a>}}
-\if{latex}{\out{\hypertarget{method-MdgmResult-eta}{}}}
-\subsection{Method \code{eta()}}{
-Get the emission parameter samples.
+\if{html}{\out{<a id="method-MdgmResult-emission_params"></a>}}
+\if{latex}{\out{\hypertarget{method-MdgmResult-emission_params}{}}}
+\subsection{Method \code{emission_params()}}{
+Get the emission parameters.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MdgmResult$eta(iteration = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{MdgmResult$emission_params(iteration = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{iteration}}{Optional integer iteration to extract (1-indexed).
-If \code{NULL}, returns the full \verb{n_colors x J} matrix.}
+\item{\code{iteration}}{Optional integer iteration to extract (1-indexed).}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Numeric matrix (\verb{n_colors x J}), numeric vector, or \code{NULL}
-if standalone model.
+Named list appropriate to emission type, or \code{NULL} for
+standalone models.
 }
 }
 \if{html}{\out{<hr>}}
@@ -126,14 +131,14 @@ Values are 1-indexed parent vertex IDs; \code{NA} indicates a root.
 \subsection{Method \code{edge_inclusion_probs()}}{
 Compute edge inclusion probabilities.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MdgmResult$edge_inclusion_probs(nug, burnin = 0L)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{MdgmResult$edge_inclusion_probs(nug = NULL, burnin = 0L)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{nug}}{A \code{NaturalUndirectedGraph} object (the same one used
-to create the model).}
+\item{\code{nug}}{A \code{NaturalUndirectedGraph} object. If \code{NULL}, uses the
+graph stored at construction time.}
 
 \item{\code{burnin}}{Number of initial iterations to discard (default 0).}
 }
@@ -157,16 +162,68 @@ A named numeric vector with \code{psi} and \code{graph} rates.
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-MdgmResult-diagnostics"></a>}}
+\if{latex}{\out{\hypertarget{method-MdgmResult-diagnostics}{}}}
+\subsection{Method \code{diagnostics()}}{
+Compute MCMC diagnostics.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MdgmResult$diagnostics(burnin = 0L)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{burnin}}{Number of initial iterations to discard (default 0).}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A named list with \code{rhat} and \code{ess} (effective sample size)
+for psi and emission parameters.
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MdgmResult-summary"></a>}}
 \if{latex}{\out{\hypertarget{method-MdgmResult-summary}{}}}
 \subsection{Method \code{summary()}}{
 Print a summary of the MCMC results.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MdgmResult$summary()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{MdgmResult$summary(burnin = 0L)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{burnin}}{Number of initial iterations to discard (default 0).}
+}
+\if{html}{\out{</div>}}
+}
 \subsection{Returns}{
-Invisible \code{self}.
+Invisible named list with summary statistics.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-MdgmResult-plot"></a>}}
+\if{latex}{\out{\hypertarget{method-MdgmResult-plot}{}}}
+\subsection{Method \code{plot()}}{
+Plot MCMC trace plots and diagnostics.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MdgmResult$plot(burnin = 0L, which = "trace")}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{burnin}}{Number of initial iterations to discard (default 0).}
+
+\item{\code{which}}{Character vector of what to plot: \code{"trace"} for trace
+plots of psi and emission params, \code{"posterior_field"} for posterior
+mean of the latent field (requires stored graph).}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Invisible \code{NULL}.
 }
 }
 }

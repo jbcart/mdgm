@@ -18,6 +18,13 @@ Model::Model(std::unique_ptr<SpatialRandomField> spatial, FamilyType emission)
 
 bool Model::has_emission() const { return emission_type_.has_value(); }
 
+FamilyType Model::emission_type() const {
+  if (!emission_type_.has_value()) {
+    throw std::logic_error("No emission type on standalone model");
+  }
+  return *emission_type_;
+}
+
 std::vector<double> Model::ZFullConditional(
     std::span<const int> z, std::size_t vertex, double psi,
     const Observations& y, std::span<const double> eta) const {

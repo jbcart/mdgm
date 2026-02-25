@@ -52,6 +52,27 @@ test_that("sample_spanning_tree returns a result", {
   expect_type(tree, "list")
 })
 
+test_that("nug_from_grid creates correct rook grid", {
+  g <- nug_from_grid(3, 3, seed = 42L)
+  expect_equal(g$nvertices(), 9L)
+  expect_equal(g$nedges(), 12L)
+})
+
+test_that("nug_from_grid creates correct queen grid", {
+  g <- nug_from_grid(3, 3, order = 2L, seed = 42L)
+  expect_equal(g$nvertices(), 9L)
+  # Queen adjacency on 3x3: 4 corners*3 + 4 edges*5 + 1 center*8 = 12+20+8=40 directed, 20 undirected
+  expect_equal(g$nedges(), 20L)
+})
+
+test_that("spanning tree methods produce results", {
+  g <- nug_from_grid(4, 4, seed = 42L)
+  for (method in c("wilson", "aldous_broder")) {
+    tree <- g$sample_spanning_tree(method)
+    expect_type(tree, "list")
+  }
+})
+
 test_that("weighted edges are preserved", {
   edges <- cbind(
     c(1, 2, 2, 3),

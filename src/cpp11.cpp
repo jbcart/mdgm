@@ -41,6 +41,13 @@ extern "C" SEXP _mdgm_model_ncolors_cpp(SEXP model) {
   END_CPP11
 }
 // R_model.cpp
+cpp11::sexp model_emission_type_cpp(cpp11::external_pointer<mdgm::Model> model);
+extern "C" SEXP _mdgm_model_emission_type_cpp(SEXP model) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(model_emission_type_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::Model>>>(model)));
+  END_CPP11
+}
+// R_model.cpp
 cpp11::writable::list run_mcmc_cpp(cpp11::external_pointer<mdgm::Model> model, const cpp11::integers& obs_data, const cpp11::integers& obs_ptr, const cpp11::integers& z_init, double psi_init, const cpp11::doubles& eta_init, int n_iterations, double psi_tune, const cpp11::doubles& emission_prior_params, cpp11::external_pointer<mdgm::RNG> rng);
 extern "C" SEXP _mdgm_run_mcmc_cpp(SEXP model, SEXP obs_data, SEXP obs_ptr, SEXP z_init, SEXP psi_init, SEXP eta_init, SEXP n_iterations, SEXP psi_tune, SEXP emission_prior_params, SEXP rng) {
   BEGIN_CPP11
@@ -159,6 +166,7 @@ extern "C" {
 static const R_CallMethodDef CallEntries[] = {
     {"_mdgm_model_create_hierarchical_cpp", (DL_FUNC) &_mdgm_model_create_hierarchical_cpp,  4},
     {"_mdgm_model_create_standalone_cpp",   (DL_FUNC) &_mdgm_model_create_standalone_cpp,    3},
+    {"_mdgm_model_emission_type_cpp",       (DL_FUNC) &_mdgm_model_emission_type_cpp,        1},
     {"_mdgm_model_has_emission_cpp",        (DL_FUNC) &_mdgm_model_has_emission_cpp,         1},
     {"_mdgm_model_ncolors_cpp",             (DL_FUNC) &_mdgm_model_ncolors_cpp,              1},
     {"_mdgm_model_nvertices_cpp",           (DL_FUNC) &_mdgm_model_nvertices_cpp,            1},

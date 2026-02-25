@@ -183,3 +183,5 @@ result_h$summary()
   constructors, querying structure, and sampling spanning trees.
 - **[MDGM Model Specification](mdgm-models.html)** — DAG types, the spatial
   field model, emission distributions, and MCMC details.
+- **[Emission Models](emission-models.html)** — Worked examples for
+  Bernoulli, Gaussian, and Poisson emission distributions.

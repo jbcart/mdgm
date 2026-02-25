@@ -73,6 +73,36 @@ class RNG {
     return (lo + hi) / 2.0;  // fallback
   }
 
+  // Gamma(shape, rate) — note: rate parameterization (scale = 1/rate)
+  double gamma_rate(double shape, double rate) {
+    return gamma(shape) / rate;
+  }
+
+  // Truncated Gamma(shape, rate) on [lo, hi] via rejection sampling
+  double truncated_gamma(double shape, double rate, double lo, double hi,
+                         int max_attempts = 10000) {
+    for (int i = 0; i < max_attempts; ++i) {
+      double sample = gamma_rate(shape, rate);
+      if (sample >= lo && sample <= hi) return sample;
+    }
+    return (lo + hi) / 2.0;  // fallback
+  }
+
+  // Truncated Normal(mean, stddev) on [lo, hi] via rejection sampling
+  double truncated_normal(double mean, double stddev, double lo, double hi,
+                          int max_attempts = 10000) {
+    for (int i = 0; i < max_attempts; ++i) {
+      double sample = normal(mean, stddev);
+      if (sample >= lo && sample <= hi) return sample;
+    }
+    return (lo + hi) / 2.0;  // fallback
+  }
+
+  // Inverse-Gamma(shape, scale): 1/Gamma(shape, 1/scale)
+  double inverse_gamma(double shape, double scale) {
+    return scale / gamma(shape);
+  }
+
   std::size_t discrete(const std::vector<double>& weights) {
     std::discrete_distribution<std::size_t> dist(weights.begin(), weights.end());
     return dist(rng_);

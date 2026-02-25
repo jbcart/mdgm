@@ -31,6 +31,20 @@ MdgmModel <- R6::R6Class(
     #' @return Integer.
     ncolors = function() {
       model_ncolors_cpp(private$.model)
+    },
+
+    #' @description Get the emission family type.
+    #' @return Character string (`"bernoulli"`, `"gaussian"`, `"poisson"`) or
+    #'   `NULL` for standalone models.
+    emission_type = function() {
+      model_emission_type_cpp(private$.model)
+    },
+
+    #' @description Get the internal C++ pointer. For internal use only.
+    #' @return External pointer.
+    #' @keywords internal
+    get_ptr = function() {
+      private$.model
     }
   ),
   private = list(
@@ -48,8 +62,8 @@ MdgmModel <- R6::R6Class(
 #'   `"acyclic_orientation"`, or `"rooted"`.
 #' @param n_colors Number of categories for the spatial field (default 2).
 #' @param emission Optional emission family for hierarchical models:
-#'   `"bernoulli"`. If `NULL` (default), creates a standalone model where
-#'   the spatial field is observed directly.
+#'   `"bernoulli"`, `"gaussian"`, or `"poisson"`. If `NULL` (default),
+#'   creates a standalone model where the spatial field is observed directly.
 #' @return An [MdgmModel] object.
 #' @examples
 #' # Standalone model on a triangle graph
@@ -69,12 +83,12 @@ mdgm_model <- function(nug,
   dag_type <- match.arg(dag_type)
   n_colors <- as.integer(n_colors)
 
-  nug_ptr <- nug$.__enclos_env__$private$.graph
+  nug_ptr <- nug$get_ptr()
 
   if (is.null(emission)) {
     ptr <- model_create_standalone_cpp(nug_ptr, dag_type, n_colors)
   } else {
-    emission <- match.arg(emission, c("bernoulli"))
+    emission <- match.arg(emission, c("bernoulli", "gaussian", "poisson"))
     ptr <- model_create_hierarchical_cpp(
       nug_ptr, dag_type, n_colors, emission
     )

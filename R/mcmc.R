@@ -13,16 +13,21 @@
 #'   with values in `0, ..., n_colors - 1`.
 #' @param psi_init Initial value for the dependence parameter (positive).
 #' @param eta_init Initial emission parameters. For Bernoulli, a numeric
-#'   vector of length `n_colors` (e.g., `c(0.2, 0.8)`). Ignored for
-#'   standalone models, but should still be provided as `numeric(0)` or
-#'   a placeholder.
+#'   vector of length `n_colors` (e.g., `c(0.2, 0.8)`). For Gaussian,
+#'   a vector of length `2 * n_colors` with means then standard deviations
+#'   (e.g., `c(mu_1, mu_2, sigma_1, sigma_2)`). For Poisson, a vector of
+#'   length `n_colors` with rate parameters. Ignored for standalone models.
 #' @param n_iter Number of MCMC iterations (default 1000).
 #' @param psi_tune Standard deviation of the normal MH proposal for psi
 #'   (default 0.1).
 #' @param emission_prior_params Prior hyperparameters for emission
-#'   parameters. For Bernoulli: `c(a, b)` for `Beta(a, b)` prior
-#'   (default `c(1, 1)`).
+#'   parameters. For Bernoulli: `c(a, b)` for `Beta(a, b)` prior.
+#'   For Gaussian: `c(mu_0, kappa_0, alpha_0, beta_0)` for
+#'   Normal-InverseGamma prior. For Poisson: `c(alpha_0, beta_0)` for
+#'   `Gamma(alpha_0, beta_0)` prior. Default `c(1, 1)`.
 #' @param seed Optional integer seed for reproducibility.
+#' @param nug Optional `NaturalUndirectedGraph` object. If provided, stored
+#'   in the result for use by `edge_inclusion_probs()` and `plot()`.
 #' @return An [MdgmResult] object containing posterior samples.
 #' @seealso [mdgm_model()] for model construction, [MdgmResult] for
 #'   accessing results.
@@ -45,7 +50,8 @@ mcmc <- function(model, y = NULL, z_init, psi_init,
                  eta_init = numeric(0),
                  n_iter = 1000L, psi_tune = 0.1,
                  emission_prior_params = c(1, 1),
-                 seed = NULL) {
+                 seed = NULL,
+                 nug = NULL) {
   stopifnot(inherits(model, "MdgmModel"))
 
   n <- model$nvertices()
@@ -64,7 +70,7 @@ mcmc <- function(model, y = NULL, z_init, psi_init,
   }
 
   # Access internal model pointer
-  model_ptr <- model$.__enclos_env__$private$.model
+  model_ptr <- model$get_ptr()
 
   # Create RNG
   if (is.null(seed)) {
@@ -83,5 +89,7 @@ mcmc <- function(model, y = NULL, z_init, psi_init,
     rng_ptr
   )
 
-  MdgmResult$new(raw)
+  MdgmResult$new(raw,
+                  emission_type = model$emission_type(),
+                  nug = nug)
 }

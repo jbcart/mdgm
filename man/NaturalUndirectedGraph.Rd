@@ -22,6 +22,7 @@ or \code{\link[=nug_from_adj_mat]{nug_from_adj_mat()}} rather than using this cl
 \item \href{#method-NaturalUndirectedGraph-neighbors}{\code{NaturalUndirectedGraph$neighbors()}}
 \item \href{#method-NaturalUndirectedGraph-weights}{\code{NaturalUndirectedGraph$weights()}}
 \item \href{#method-NaturalUndirectedGraph-sample_spanning_tree}{\code{NaturalUndirectedGraph$sample_spanning_tree()}}
+\item \href{#method-NaturalUndirectedGraph-get_ptr}{\code{NaturalUndirectedGraph$get_ptr()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -128,7 +129,7 @@ Numeric vector of edge weights (same order as \code{neighbors(v)}).
 Sample a uniform spanning tree.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{NaturalUndirectedGraph$sample_spanning_tree(
-  method = c("wilson", "aldous_broder", "hybrid", "fast_forward"),
+  method = c("wilson", "aldous_broder"),
   k = 1000
 )}\if{html}{\out{</div>}}
 }
@@ -136,15 +137,27 @@ Sample a uniform spanning tree.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{method}}{Sampling algorithm: \code{"wilson"}, \code{"aldous_broder"},
-\code{"hybrid"}, or \code{"fast_forward"}.}
+\item{\code{method}}{Sampling algorithm: \code{"wilson"} or \code{"aldous_broder"}.}
 
-\item{\code{k}}{Number of steps before switching algorithms (for hybrid/fast_forward).}
+\item{\code{k}}{Number of steps (unused, reserved for future methods).}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
 A list representing the spanning tree as a parent vector.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-NaturalUndirectedGraph-get_ptr"></a>}}
+\if{latex}{\out{\hypertarget{method-NaturalUndirectedGraph-get_ptr}{}}}
+\subsection{Method \code{get_ptr()}}{
+Get the internal C++ pointer. For internal use only.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{NaturalUndirectedGraph$get_ptr()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+External pointer.
 }
 }
 }

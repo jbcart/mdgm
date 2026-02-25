@@ -85,6 +85,22 @@ int model_ncolors_cpp(cpp11::external_pointer<mdgm::Model> model) {
   return static_cast<int>(model->ncolors());
 }
 
+[[cpp11::register]]
+cpp11::sexp model_emission_type_cpp(cpp11::external_pointer<mdgm::Model> model) {
+  if (!model->has_emission()) {
+    return R_NilValue;
+  }
+  // Use the FamilyType enum to return a string
+  auto ft = model->emission_type();
+  switch (ft) {
+    case mdgm::FamilyType::kBernoulli: return cpp11::as_sexp("bernoulli");
+    case mdgm::FamilyType::kGaussian: return cpp11::as_sexp("gaussian");
+    case mdgm::FamilyType::kPoisson: return cpp11::as_sexp("poisson");
+    case mdgm::FamilyType::kCategorical: return cpp11::as_sexp("categorical");
+    default: return R_NilValue;
+  }
+}
+
 // --- MCMC ---
 
 [[cpp11::register]]
@@ -122,6 +138,7 @@ cpp11::writable::list run_mcmc_cpp(
   const std::size_t n = samples.n_vertices;
   const std::size_t J = samples.n_iterations;
   const std::size_t nc = samples.n_colors;
+  const std::size_t n_eta = samples.n_eta;
 
   // z: integer matrix n x J (column-major, already stored that way)
   cpp11::writable::integers z_r(static_cast<R_xlen_t>(n * J));
@@ -137,17 +154,17 @@ cpp11::writable::list run_mcmc_cpp(
     psi_r[static_cast<R_xlen_t>(j)] = samples.psi[j];
   }
 
-  // eta: numeric matrix nc x J (only if emission model present)
+  // eta: numeric matrix n_eta x J (only if emission model present)
   cpp11::sexp eta_r;
   if (samples.eta.empty()) {
     eta_r = R_NilValue;
   } else {
-    cpp11::writable::doubles eta_tmp(static_cast<R_xlen_t>(nc * J));
-    for (std::size_t i = 0; i < nc * J; ++i) {
+    cpp11::writable::doubles eta_tmp(static_cast<R_xlen_t>(n_eta * J));
+    for (std::size_t i = 0; i < n_eta * J; ++i) {
       eta_tmp[static_cast<R_xlen_t>(i)] = samples.eta[i];
     }
     eta_tmp.attr("dim") = cpp11::writable::integers({
-        static_cast<int>(nc), static_cast<int>(J)});
+        static_cast<int>(n_eta), static_cast<int>(J)});
     eta_r = eta_tmp;
   }
 

@@ -31,14 +31,24 @@ McmcSamples RunMcmc(
   const std::size_t nc = model.ncolors();
   const std::size_t J = config.n_iterations;
 
+  // Initialize eta
+  std::vector<double> eta(eta_init);
+  if (eta.empty() && model.has_emission()) {
+    eta.resize(nc, 0.5);  // default if not provided
+  }
+
+  // Number of emission parameters per iteration
+  const std::size_t n_eta = eta.size();
+
   // Allocate output storage
   McmcSamples samples;
   samples.n_iterations = J;
   samples.n_vertices = n;
   samples.n_colors = nc;
+  samples.n_eta = n_eta;
   samples.z.resize(n * J);
   samples.psi.resize(J);
-  samples.eta.resize(model.has_emission() ? nc * J : 0);
+  samples.eta.resize(model.has_emission() ? n_eta * J : 0);
   samples.dag_data.resize(n * J);
   samples.psi_accepted = 0;
   samples.graph_accepted = 0;
@@ -46,14 +56,10 @@ McmcSamples RunMcmc(
   // Initialize iteration 0
   std::vector<int> z(z_init);
   double psi = psi_init;
-  std::vector<double> eta(eta_init);
-  if (eta.empty() && model.has_emission()) {
-    eta.resize(nc, 0.5);  // default if not provided
-  }
 
   for (std::size_t i = 0; i < n; ++i) samples.z[i] = z[i];
   samples.psi[0] = psi;
-  for (std::size_t k = 0; k < eta.size(); ++k) samples.eta[k] = eta[k];
+  for (std::size_t k = 0; k < n_eta; ++k) samples.eta[k] = eta[k];
   model.StoreDagSample(samples.dag_data, 0);
 
   // MCMC iterations
@@ -94,8 +100,8 @@ McmcSamples RunMcmc(
     // Store samples for this iteration
     for (std::size_t i = 0; i < n; ++i) samples.z[i + j * n] = z[i];
     samples.psi[j] = psi;
-    for (std::size_t k = 0; k < eta.size(); ++k) {
-      samples.eta[k + j * nc] = eta[k];
+    for (std::size_t k = 0; k < n_eta; ++k) {
+      samples.eta[k + j * n_eta] = eta[k];
     }
   }
 

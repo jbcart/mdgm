@@ -94,11 +94,18 @@ $$y_{ij} \mid z_i, \eta \sim f(y_{ij} \mid \eta_{z_i})$$
 Currently supported emission families:
 
 - **Bernoulli**: $y_{ij} \mid z_i = k \sim \text{Bernoulli}(\eta_k)$, with
-  identifiability constraint $\eta_0 < \eta_1$ enforced via truncated Beta
-  posterior sampling.
+  identifiability constraint $\eta_0 < \eta_1 < \cdots$ enforced via truncated
+  Beta posterior sampling.
+- **Gaussian**: $y_{ij} \mid z_i = k \sim \mathcal{N}(\mu_k, \sigma_k^2)$,
+  with identifiability constraint $\mu_0 < \mu_1 < \cdots$. Conjugate
+  Normal-InverseGamma updates.
+- **Poisson**: $y_{ij} \mid z_i = k \sim \text{Poisson}(\lambda_k)$, with
+  identifiability constraint $\lambda_0 < \lambda_1 < \cdots$. Conjugate
+  truncated Gamma updates.
 
 The MCMC additionally updates $z$ (Gibbs scan over vertices) and the emission
-parameters $\eta$ (conjugate updates).
+parameters (conjugate updates). See the
+[Emission Models](emission-models.html) vignette for worked examples.
 
 ## Prior specification
 
@@ -112,9 +119,16 @@ Updates use a Metropolis-Hastings random walk with a normal proposal.
 
 ### Emission parameters
 
-For the Bernoulli emission, each $\eta_k$ has a $\text{Beta}(a, b)$ prior.
-The conjugate posterior is a truncated Beta distribution that maintains
-$\eta_0 < \eta_1$.
+- **Bernoulli**: Each $\eta_k$ has a $\text{Beta}(a, b)$ prior.
+  `emission_prior_params = c(a, b)`.
+- **Gaussian**: Each $(\mu_k, \sigma_k^2)$ has a Normal-InverseGamma prior
+  with hyperparameters $(\mu_0, \kappa_0, \alpha_0, \beta_0)$.
+  `emission_prior_params = c(mu_0, kappa_0, alpha_0, beta_0)`.
+- **Poisson**: Each $\lambda_k$ has a $\text{Gamma}(\alpha_0, \beta_0)$ prior
+  (rate parameterization). `emission_prior_params = c(alpha_0, beta_0)`.
+
+All conjugate posteriors use truncated sampling to enforce parameter ordering
+for identifiability.
 
 ## MCMC algorithm
 

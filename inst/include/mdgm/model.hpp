@@ -21,6 +21,7 @@ class Model {
   Model(std::unique_ptr<SpatialRandomField> spatial, FamilyType emission);
 
   bool has_emission() const;
+  FamilyType emission_type() const;
 
   // Full conditional for z_i: spatial * emission (if present), normalized
   std::vector<double> ZFullConditional(

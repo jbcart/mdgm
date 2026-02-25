@@ -20,8 +20,8 @@ mdgm_model(
 \item{n_colors}{Number of categories for the spatial field (default 2).}
 
 \item{emission}{Optional emission family for hierarchical models:
-\code{"bernoulli"}. If \code{NULL} (default), creates a standalone model where
-the spatial field is observed directly.}
+\code{"bernoulli"}, \code{"gaussian"}, or \code{"poisson"}. If \code{NULL} (default),
+creates a standalone model where the spatial field is observed directly.}
 }
 \value{
 An \link{MdgmModel} object.

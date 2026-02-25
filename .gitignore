@@ -58,5 +58,8 @@ build/
 .vscode/
 
 
+README.html
+*.Rhistory
+
 /doc/
 /Meta/

@@ -29,10 +29,10 @@ NaturalUndirectedGraph <- R6::R6Class(
           n <- as.integer(n)
         }
         if (!is.integer(row_idx)) {
-          row <- as.integer(row_idx)
+          row_idx <- as.integer(row_idx)
         }
         if (!is.integer(col_idx)) {
-          col <- as.integer(col_idx)
+          col_idx <- as.integer(col_idx)
         }
         private$.graph <- nug_create_cpp(n, row_idx, col_idx, weights)
       }
@@ -73,14 +73,20 @@ NaturalUndirectedGraph <- R6::R6Class(
     },
 
     #' @description Sample a uniform spanning tree.
-    #' @param method Sampling algorithm: `"wilson"`, `"aldous_broder"`,
-    #'   `"hybrid"`, or `"fast_forward"`.
-    #' @param k Number of steps before switching algorithms (for hybrid/fast_forward).
+    #' @param method Sampling algorithm: `"wilson"` or `"aldous_broder"`.
+    #' @param k Number of steps (unused, reserved for future methods).
     #' @return A list representing the spanning tree as a parent vector.
-    sample_spanning_tree = function(method = c("wilson", "aldous_broder", "hybrid", "fast_forward"),
+    sample_spanning_tree = function(method = c("wilson", "aldous_broder"),
                                     k = 1000) {
       method <- match.arg(method)
       nug_sample_spanning_tree_cpp(private$.graph, method, as.integer(k), private$.rng)
+    },
+
+    #' @description Get the internal C++ pointer. For internal use only.
+    #' @return External pointer.
+    #' @keywords internal
+    get_ptr = function() {
+      private$.graph
     }
   ),
   private = list(

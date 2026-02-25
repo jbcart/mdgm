@@ -13,7 +13,8 @@ mcmc(
   n_iter = 1000L,
   psi_tune = 0.1,
   emission_prior_params = c(1, 1),
-  seed = NULL
+  seed = NULL,
+  nug = NULL
 )
 }
 \arguments{
@@ -30,9 +31,10 @@ with values in \verb{0, ..., n_colors - 1}.}
 \item{psi_init}{Initial value for the dependence parameter (positive).}
 
 \item{eta_init}{Initial emission parameters. For Bernoulli, a numeric
-vector of length \code{n_colors} (e.g., \code{c(0.2, 0.8)}). Ignored for
-standalone models, but should still be provided as \code{numeric(0)} or
-a placeholder.}
+vector of length \code{n_colors} (e.g., \code{c(0.2, 0.8)}). For Gaussian,
+a vector of length \code{2 * n_colors} with means then standard deviations
+(e.g., \code{c(mu_1, mu_2, sigma_1, sigma_2)}). For Poisson, a vector of
+length \code{n_colors} with rate parameters. Ignored for standalone models.}
 
 \item{n_iter}{Number of MCMC iterations (default 1000).}
 
@@ -40,10 +42,15 @@ a placeholder.}
 (default 0.1).}
 
 \item{emission_prior_params}{Prior hyperparameters for emission
-parameters. For Bernoulli: \code{c(a, b)} for \code{Beta(a, b)} prior
-(default \code{c(1, 1)}).}
+parameters. For Bernoulli: \code{c(a, b)} for \code{Beta(a, b)} prior.
+For Gaussian: \code{c(mu_0, kappa_0, alpha_0, beta_0)} for
+Normal-InverseGamma prior. For Poisson: \code{c(alpha_0, beta_0)} for
+\code{Gamma(alpha_0, beta_0)} prior. Default \code{c(1, 1)}.}
 
 \item{seed}{Optional integer seed for reproducibility.}
+
+\item{nug}{Optional \code{NaturalUndirectedGraph} object. If provided, stored
+in the result for use by \code{edge_inclusion_probs()} and \code{plot()}.}
 }
 \value{
 An \link{MdgmResult} object containing posterior samples.

@@ -24,6 +24,7 @@ struct McmcSamples {
   std::size_t n_iterations;
   std::size_t n_vertices;
   std::size_t n_colors;
+  std::size_t n_eta;  // number of emission params per iteration
 };
 
 McmcSamples RunMcmc(

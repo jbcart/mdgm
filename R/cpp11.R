@@ -20,6 +20,10 @@ model_ncolors_cpp <- function(model) {
   .Call(`_mdgm_model_ncolors_cpp`, model)
 }
 
+model_emission_type_cpp <- function(model) {
+  .Call(`_mdgm_model_emission_type_cpp`, model)
+}
+
 run_mcmc_cpp <- function(model, obs_data, obs_ptr, z_init, psi_init, eta_init, n_iterations, psi_tune, emission_prior_params, rng) {
   .Call(`_mdgm_run_mcmc_cpp`, model, obs_data, obs_ptr, z_init, psi_init, eta_init, n_iterations, psi_tune, emission_prior_params, rng)
 }

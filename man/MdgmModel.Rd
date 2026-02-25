@@ -11,6 +11,7 @@ MDGM Model
 \details{
 R6 class wrapping a C++ MDGM model. Use \code{\link[=mdgm_model]{mdgm_model()}} to create instances.
 }
+\keyword{internal}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
@@ -18,6 +19,8 @@ R6 class wrapping a C++ MDGM model. Use \code{\link[=mdgm_model]{mdgm_model()}} 
 \item \href{#method-MdgmModel-has_emission}{\code{MdgmModel$has_emission()}}
 \item \href{#method-MdgmModel-nvertices}{\code{MdgmModel$nvertices()}}
 \item \href{#method-MdgmModel-ncolors}{\code{MdgmModel$ncolors()}}
+\item \href{#method-MdgmModel-emission_type}{\code{MdgmModel$emission_type()}}
+\item \href{#method-MdgmModel-get_ptr}{\code{MdgmModel$get_ptr()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -74,6 +77,33 @@ Get the number of colors (categories).
 
 \subsection{Returns}{
 Integer.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-MdgmModel-emission_type"></a>}}
+\if{latex}{\out{\hypertarget{method-MdgmModel-emission_type}{}}}
+\subsection{Method \code{emission_type()}}{
+Get the emission family type.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MdgmModel$emission_type()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+Character string (\code{"bernoulli"}, \code{"gaussian"}, \code{"poisson"}) or
+\code{NULL} for standalone models.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-MdgmModel-get_ptr"></a>}}
+\if{latex}{\out{\hypertarget{method-MdgmModel-get_ptr}{}}}
+\subsection{Method \code{get_ptr()}}{
+Get the internal C++ pointer. For internal use only.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MdgmModel$get_ptr()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+External pointer.
 }
 }
 }
