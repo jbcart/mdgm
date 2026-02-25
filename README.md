@@ -41,6 +41,54 @@ nug$nedges()
 #> [1] 24
 ```
 
+## Fitting a standalone model
+
+In a standalone model, the spatial field $z$ is observed directly — no
+emission distribution is needed. Here we fit a spanning-tree MDGM to a
+deterministic checkerboard pattern on the 4x4 grid:
+
+``` r
+# Define the spatial field
+z <- c(1L, 1L, 0L, 0L,
+       1L, 1L, 0L, 0L,
+       0L, 0L, 1L, 1L,
+       0L, 0L, 1L, 1L)
+
+# Specify a standalone model (no emission)
+model <- mdgm_model(nug, dag_type = "spanning_tree")
+
+# Run MCMC — psi_tune = 1.0 targets ~0.3–0.7 acceptance rate
+result <- mcmc(model, z_init = z, psi_init = 0.5,
+               n_iter = 2000L, psi_tune = 1.0, seed = 42L)
+result$summary()
+#> MDGM MCMC Results
+#>   Vertices: 16, Colors: 2
+#>   Iterations: 2000
+#>   Psi acceptance rate: 0.471
+#>   Psi posterior mean: 0.8673
+```
+
+Visualize the spatial field as a raster:
+
+``` r
+library(ggplot2)
+
+grid_df <- data.frame(
+  x = rep(1:4, times = 4),
+  y = rep(4:1, each = 4),
+  z = factor(z)
+)
+
+ggplot(grid_df, aes(x, y, fill = z)) +
+  geom_raster() +
+  scale_fill_manual(values = c("0" = "#440154", "1" = "#fde725")) +
+  coord_equal() +
+  theme_minimal() +
+  labs(title = "4x4 Spatial Field", fill = "z")
+```
+
+<img src="man/figures/README-grid-plot-1.png" width="100%" />
+
 ## C++ unit tests
 
 The C++ core ships with GoogleTest unit tests under `tests/cpp/`. Build

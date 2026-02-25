@@ -49,6 +49,47 @@ nug$nvertices()
 nug$nedges()
 ```
 
+## Fitting a standalone model
+
+In a standalone model, the spatial field $z$ is observed directly — no emission
+distribution is needed. Here we fit a spanning-tree MDGM to a deterministic
+checkerboard pattern on the 4x4 grid:
+
+```{r standalone-fit}
+# Define the spatial field
+z <- c(1L, 1L, 0L, 0L,
+       1L, 1L, 0L, 0L,
+       0L, 0L, 1L, 1L,
+       0L, 0L, 1L, 1L)
+
+# Specify a standalone model (no emission)
+model <- mdgm_model(nug, dag_type = "spanning_tree")
+
+# Run MCMC — psi_tune = 1.0 targets ~0.3–0.7 acceptance rate
+result <- mcmc(model, z_init = z, psi_init = 0.5,
+               n_iter = 2000L, psi_tune = 1.0, seed = 42L)
+result$summary()
+```
+
+Visualize the spatial field as a raster:
+
+```{r grid-plot, fig.width = 4, fig.height = 4}
+library(ggplot2)
+
+grid_df <- data.frame(
+  x = rep(1:4, times = 4),
+  y = rep(4:1, each = 4),
+  z = factor(z)
+)
+
+ggplot(grid_df, aes(x, y, fill = z)) +
+  geom_raster() +
+  scale_fill_manual(values = c("0" = "#440154", "1" = "#fde725")) +
+  coord_equal() +
+  theme_minimal() +
+  labs(title = "4x4 Spatial Field", fill = "z")
+```
+
 ## C++ unit tests
 
 The C++ core ships with GoogleTest unit tests under `tests/cpp/`. Build and run
