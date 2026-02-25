@@ -57,7 +57,7 @@ z <- c(1L, 1L, 0L, 0L,
 # Specify a standalone model (no emission)
 model <- mdgm_model(nug, dag_type = "spanning_tree")
 
-# Run MCMC — psi_tune = 1.0 targets ~0.3–0.7 acceptance rate
+# Run MCMC
 result <- mcmc(model, z_init = z, psi_init = 0.5,
                n_iter = 2000L, psi_tune = 1.0, seed = 42L)
 result$summary()
@@ -88,6 +88,19 @@ ggplot(grid_df, aes(x, y, fill = z)) +
 ```
 
 <img src="man/figures/README-grid-plot-1.png" width="100%" />
+
+Trace plot for the spatial dependence parameter $\psi$:
+
+``` r
+psi_df <- data.frame(iteration = seq_along(result$psi()), psi = result$psi())
+
+ggplot(psi_df, aes(iteration, psi)) +
+  geom_line(linewidth = 0.3) +
+  theme_minimal() +
+  labs(x = "Iteration", y = expression(psi), title = "Psi trace plot")
+```
+
+<img src="man/figures/README-psi-trace-1.png" width="100%" />
 
 ## C++ unit tests
 
