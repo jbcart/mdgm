@@ -75,10 +75,11 @@ and (for hierarchical models) emission parameters.</p>
 
 
 <dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
-<dd><p>Observation data. For hierarchical models, a list of integer
+<dd><p>Observation data. For hierarchical models, a list of numeric
 vectors where <code>y[[i]]</code> contains the observations for vertex <code>i</code>.
-Vertices with no observations should have <code>integer(0)</code>. For standalone
-models, pass <code>NULL</code> (default).</p></dd>
+For Bernoulli, values should be 0 or 1; for Poisson, non-negative
+integers; for Gaussian, any real values. Vertices with no observations
+should have <code>numeric(0)</code>. For standalone models, pass <code>NULL</code> (default).</p></dd>
 
 
 <dt id="arg-z-init">z_init<a class="anchor" aria-label="anchor" href="#arg-z-init"></a></dt>

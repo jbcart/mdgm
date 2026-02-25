@@ -105,7 +105,7 @@ mdgm package supports three emission families:</p>
 </tr>
 <tr class="even">
 <td align="left">Gaussian</td>
-<td align="left">Continuous (integer-valued)</td>
+<td align="left">Continuous</td>
 <td align="left">
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\mu_k</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup><annotation encoding="application/x-tex">\sigma_k^2</annotation></semantics></math>
@@ -216,21 +216,21 @@ Bernoulli case.</p>
 <span>                 z_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
 <span>                 psi_init <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>                 theta_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">0.7</span><span class="op">)</span>,</span>
-<span>                 n_iter <span class="op">=</span> <span class="fl">2000L</span>,</span>
+<span>                 n_iter <span class="op">=</span> <span class="fl">5000L</span>,</span>
 <span>                 psi_tune <span class="op">=</span> <span class="fl">1.0</span>,</span>
 <span>                 seed <span class="op">=</span> <span class="fl">42L</span>,</span>
 <span>                 nug <span class="op">=</span> <span class="va">nug</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">result_b</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span>burnin <span class="op">=</span> <span class="fl">500L</span><span class="op">)</span></span>
+<span><span class="va">result_b</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span>burnin <span class="op">=</span> <span class="fl">1000L</span><span class="op">)</span></span>
 <span><span class="co">#&gt; MDGM MCMC Results</span></span>
 <span><span class="co">#&gt;   Vertices: 64, Colors: 2</span></span>
-<span><span class="co">#&gt;   Iterations: 2000 (burnin: 500)</span></span>
-<span><span class="co">#&gt;   Psi acceptance rate: 0.465</span></span>
-<span><span class="co">#&gt;   Psi posterior mean: 2.2008 (sd: 1.3132)</span></span>
+<span><span class="co">#&gt;   Iterations: 5000 (burnin: 1000)</span></span>
+<span><span class="co">#&gt;   Psi acceptance rate: 0.409</span></span>
+<span><span class="co">#&gt;   Psi posterior mean: 1.9176 (sd: 2.1736)</span></span>
 <span><span class="co">#&gt;   Emission type: bernoulli</span></span>
-<span><span class="co">#&gt;   p_1 posterior mean: 0.4141 (sd: 0.1506)</span></span>
-<span><span class="co">#&gt;   p_2 posterior mean: 0.7350 (sd: 0.0432)</span></span>
-<span><span class="co">#&gt;   Psi R-hat: 1.0953, ESS: 11</span></span></code></pre></div>
+<span><span class="co">#&gt;   p_1 posterior mean: 0.4607 (sd: 0.1545)</span></span>
+<span><span class="co">#&gt;   p_2 posterior mean: 0.7394 (sd: 0.0478)</span></span>
+<span><span class="co">#&gt;   Psi R-hat: 1.0002, ESS: 32</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="posterior-trace-plots">Posterior trace plots<a class="anchor" aria-label="anchor" href="#posterior-trace-plots"></a>
@@ -246,19 +246,26 @@ Bernoulli case.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">p_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">iteration</span>, <span class="va">value</span>, color <span class="op">=</span> <span class="va">parameter</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span>, linewidth <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="va">p_true</span>, linetype <span class="op">=</span> <span class="st">"dashed"</span>, alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Bernoulli emission: p trace"</span>,</span>
 <span>       x <span class="op">=</span> <span class="st">"Iteration"</span>, y <span class="op">=</span> <span class="st">"Value"</span>, color <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
 <p><img src="emission-models_files/figure-html/bernoulli-trace-1.png" class="r-plt" alt="" width="576"></p>
 </div>
+<div class="section level3">
+<h3 id="edge-inclusion-probabilities">Edge inclusion probabilities<a class="anchor" aria-label="anchor" href="#edge-inclusion-probabilities"></a>
+</h3>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">result_b</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>burnin <span class="op">=</span> <span class="fl">1000L</span>, which <span class="op">=</span> <span class="st">"edge_inclusion"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="emission-models_files/figure-html/bernoulli-eip-1.png" class="r-plt" alt="" width="480"></p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="gaussian-emission">Gaussian emission<a class="anchor" aria-label="anchor" href="#gaussian-emission"></a>
 </h2>
-<p>The Gaussian emission models continuous (integer-valued)
-observations. Each observation is drawn from
+<p>The Gaussian emission models continuous observations. Each
+observation is drawn from
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><msub><mi>z</mi><mi>i</mi></msub></msub><mo>,</mo><msubsup><mi>σ</mi><msub><mi>z</mi><mi>i</mi></msub><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{N}(\mu_{z_i}, \sigma_{z_i}^2)</annotation></semantics></math>.
 A single observation per vertex is sufficient for identifiability.</p>
 <p>The priors on
@@ -276,21 +283,20 @@ is the prior variance for the mean.</p>
 <p>Here we use overlapping emission distributions — the two groups
 differ in mean but share similar spread, making classification rely on
 both the emission signal and the spatial structure:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span>
 <span><span class="va">mu_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">12</span><span class="op">)</span></span>
 <span><span class="va">sigma2_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">9</span>, <span class="fl">9</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Single observation per vertex</span></span>
 <span><span class="va">y_gauss</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">mu_true</span><span class="op">[</span><span class="va">z_true</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span>,</span>
-<span>                         <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">sigma2_true</span><span class="op">[</span><span class="va">z_true</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">mu_true</span><span class="op">[</span><span class="va">z_true</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">sigma2_true</span><span class="op">[</span><span class="va">z_true</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Visualize the observations</span></span>
 <span><span class="va">obs_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">8</span>, <span class="fl">8</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">8</span><span class="op">:</span><span class="fl">1</span>, each <span class="op">=</span> <span class="fl">8</span><span class="op">)</span>,</span>
-<span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">y_gauss</span>, <span class="va">`[`</span>, <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">y_gauss</span>, <span class="va">`[`</span>, <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">obs_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, fill <span class="op">=</span> <span class="va">value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"white"</span>, linewidth <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span>
@@ -300,7 +306,7 @@ both the emission signal and the spatial structure:</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Observed temperatures (single obs per vertex)"</span>, fill <span class="op">=</span> <span class="st">"y"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="emission-models_files/figure-html/gaussian-sim-1.png" class="r-plt" alt="" width="480"></p>
 <p>Fit with Gaussian emission:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model_g</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mdgm_model.html">mdgm_model</a></span><span class="op">(</span><span class="va">nug</span>, dag_type <span class="op">=</span> <span class="st">"spanning_tree"</span>,</span>
 <span>                       n_colors <span class="op">=</span> <span class="fl">2L</span>, emission <span class="op">=</span> <span class="st">"gaussian"</span><span class="op">)</span></span>
 <span></span>
@@ -309,28 +315,28 @@ both the emission signal and the spatial structure:</p>
 <span>                 z_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
 <span>                 psi_init <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>                 theta_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">14</span>, <span class="fl">9</span>, <span class="fl">9</span><span class="op">)</span>,</span>
-<span>                 n_iter <span class="op">=</span> <span class="fl">2000L</span>,</span>
+<span>                 n_iter <span class="op">=</span> <span class="fl">5000L</span>,</span>
 <span>                 psi_tune <span class="op">=</span> <span class="fl">1.0</span>,</span>
 <span>                 seed <span class="op">=</span> <span class="fl">42L</span>,</span>
 <span>                 nug <span class="op">=</span> <span class="va">nug</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">result_g</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span>burnin <span class="op">=</span> <span class="fl">500L</span><span class="op">)</span></span>
+<span><span class="va">result_g</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span>burnin <span class="op">=</span> <span class="fl">1000L</span><span class="op">)</span></span>
 <span><span class="co">#&gt; MDGM MCMC Results</span></span>
 <span><span class="co">#&gt;   Vertices: 64, Colors: 2</span></span>
-<span><span class="co">#&gt;   Iterations: 2000 (burnin: 500)</span></span>
-<span><span class="co">#&gt;   Psi acceptance rate: 0.513</span></span>
-<span><span class="co">#&gt;   Psi posterior mean: 2.9534 (sd: 1.3112)</span></span>
+<span><span class="co">#&gt;   Iterations: 5000 (burnin: 1000)</span></span>
+<span><span class="co">#&gt;   Psi acceptance rate: 0.496</span></span>
+<span><span class="co">#&gt;   Psi posterior mean: 2.6787 (sd: 1.1109)</span></span>
 <span><span class="co">#&gt;   Emission type: gaussian</span></span>
-<span><span class="co">#&gt;   mu_1 posterior mean: 2.6923 (sd: 2.0341)</span></span>
-<span><span class="co">#&gt;   sigma2_1 posterior mean: 12.6376 (sd: 0.6073)</span></span>
-<span><span class="co">#&gt;   NA posterior mean: 10.7035 (sd: 11.4432)</span></span>
-<span><span class="co">#&gt;   NA posterior mean: 12.2790 (sd: 3.0145)</span></span>
-<span><span class="co">#&gt;   Psi R-hat: 1.0001, ESS: 51</span></span></code></pre></div>
+<span><span class="co">#&gt;   mu_1 posterior mean: 3.0386 (sd: 2.3124)</span></span>
+<span><span class="co">#&gt;   mu_2 posterior mean: 12.7544 (sd: 0.6093)</span></span>
+<span><span class="co">#&gt;   sigma2_1 posterior mean: 12.8009 (sd: 11.9612)</span></span>
+<span><span class="co">#&gt;   sigma2_2 posterior mean: 12.0755 (sd: 3.0299)</span></span>
+<span><span class="co">#&gt;   Psi R-hat: 1.0005, ESS: 66</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="posterior-emission-parameters">Posterior emission parameters<a class="anchor" aria-label="anchor" href="#posterior-emission-parameters"></a>
 </h3>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ep_g</span> <span class="op">&lt;-</span> <span class="va">result_g</span><span class="op">$</span><span class="fu">emission_params</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">n_iter_g</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">ep_g</span><span class="op">$</span><span class="va">mu</span><span class="op">)</span></span>
 <span></span>
@@ -341,13 +347,13 @@ both the emission signal and the spatial structure:</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mu_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">iteration</span>, <span class="va">value</span>, color <span class="op">=</span> <span class="va">parameter</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span>, linewidth <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="va">mu_true</span>, linetype <span class="op">=</span> <span class="st">"dashed"</span>, alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Gaussian emission: mu trace"</span>,</span>
 <span>       x <span class="op">=</span> <span class="st">"Iteration"</span>, y <span class="op">=</span> <span class="st">"Value"</span>, color <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
 <p><img src="emission-models_files/figure-html/gaussian-trace-1.png" class="r-plt" alt="" width="576"></p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sigma2_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  iteration <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_iter_g</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span>,</span>
 <span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ep_g</span><span class="op">$</span><span class="va">sigma2</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span>, <span class="va">ep_g</span><span class="op">$</span><span class="va">sigma2</span><span class="op">[</span><span class="fl">2</span>, <span class="op">]</span><span class="op">)</span>,</span>
@@ -355,12 +361,19 @@ both the emission signal and the spatial structure:</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sigma2_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">iteration</span>, <span class="va">value</span>, color <span class="op">=</span> <span class="va">parameter</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span>, linewidth <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="va">sigma2_true</span>, linetype <span class="op">=</span> <span class="st">"dashed"</span>, alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Gaussian emission: sigma2 trace"</span>,</span>
 <span>       x <span class="op">=</span> <span class="st">"Iteration"</span>, y <span class="op">=</span> <span class="st">"Value"</span>, color <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
 <p><img src="emission-models_files/figure-html/gaussian-sigma2-trace-1.png" class="r-plt" alt="" width="576"></p>
+</div>
+<div class="section level3">
+<h3 id="edge-inclusion-probabilities-1">Edge inclusion probabilities<a class="anchor" aria-label="anchor" href="#edge-inclusion-probabilities-1"></a>
+</h3>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">result_g</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>burnin <span class="op">=</span> <span class="fl">1000L</span>, which <span class="op">=</span> <span class="st">"edge_inclusion"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="emission-models_files/figure-html/gaussian-eip-1.png" class="r-plt" alt="" width="480"></p>
 </div>
 </div>
 <div class="section level2">
@@ -380,18 +393,18 @@ with rate parameterization (mean
 </h3>
 <p>We again use overlapping rates so that the spatial structure
 contributes meaningfully to classification:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">lambda_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">10</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Single count per vertex</span></span>
 <span><span class="va">y_pois</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">rpois</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">lambda_true</span><span class="op">[</span><span class="va">z_true</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">rpois</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">lambda_true</span><span class="op">[</span><span class="va">z_true</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">obs_df_p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">8</span>, <span class="fl">8</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">8</span><span class="op">:</span><span class="fl">1</span>, each <span class="op">=</span> <span class="fl">8</span><span class="op">)</span>,</span>
-<span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">y_pois</span>, <span class="va">`[`</span>, <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">y_pois</span>, <span class="va">`[`</span>, <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">obs_df_p</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, fill <span class="op">=</span> <span class="va">value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"white"</span>, linewidth <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span>
@@ -400,7 +413,7 @@ contributes meaningfully to classification:</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Observed counts (single obs per vertex)"</span>, fill <span class="op">=</span> <span class="st">"y"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="emission-models_files/figure-html/poisson-sim-1.png" class="r-plt" alt="" width="480"></p>
 <p>Fit with Poisson emission:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model_p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mdgm_model.html">mdgm_model</a></span><span class="op">(</span><span class="va">nug</span>, dag_type <span class="op">=</span> <span class="st">"spanning_tree"</span>,</span>
 <span>                       n_colors <span class="op">=</span> <span class="fl">2L</span>, emission <span class="op">=</span> <span class="st">"poisson"</span><span class="op">)</span></span>
 <span></span>
@@ -408,26 +421,26 @@ contributes meaningfully to classification:</p>
 <span>                 z_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
 <span>                 psi_init <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>                 theta_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">8</span><span class="op">)</span>,</span>
-<span>                 n_iter <span class="op">=</span> <span class="fl">2000L</span>,</span>
+<span>                 n_iter <span class="op">=</span> <span class="fl">5000L</span>,</span>
 <span>                 psi_tune <span class="op">=</span> <span class="fl">1.0</span>,</span>
 <span>                 seed <span class="op">=</span> <span class="fl">42L</span>,</span>
 <span>                 nug <span class="op">=</span> <span class="va">nug</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">result_p</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span>burnin <span class="op">=</span> <span class="fl">500L</span><span class="op">)</span></span>
+<span><span class="va">result_p</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span>burnin <span class="op">=</span> <span class="fl">1000L</span><span class="op">)</span></span>
 <span><span class="co">#&gt; MDGM MCMC Results</span></span>
 <span><span class="co">#&gt;   Vertices: 64, Colors: 2</span></span>
-<span><span class="co">#&gt;   Iterations: 2000 (burnin: 500)</span></span>
-<span><span class="co">#&gt;   Psi acceptance rate: 0.437</span></span>
-<span><span class="co">#&gt;   Psi posterior mean: 1.8821 (sd: 1.2732)</span></span>
+<span><span class="co">#&gt;   Iterations: 5000 (burnin: 1000)</span></span>
+<span><span class="co">#&gt;   Psi acceptance rate: 0.449</span></span>
+<span><span class="co">#&gt;   Psi posterior mean: 2.0454 (sd: 1.2352)</span></span>
 <span><span class="co">#&gt;   Emission type: poisson</span></span>
-<span><span class="co">#&gt;   lambda_1 posterior mean: 5.4345 (sd: 1.7691)</span></span>
-<span><span class="co">#&gt;   lambda_2 posterior mean: 9.9390 (sd: 0.8308)</span></span>
-<span><span class="co">#&gt;   Psi R-hat: 1.0040, ESS: 29</span></span></code></pre></div>
+<span><span class="co">#&gt;   lambda_1 posterior mean: 5.0662 (sd: 1.6861)</span></span>
+<span><span class="co">#&gt;   lambda_2 posterior mean: 9.8492 (sd: 0.7673)</span></span>
+<span><span class="co">#&gt;   Psi R-hat: 1.0080, ESS: 44</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="posterior-trace-plots-1">Posterior trace plots<a class="anchor" aria-label="anchor" href="#posterior-trace-plots-1"></a>
 </h3>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ep_p</span> <span class="op">&lt;-</span> <span class="va">result_p</span><span class="op">$</span><span class="fu">emission_params</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">n_iter_p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">ep_p</span><span class="op">$</span><span class="va">lambda</span><span class="op">)</span></span>
 <span></span>
@@ -438,12 +451,19 @@ contributes meaningfully to classification:</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">lambda_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">iteration</span>, <span class="va">value</span>, color <span class="op">=</span> <span class="va">parameter</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span>, linewidth <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="va">lambda_true</span>, linetype <span class="op">=</span> <span class="st">"dashed"</span>, alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Poisson emission: lambda trace"</span>,</span>
 <span>       x <span class="op">=</span> <span class="st">"Iteration"</span>, y <span class="op">=</span> <span class="st">"Value"</span>, color <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
 <p><img src="emission-models_files/figure-html/poisson-trace-1.png" class="r-plt" alt="" width="576"></p>
+</div>
+<div class="section level3">
+<h3 id="edge-inclusion-probabilities-2">Edge inclusion probabilities<a class="anchor" aria-label="anchor" href="#edge-inclusion-probabilities-2"></a>
+</h3>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">result_p</span><span class="op">$</span><span class="fu">plot</span><span class="op">(</span>burnin <span class="op">=</span> <span class="fl">1000L</span>, which <span class="op">=</span> <span class="st">"edge_inclusion"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="emission-models_files/figure-html/poisson-eip-1.png" class="r-plt" alt="" width="480"></p>
 </div>
 </div>
 <div class="section level2">
@@ -451,8 +471,8 @@ contributes meaningfully to classification:</p>
 </h2>
 <p>For all three emission types, the posterior mode of the latent field
 should recover the true spatial pattern:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">burnin</span> <span class="op">&lt;-</span> <span class="fl">500L</span></span>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">burnin</span> <span class="op">&lt;-</span> <span class="fl">1000L</span></span>
 <span></span>
 <span><span class="va">recover_field</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">result</span>, <span class="va">burnin</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">z_post</span> <span class="op">&lt;-</span> <span class="va">result</span><span class="op">$</span><span class="fu">z</span><span class="op">(</span><span class="op">)</span></span>

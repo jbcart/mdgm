@@ -31,10 +31,12 @@ mcmc(
 
 - y:
 
-  Observation data. For hierarchical models, a list of integer vectors
-  where `y[[i]]` contains the observations for vertex `i`. Vertices with
-  no observations should have `integer(0)`. For standalone models, pass
-  `NULL` (default).
+  Observation data. For hierarchical models, a list of numeric vectors
+  where `y[[i]]` contains the observations for vertex `i`. For
+  Bernoulli, values should be 0 or 1; for Poisson, non-negative
+  integers; for Gaussian, any real values. Vertices with no observations
+  should have `numeric(0)`. For standalone models, pass `NULL`
+  (default).
 
 - z_init:
 

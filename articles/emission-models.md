@@ -11,11 +11,11 @@ In a hierarchical MDGM, the spatial field $z$ is latent and observations
 $y$ are generated through an **emission distribution**. The mdgm package
 supports three emission families:
 
-| Family    | Observation type            | Parameters                    | Prior                             |
-|:----------|:----------------------------|:------------------------------|:----------------------------------|
-| Bernoulli | Binary (0/1)                | $p_{k}$ (success probability) | Beta$(a,b)$                       |
-| Gaussian  | Continuous (integer-valued) | $\mu_{k}$, $\sigma_{k}^{2}$   | Independent Normal, Inverse-Gamma |
-| Poisson   | Count                       | $\lambda_{k}$ (rate)          | Gamma$(\alpha,\beta)$             |
+| Family    | Observation type | Parameters                    | Prior                             |
+|:----------|:-----------------|:------------------------------|:----------------------------------|
+| Bernoulli | Binary (0/1)     | $p_{k}$ (success probability) | Beta$(a,b)$                       |
+| Gaussian  | Continuous       | $\mu_{k}$, $\sigma_{k}^{2}$   | Independent Normal, Inverse-Gamma |
+| Poisson   | Count            | $\lambda_{k}$ (rate)          | Gamma$(\alpha,\beta)$             |
 
 All emission families enforce an **identifiability constraint** on their
 location parameters: $p_{0} < p_{1} < \cdots$ (Bernoulli),
@@ -109,21 +109,21 @@ result_b <- mcmc(model_b, y = y_bern,
                  z_init = sample(0:1, n, replace = TRUE),
                  psi_init = 0.5,
                  theta_init = c(0.3, 0.7),
-                 n_iter = 2000L,
+                 n_iter = 5000L,
                  psi_tune = 1.0,
                  seed = 42L,
                  nug = nug)
 
-result_b$summary(burnin = 500L)
+result_b$summary(burnin = 1000L)
 #> MDGM MCMC Results
 #>   Vertices: 64, Colors: 2
-#>   Iterations: 2000 (burnin: 500)
-#>   Psi acceptance rate: 0.465
-#>   Psi posterior mean: 2.2008 (sd: 1.3132)
+#>   Iterations: 5000 (burnin: 1000)
+#>   Psi acceptance rate: 0.409
+#>   Psi posterior mean: 1.9176 (sd: 2.1736)
 #>   Emission type: bernoulli
-#>   p_1 posterior mean: 0.4141 (sd: 0.1506)
-#>   p_2 posterior mean: 0.7350 (sd: 0.0432)
-#>   Psi R-hat: 1.0953, ESS: 11
+#>   p_1 posterior mean: 0.4607 (sd: 0.1545)
+#>   p_2 posterior mean: 0.7394 (sd: 0.0478)
+#>   Psi R-hat: 1.0002, ESS: 32
 ```
 
 ### Posterior trace plots
@@ -139,7 +139,7 @@ p_df <- data.frame(
 )
 
 ggplot(p_df, aes(iteration, value, color = parameter)) +
-  geom_line(alpha = 0.5) +
+  geom_line(alpha = 0.5, linewidth = 0.3) +
   geom_hline(yintercept = p_true, linetype = "dashed", alpha = 0.5) +
   theme_minimal() +
   labs(title = "Bernoulli emission: p trace",
@@ -148,10 +148,18 @@ ggplot(p_df, aes(iteration, value, color = parameter)) +
 
 ![](emission-models_files/figure-html/bernoulli-trace-1.png)
 
+### Edge inclusion probabilities
+
+``` r
+result_b$plot(burnin = 1000L, which = "edge_inclusion")
+```
+
+![](emission-models_files/figure-html/bernoulli-eip-1.png)
+
 ## Gaussian emission
 
-The Gaussian emission models continuous (integer-valued) observations.
-Each observation is drawn from
+The Gaussian emission models continuous observations. Each observation
+is drawn from
 $\mathcal{N}\left( \mu_{z_{i}},\sigma_{z_{i}}^{2} \right)$. A single
 observation per vertex is sufficient for identifiability.
 
@@ -172,14 +180,13 @@ sigma2_true <- c(9, 9)
 
 # Single observation per vertex
 y_gauss <- lapply(seq_len(n), function(i) {
-  as.integer(round(rnorm(1, mu_true[z_true[i] + 1],
-                         sqrt(sigma2_true[z_true[i] + 1]))))
+  rnorm(1, mu_true[z_true[i] + 1], sqrt(sigma2_true[z_true[i] + 1]))
 })
 
 # Visualize the observations
 obs_df <- data.frame(
   x = rep(1:8, 8), y = rep(8:1, each = 8),
-  value = vapply(y_gauss, `[`, integer(1), 1)
+  value = vapply(y_gauss, `[`, numeric(1), 1)
 )
 ggplot(obs_df, aes(x, y, fill = value)) +
   geom_tile(color = "white", linewidth = 0.3) +
@@ -202,23 +209,23 @@ result_g <- mcmc(model_g, y = y_gauss,
                  z_init = sample(0:1, n, replace = TRUE),
                  psi_init = 0.5,
                  theta_init = c(4, 14, 9, 9),
-                 n_iter = 2000L,
+                 n_iter = 5000L,
                  psi_tune = 1.0,
                  seed = 42L,
                  nug = nug)
 
-result_g$summary(burnin = 500L)
+result_g$summary(burnin = 1000L)
 #> MDGM MCMC Results
 #>   Vertices: 64, Colors: 2
-#>   Iterations: 2000 (burnin: 500)
-#>   Psi acceptance rate: 0.513
-#>   Psi posterior mean: 2.9534 (sd: 1.3112)
+#>   Iterations: 5000 (burnin: 1000)
+#>   Psi acceptance rate: 0.496
+#>   Psi posterior mean: 2.6787 (sd: 1.1109)
 #>   Emission type: gaussian
-#>   mu_1 posterior mean: 2.6923 (sd: 2.0341)
-#>   sigma2_1 posterior mean: 12.6376 (sd: 0.6073)
-#>   NA posterior mean: 10.7035 (sd: 11.4432)
-#>   NA posterior mean: 12.2790 (sd: 3.0145)
-#>   Psi R-hat: 1.0001, ESS: 51
+#>   mu_1 posterior mean: 3.0386 (sd: 2.3124)
+#>   mu_2 posterior mean: 12.7544 (sd: 0.6093)
+#>   sigma2_1 posterior mean: 12.8009 (sd: 11.9612)
+#>   sigma2_2 posterior mean: 12.0755 (sd: 3.0299)
+#>   Psi R-hat: 1.0005, ESS: 66
 ```
 
 ### Posterior emission parameters
@@ -234,7 +241,7 @@ mu_df <- data.frame(
 )
 
 ggplot(mu_df, aes(iteration, value, color = parameter)) +
-  geom_line(alpha = 0.5) +
+  geom_line(alpha = 0.5, linewidth = 0.3) +
   geom_hline(yintercept = mu_true, linetype = "dashed", alpha = 0.5) +
   theme_minimal() +
   labs(title = "Gaussian emission: mu trace",
@@ -251,7 +258,7 @@ sigma2_df <- data.frame(
 )
 
 ggplot(sigma2_df, aes(iteration, value, color = parameter)) +
-  geom_line(alpha = 0.5) +
+  geom_line(alpha = 0.5, linewidth = 0.3) +
   geom_hline(yintercept = sigma2_true, linetype = "dashed", alpha = 0.5) +
   theme_minimal() +
   labs(title = "Gaussian emission: sigma2 trace",
@@ -259,6 +266,14 @@ ggplot(sigma2_df, aes(iteration, value, color = parameter)) +
 ```
 
 ![](emission-models_files/figure-html/gaussian-sigma2-trace-1.png)
+
+### Edge inclusion probabilities
+
+``` r
+result_g$plot(burnin = 1000L, which = "edge_inclusion")
+```
+
+![](emission-models_files/figure-html/gaussian-eip-1.png)
 
 ## Poisson emission
 
@@ -281,12 +296,12 @@ lambda_true <- c(4, 10)
 
 # Single count per vertex
 y_pois <- lapply(seq_len(n), function(i) {
-  as.integer(rpois(1, lambda_true[z_true[i] + 1]))
+  rpois(1, lambda_true[z_true[i] + 1])
 })
 
 obs_df_p <- data.frame(
   x = rep(1:8, 8), y = rep(8:1, each = 8),
-  value = vapply(y_pois, `[`, integer(1), 1)
+  value = vapply(y_pois, `[`, numeric(1), 1)
 )
 ggplot(obs_df_p, aes(x, y, fill = value)) +
   geom_tile(color = "white", linewidth = 0.3) +
@@ -307,21 +322,21 @@ result_p <- mcmc(model_p, y = y_pois,
                  z_init = sample(0:1, n, replace = TRUE),
                  psi_init = 0.5,
                  theta_init = c(3, 8),
-                 n_iter = 2000L,
+                 n_iter = 5000L,
                  psi_tune = 1.0,
                  seed = 42L,
                  nug = nug)
 
-result_p$summary(burnin = 500L)
+result_p$summary(burnin = 1000L)
 #> MDGM MCMC Results
 #>   Vertices: 64, Colors: 2
-#>   Iterations: 2000 (burnin: 500)
-#>   Psi acceptance rate: 0.437
-#>   Psi posterior mean: 1.8821 (sd: 1.2732)
+#>   Iterations: 5000 (burnin: 1000)
+#>   Psi acceptance rate: 0.449
+#>   Psi posterior mean: 2.0454 (sd: 1.2352)
 #>   Emission type: poisson
-#>   lambda_1 posterior mean: 5.4345 (sd: 1.7691)
-#>   lambda_2 posterior mean: 9.9390 (sd: 0.8308)
-#>   Psi R-hat: 1.0040, ESS: 29
+#>   lambda_1 posterior mean: 5.0662 (sd: 1.6861)
+#>   lambda_2 posterior mean: 9.8492 (sd: 0.7673)
+#>   Psi R-hat: 1.0080, ESS: 44
 ```
 
 ### Posterior trace plots
@@ -337,7 +352,7 @@ lambda_df <- data.frame(
 )
 
 ggplot(lambda_df, aes(iteration, value, color = parameter)) +
-  geom_line(alpha = 0.5) +
+  geom_line(alpha = 0.5, linewidth = 0.3) +
   geom_hline(yintercept = lambda_true, linetype = "dashed", alpha = 0.5) +
   theme_minimal() +
   labs(title = "Poisson emission: lambda trace",
@@ -346,13 +361,21 @@ ggplot(lambda_df, aes(iteration, value, color = parameter)) +
 
 ![](emission-models_files/figure-html/poisson-trace-1.png)
 
+### Edge inclusion probabilities
+
+``` r
+result_p$plot(burnin = 1000L, which = "edge_inclusion")
+```
+
+![](emission-models_files/figure-html/poisson-eip-1.png)
+
 ## Comparing latent field recovery
 
 For all three emission types, the posterior mode of the latent field
 should recover the true spatial pattern:
 
 ``` r
-burnin <- 500L
+burnin <- 1000L
 
 recover_field <- function(result, burnin) {
   z_post <- result$z()

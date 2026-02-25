@@ -236,9 +236,10 @@ Plot MCMC trace plots and diagnostics.
 - `which`:
 
   Character vector of what to plot: `"trace"` for trace plots of psi and
-  emission params, `"posterior_field"` for posterior mean of the latent
-  field (requires stored graph).
+  emission params, `"edge_inclusion"` for edge inclusion probabilities
+  (requires stored graph and igraph), `"posterior_field"` for posterior
+  mode of the latent field (requires stored graph).
 
 #### Returns
 
-Invisible `NULL`.
+Invisible list of ggplot/igraph plot objects.
