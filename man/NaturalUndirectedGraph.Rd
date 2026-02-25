@@ -30,7 +30,13 @@ or \code{\link[=nug_from_adj_mat]{nug_from_adj_mat()}} rather than using this cl
 \subsection{Method \code{new()}}{
 Create a new undirected graph.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{NaturalUndirectedGraph$new(n, row_idx, col_idx, weights, ...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{NaturalUndirectedGraph$new(
+  n = NULL,
+  row_idx = NULL,
+  col_idx = NULL,
+  weights = NULL,
+  ...
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

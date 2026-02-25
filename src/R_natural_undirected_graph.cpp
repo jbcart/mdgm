@@ -107,6 +107,16 @@ cpp11::writable::doubles nug_neighbor_weights_cpp(
 }
 
 [[cpp11::register]]
+cpp11::external_pointer<mdgm::NaturalUndirectedGraph> nug_generate_regular_cpp(
+    int nrows, int ncols, int order) {
+  std::vector<std::size_t> dims = {static_cast<std::size_t>(nrows),
+                                    static_cast<std::size_t>(ncols)};
+  auto graph = std::make_unique<mdgm::NaturalUndirectedGraph>(
+      mdgm::GenerateRegularGraph(dims, order));
+  return cpp11::external_pointer<mdgm::NaturalUndirectedGraph>(graph.release());
+}
+
+[[cpp11::register]]
 int nug_nvertices_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> g) {
   return static_cast<int>(g->nvertices());
 }

@@ -32,6 +32,7 @@ g$neighbors(1)
 \seealso{
 Other graph-construction: 
 \code{\link{nug_from_adj_list}()},
-\code{\link{nug_from_adj_mat}()}
+\code{\link{nug_from_adj_mat}()},
+\code{\link{nug_from_grid}()}
 }
 \concept{graph-construction}

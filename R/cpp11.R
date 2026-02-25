@@ -40,6 +40,10 @@ nug_neighbor_weights_cpp <- function(g, vertex) {
   .Call(`_mdgm_nug_neighbor_weights_cpp`, g, vertex)
 }
 
+nug_generate_regular_cpp <- function(nrows, ncols, order) {
+  .Call(`_mdgm_nug_generate_regular_cpp`, nrows, ncols, order)
+}
+
 nug_nvertices_cpp <- function(g) {
   .Call(`_mdgm_nug_nvertices_cpp`, g)
 }

@@ -7,61 +7,47 @@
 
 <!-- badges: end -->
 
-The goal of mdgm is to …
+**mdgm** (Mixture of Directed Graphical Models) provides Bayesian
+inference for discrete spatial random fields. Instead of working with a
+Markov random field and its intractable normalizing constant, the MDGM
+defines a mixture over directed acyclic graphs (DAGs) compatible with an
+undirected neighborhood graph. Each DAG admits a tractable likelihood,
+avoiding the partition function entirely.
+
+See [Carter and Calder (2024)](https://arxiv.org/abs/2406.15700) for the
+full methodological details.
 
 ## Installation
 
-You can install the development version of mdgm from
-[GitHub](https://github.com/) with:
+You can install the development version from GitHub:
 
 ``` r
 # install.packages("pak")
 pak::pak("jbcart/mdgm")
 ```
 
-## Example
+A C++20 compiler is required.
 
-This is a basic example which shows you how to solve a common problem:
-
-``` r
-# library(mdgm)
-## basic example code
-```
-
-What is special about using `README.Rmd` instead of just `README.md`?
-You can include R chunks like so:
+## Quick start
 
 ``` r
-summary(cars)
-#>      speed           dist       
-#>  Min.   : 4.0   Min.   :  2.00  
-#>  1st Qu.:12.0   1st Qu.: 26.00  
-#>  Median :15.0   Median : 36.00  
-#>  Mean   :15.4   Mean   : 42.98  
-#>  3rd Qu.:19.0   3rd Qu.: 56.00  
-#>  Max.   :25.0   Max.   :120.00
+library(mdgm)
+
+# Build a 4x4 grid graph with rook adjacency
+nug <- nug_from_grid(4, 4, seed = 42L)
+nug$nvertices()
+#> [1] 16
+nug$nedges()
+#> [1] 24
 ```
-
-You’ll still need to render `README.Rmd` regularly, to keep `README.md`
-up-to-date. `devtools::build_readme()` is handy for this.
-
-You can also embed plots, for example:
-
-<img src="man/figures/README-pressure-1.png" width="100%" />
-
-In that case, don’t forget to commit and push the resulting figure
-files, so they display on GitHub and CRAN.
 
 ## C++ unit tests
 
-The graph storage data structures implemented in `src/GraphStorage.*`
-ship with standalone C++ unit tests under `tests/cpp`. Build and run
-them with any C++20 compiler using:
+The C++ core ships with GoogleTest unit tests under `tests/cpp/`. Build
+and run them with:
 
 ``` bash
-make -C tests/cpp
-./tests/cpp/graph_storage_tests
+cmake -B build -DBUILD_TESTS=ON
+cmake --build build
+ctest --test-dir build
 ```
-
-The `Makefile` links directly against the `src/` sources so the binary
-exercises the current implementation.

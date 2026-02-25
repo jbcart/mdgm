@@ -15,23 +15,27 @@ NaturalUndirectedGraph <- R6::R6Class(
     #' @param col_idx Integer vector of target vertex indices (1-indexed).
     #' @param weights Numeric vector of edge weights.
     #' @param ... Additional arguments: `seed` (integer) or `rng` (external pointer).
-    initialize = function(n, row_idx, col_idx, weights, ...) {
+    initialize = function(n = NULL, row_idx = NULL, col_idx = NULL, weights = NULL, ...) {
       args <- list(...)
-      stopifnot(length(row_idx) == length(col_idx))
-      if (any(row_idx < 1) || any(col_idx < 1) || any(row_idx > n) || any(col_idx > n)) {
-        stop("Edge indices must be in the range [1, n]")
+      if (".graph_ptr" %in% names(args)) {
+        private$.graph <- args[[".graph_ptr"]]
+      } else {
+        stopifnot(!is.null(n), !is.null(row_idx), !is.null(col_idx), !is.null(weights))
+        stopifnot(length(row_idx) == length(col_idx))
+        if (any(row_idx < 1) || any(col_idx < 1) || any(row_idx > n) || any(col_idx > n)) {
+          stop("Edge indices must be in the range [1, n]")
+        }
+        if (!is.integer(n)) {
+          n <- as.integer(n)
+        }
+        if (!is.integer(row_idx)) {
+          row <- as.integer(row_idx)
+        }
+        if (!is.integer(col_idx)) {
+          col <- as.integer(col_idx)
+        }
+        private$.graph <- nug_create_cpp(n, row_idx, col_idx, weights)
       }
-      if (!is.integer(n)) {
-        n <- as.integer(n)
-      }
-      if (!is.integer(row_idx)) {
-        row <- as.integer(row_idx)
-      }
-      if (!is.integer(col_idx)) {
-        col <- as.integer(col_idx)
-      }
-      private$.graph <- nug_create_cpp(n, row_idx, col_idx, weights)
-      
       if ("rng" %in% names(args)) {
         stopifnot(inherits(args$rng, "externalptr"))
         private$.rng <- args$rng
@@ -164,4 +168,28 @@ nug_from_adj_mat <- function(adj_mat, ...) {
   nug_from_edge_list(n, edges, ...)
 }
 
-
+#' Create a regular 2D grid graph
+#'
+#' Generates a grid graph with the specified dimensions and neighborhood order.
+#' Order 1 gives rook adjacency (4-connected), order 2 gives queen adjacency
+#' (8-connected).
+#'
+#' @param nrows Number of rows in the grid.
+#' @param ncols Number of columns in the grid.
+#' @param order Neighborhood order: `1` for rook (default) or `2` for queen.
+#' @param ... Additional arguments: `seed` (integer) for reproducible RNG.
+#' @return A `NaturalUndirectedGraph` object.
+#' @family graph-construction
+#' @examples
+#' # 4x4 rook grid
+#' g <- nug_from_grid(4, 4)
+#' g$nvertices()
+#' g$nedges()
+#' @export
+nug_from_grid <- function(nrows, ncols, order = 1L, ...) {
+  nrows <- as.integer(nrows)
+  ncols <- as.integer(ncols)
+  order <- as.integer(order)
+  graph_ptr <- nug_generate_regular_cpp(nrows, ncols, order)
+  NaturalUndirectedGraph$new(.graph_ptr = graph_ptr, ...)
+}

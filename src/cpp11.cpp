@@ -76,6 +76,13 @@ extern "C" SEXP _mdgm_nug_neighbor_weights_cpp(SEXP g, SEXP vertex) {
   END_CPP11
 }
 // R_natural_undirected_graph.cpp
+cpp11::external_pointer<mdgm::NaturalUndirectedGraph> nug_generate_regular_cpp(int nrows, int ncols, int order);
+extern "C" SEXP _mdgm_nug_generate_regular_cpp(SEXP nrows, SEXP ncols, SEXP order) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(nug_generate_regular_cpp(cpp11::as_cpp<cpp11::decay_t<int>>(nrows), cpp11::as_cpp<cpp11::decay_t<int>>(ncols), cpp11::as_cpp<cpp11::decay_t<int>>(order)));
+  END_CPP11
+}
+// R_natural_undirected_graph.cpp
 int nug_nvertices_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> g);
 extern "C" SEXP _mdgm_nug_nvertices_cpp(SEXP g) {
   BEGIN_CPP11
@@ -156,6 +163,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_mdgm_model_ncolors_cpp",             (DL_FUNC) &_mdgm_model_ncolors_cpp,              1},
     {"_mdgm_model_nvertices_cpp",           (DL_FUNC) &_mdgm_model_nvertices_cpp,            1},
     {"_mdgm_nug_create_cpp",                (DL_FUNC) &_mdgm_nug_create_cpp,                 4},
+    {"_mdgm_nug_generate_regular_cpp",      (DL_FUNC) &_mdgm_nug_generate_regular_cpp,       3},
     {"_mdgm_nug_nedges_cpp",                (DL_FUNC) &_mdgm_nug_nedges_cpp,                 1},
     {"_mdgm_nug_neighbor_weights_cpp",      (DL_FUNC) &_mdgm_nug_neighbor_weights_cpp,       2},
     {"_mdgm_nug_neighbors_cpp",             (DL_FUNC) &_mdgm_nug_neighbors_cpp,              2},
