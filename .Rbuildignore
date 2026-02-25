@@ -7,3 +7,8 @@
 ^CMakeLists\.txt$
 ^functions\.jl$
 ^playground$
+^tests/cpp$
+^CLAUDE\.md$
+^\.claude$
+^doc$
+^Meta$

@@ -1,0 +1,38 @@
+#pragma once
+
+#include <cstddef>
+#include <mdgm/model.hpp>
+#include <mdgm/observations.hpp>
+#include <mdgm/rng.hpp>
+#include <vector>
+
+namespace mdgm {
+
+struct McmcConfig {
+  std::size_t n_iterations;
+  double psi_tune;
+  std::vector<double> emission_prior_params;
+};
+
+struct McmcSamples {
+  std::vector<int> z;                    // n x J column-major
+  std::vector<double> psi;               // length J
+  std::vector<double> eta;               // ncolors x J
+  std::vector<std::size_t> dag_data;     // n x J compact DAG storage
+  std::size_t psi_accepted;
+  std::size_t graph_accepted;
+  std::size_t n_iterations;
+  std::size_t n_vertices;
+  std::size_t n_colors;
+};
+
+McmcSamples RunMcmc(
+    Model& model,
+    const Observations& y,
+    const std::vector<int>& z_init,
+    double psi_init,
+    const std::vector<double>& eta_init,
+    const McmcConfig& config,
+    RNG& rng);
+
+}  // namespace mdgm

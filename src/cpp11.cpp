@@ -5,39 +5,88 @@
 #include "cpp11/declarations.hpp"
 #include <R_ext/Visibility.h>
 
-// R_natural_undirected_graph.cpp
-cpp11::external_pointer<mdgm::NaturalUndirectedGraph> undirected_graph_create_cpp(int nvertices, const cpp11::integers& row, const cpp11::integers& col, const cpp11::doubles& weights);
-extern "C" SEXP _mdgm_undirected_graph_create_cpp(SEXP nvertices, SEXP row, SEXP col, SEXP weights) {
+// R_model.cpp
+cpp11::external_pointer<mdgm::Model> model_create_standalone_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> nug, cpp11::strings dag_type, int n_colors);
+extern "C" SEXP _mdgm_model_create_standalone_cpp(SEXP nug, SEXP dag_type, SEXP n_colors) {
   BEGIN_CPP11
-    return cpp11::as_sexp(undirected_graph_create_cpp(cpp11::as_cpp<cpp11::decay_t<int>>(nvertices), cpp11::as_cpp<cpp11::decay_t<const cpp11::integers&>>(row), cpp11::as_cpp<cpp11::decay_t<const cpp11::integers&>>(col), cpp11::as_cpp<cpp11::decay_t<const cpp11::doubles&>>(weights)));
+    return cpp11::as_sexp(model_create_standalone_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::NaturalUndirectedGraph>>>(nug), cpp11::as_cpp<cpp11::decay_t<cpp11::strings>>(dag_type), cpp11::as_cpp<cpp11::decay_t<int>>(n_colors)));
+  END_CPP11
+}
+// R_model.cpp
+cpp11::external_pointer<mdgm::Model> model_create_hierarchical_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> nug, cpp11::strings dag_type, int n_colors, cpp11::strings emission);
+extern "C" SEXP _mdgm_model_create_hierarchical_cpp(SEXP nug, SEXP dag_type, SEXP n_colors, SEXP emission) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(model_create_hierarchical_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::NaturalUndirectedGraph>>>(nug), cpp11::as_cpp<cpp11::decay_t<cpp11::strings>>(dag_type), cpp11::as_cpp<cpp11::decay_t<int>>(n_colors), cpp11::as_cpp<cpp11::decay_t<cpp11::strings>>(emission)));
+  END_CPP11
+}
+// R_model.cpp
+bool model_has_emission_cpp(cpp11::external_pointer<mdgm::Model> model);
+extern "C" SEXP _mdgm_model_has_emission_cpp(SEXP model) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(model_has_emission_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::Model>>>(model)));
+  END_CPP11
+}
+// R_model.cpp
+int model_nvertices_cpp(cpp11::external_pointer<mdgm::Model> model);
+extern "C" SEXP _mdgm_model_nvertices_cpp(SEXP model) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(model_nvertices_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::Model>>>(model)));
+  END_CPP11
+}
+// R_model.cpp
+int model_ncolors_cpp(cpp11::external_pointer<mdgm::Model> model);
+extern "C" SEXP _mdgm_model_ncolors_cpp(SEXP model) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(model_ncolors_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::Model>>>(model)));
+  END_CPP11
+}
+// R_model.cpp
+cpp11::writable::list run_mcmc_cpp(cpp11::external_pointer<mdgm::Model> model, const cpp11::integers& obs_data, const cpp11::integers& obs_ptr, const cpp11::integers& z_init, double psi_init, const cpp11::doubles& eta_init, int n_iterations, double psi_tune, const cpp11::doubles& emission_prior_params, cpp11::external_pointer<mdgm::RNG> rng);
+extern "C" SEXP _mdgm_run_mcmc_cpp(SEXP model, SEXP obs_data, SEXP obs_ptr, SEXP z_init, SEXP psi_init, SEXP eta_init, SEXP n_iterations, SEXP psi_tune, SEXP emission_prior_params, SEXP rng) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(run_mcmc_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::Model>>>(model), cpp11::as_cpp<cpp11::decay_t<const cpp11::integers&>>(obs_data), cpp11::as_cpp<cpp11::decay_t<const cpp11::integers&>>(obs_ptr), cpp11::as_cpp<cpp11::decay_t<const cpp11::integers&>>(z_init), cpp11::as_cpp<cpp11::decay_t<double>>(psi_init), cpp11::as_cpp<cpp11::decay_t<const cpp11::doubles&>>(eta_init), cpp11::as_cpp<cpp11::decay_t<int>>(n_iterations), cpp11::as_cpp<cpp11::decay_t<double>>(psi_tune), cpp11::as_cpp<cpp11::decay_t<const cpp11::doubles&>>(emission_prior_params), cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::RNG>>>(rng)));
   END_CPP11
 }
 // R_natural_undirected_graph.cpp
-cpp11::writable::list undirected_graph_sample_spanning_tree_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> g, cpp11::strings method, int k, cpp11::external_pointer<mdgm::RNG> rng);
-extern "C" SEXP _mdgm_undirected_graph_sample_spanning_tree_cpp(SEXP g, SEXP method, SEXP k, SEXP rng) {
+cpp11::external_pointer<mdgm::NaturalUndirectedGraph> nug_create_cpp(int nvertices, const cpp11::integers& row, const cpp11::integers& col, const cpp11::doubles& weights);
+extern "C" SEXP _mdgm_nug_create_cpp(SEXP nvertices, SEXP row, SEXP col, SEXP weights) {
   BEGIN_CPP11
-    return cpp11::as_sexp(undirected_graph_sample_spanning_tree_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::NaturalUndirectedGraph>>>(g), cpp11::as_cpp<cpp11::decay_t<cpp11::strings>>(method), cpp11::as_cpp<cpp11::decay_t<int>>(k), cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::RNG>>>(rng)));
+    return cpp11::as_sexp(nug_create_cpp(cpp11::as_cpp<cpp11::decay_t<int>>(nvertices), cpp11::as_cpp<cpp11::decay_t<const cpp11::integers&>>(row), cpp11::as_cpp<cpp11::decay_t<const cpp11::integers&>>(col), cpp11::as_cpp<cpp11::decay_t<const cpp11::doubles&>>(weights)));
   END_CPP11
 }
 // R_natural_undirected_graph.cpp
-cpp11::writable::list undirected_graph_neighbors_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> g, int vertex);
-extern "C" SEXP _mdgm_undirected_graph_neighbors_cpp(SEXP g, SEXP vertex) {
+cpp11::writable::list nug_sample_spanning_tree_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> g, cpp11::strings method, int k, cpp11::external_pointer<mdgm::RNG> rng);
+extern "C" SEXP _mdgm_nug_sample_spanning_tree_cpp(SEXP g, SEXP method, SEXP k, SEXP rng) {
   BEGIN_CPP11
-    return cpp11::as_sexp(undirected_graph_neighbors_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::NaturalUndirectedGraph>>>(g), cpp11::as_cpp<cpp11::decay_t<int>>(vertex)));
+    return cpp11::as_sexp(nug_sample_spanning_tree_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::NaturalUndirectedGraph>>>(g), cpp11::as_cpp<cpp11::decay_t<cpp11::strings>>(method), cpp11::as_cpp<cpp11::decay_t<int>>(k), cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::RNG>>>(rng)));
   END_CPP11
 }
 // R_natural_undirected_graph.cpp
-int undirected_graph_nvertices_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> g);
-extern "C" SEXP _mdgm_undirected_graph_nvertices_cpp(SEXP g) {
+cpp11::writable::integers nug_neighbors_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> g, int vertex);
+extern "C" SEXP _mdgm_nug_neighbors_cpp(SEXP g, SEXP vertex) {
   BEGIN_CPP11
-    return cpp11::as_sexp(undirected_graph_nvertices_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::NaturalUndirectedGraph>>>(g)));
+    return cpp11::as_sexp(nug_neighbors_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::NaturalUndirectedGraph>>>(g), cpp11::as_cpp<cpp11::decay_t<int>>(vertex)));
   END_CPP11
 }
 // R_natural_undirected_graph.cpp
-int undirected_graph_nedges_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> g);
-extern "C" SEXP _mdgm_undirected_graph_nedges_cpp(SEXP g) {
+cpp11::writable::doubles nug_neighbor_weights_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> g, int vertex);
+extern "C" SEXP _mdgm_nug_neighbor_weights_cpp(SEXP g, SEXP vertex) {
   BEGIN_CPP11
-    return cpp11::as_sexp(undirected_graph_nedges_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::NaturalUndirectedGraph>>>(g)));
+    return cpp11::as_sexp(nug_neighbor_weights_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::NaturalUndirectedGraph>>>(g), cpp11::as_cpp<cpp11::decay_t<int>>(vertex)));
+  END_CPP11
+}
+// R_natural_undirected_graph.cpp
+int nug_nvertices_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> g);
+extern "C" SEXP _mdgm_nug_nvertices_cpp(SEXP g) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(nug_nvertices_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::NaturalUndirectedGraph>>>(g)));
+  END_CPP11
+}
+// R_natural_undirected_graph.cpp
+int nug_nedges_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> g);
+extern "C" SEXP _mdgm_nug_nedges_cpp(SEXP g) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(nug_nedges_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::NaturalUndirectedGraph>>>(g)));
   END_CPP11
 }
 // R_utils.cpp
@@ -101,19 +150,26 @@ extern "C" SEXP _mdgm_rng_discrete_cpp(SEXP rng, SEXP weights) {
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
-    {"_mdgm_rng_create_cpp",                            (DL_FUNC) &_mdgm_rng_create_cpp,                            0},
-    {"_mdgm_rng_create_seed_cpp",                       (DL_FUNC) &_mdgm_rng_create_seed_cpp,                       1},
-    {"_mdgm_rng_discrete_cpp",                          (DL_FUNC) &_mdgm_rng_discrete_cpp,                          2},
-    {"_mdgm_rng_normal_cpp",                            (DL_FUNC) &_mdgm_rng_normal_cpp,                            3},
-    {"_mdgm_rng_reseed_random_cpp",                     (DL_FUNC) &_mdgm_rng_reseed_random_cpp,                     1},
-    {"_mdgm_rng_set_seed_cpp",                          (DL_FUNC) &_mdgm_rng_set_seed_cpp,                          2},
-    {"_mdgm_rng_uniform_cpp",                           (DL_FUNC) &_mdgm_rng_uniform_cpp,                           3},
-    {"_mdgm_rng_uniform_int_cpp",                       (DL_FUNC) &_mdgm_rng_uniform_int_cpp,                       3},
-    {"_mdgm_undirected_graph_create_cpp",               (DL_FUNC) &_mdgm_undirected_graph_create_cpp,               4},
-    {"_mdgm_undirected_graph_nedges_cpp",               (DL_FUNC) &_mdgm_undirected_graph_nedges_cpp,               1},
-    {"_mdgm_undirected_graph_neighbors_cpp",            (DL_FUNC) &_mdgm_undirected_graph_neighbors_cpp,            2},
-    {"_mdgm_undirected_graph_nvertices_cpp",            (DL_FUNC) &_mdgm_undirected_graph_nvertices_cpp,            1},
-    {"_mdgm_undirected_graph_sample_spanning_tree_cpp", (DL_FUNC) &_mdgm_undirected_graph_sample_spanning_tree_cpp, 4},
+    {"_mdgm_model_create_hierarchical_cpp", (DL_FUNC) &_mdgm_model_create_hierarchical_cpp,  4},
+    {"_mdgm_model_create_standalone_cpp",   (DL_FUNC) &_mdgm_model_create_standalone_cpp,    3},
+    {"_mdgm_model_has_emission_cpp",        (DL_FUNC) &_mdgm_model_has_emission_cpp,         1},
+    {"_mdgm_model_ncolors_cpp",             (DL_FUNC) &_mdgm_model_ncolors_cpp,              1},
+    {"_mdgm_model_nvertices_cpp",           (DL_FUNC) &_mdgm_model_nvertices_cpp,            1},
+    {"_mdgm_nug_create_cpp",                (DL_FUNC) &_mdgm_nug_create_cpp,                 4},
+    {"_mdgm_nug_nedges_cpp",                (DL_FUNC) &_mdgm_nug_nedges_cpp,                 1},
+    {"_mdgm_nug_neighbor_weights_cpp",      (DL_FUNC) &_mdgm_nug_neighbor_weights_cpp,       2},
+    {"_mdgm_nug_neighbors_cpp",             (DL_FUNC) &_mdgm_nug_neighbors_cpp,              2},
+    {"_mdgm_nug_nvertices_cpp",             (DL_FUNC) &_mdgm_nug_nvertices_cpp,              1},
+    {"_mdgm_nug_sample_spanning_tree_cpp",  (DL_FUNC) &_mdgm_nug_sample_spanning_tree_cpp,   4},
+    {"_mdgm_rng_create_cpp",                (DL_FUNC) &_mdgm_rng_create_cpp,                 0},
+    {"_mdgm_rng_create_seed_cpp",           (DL_FUNC) &_mdgm_rng_create_seed_cpp,            1},
+    {"_mdgm_rng_discrete_cpp",              (DL_FUNC) &_mdgm_rng_discrete_cpp,               2},
+    {"_mdgm_rng_normal_cpp",                (DL_FUNC) &_mdgm_rng_normal_cpp,                 3},
+    {"_mdgm_rng_reseed_random_cpp",         (DL_FUNC) &_mdgm_rng_reseed_random_cpp,          1},
+    {"_mdgm_rng_set_seed_cpp",              (DL_FUNC) &_mdgm_rng_set_seed_cpp,               2},
+    {"_mdgm_rng_uniform_cpp",               (DL_FUNC) &_mdgm_rng_uniform_cpp,                3},
+    {"_mdgm_rng_uniform_int_cpp",           (DL_FUNC) &_mdgm_rng_uniform_int_cpp,            3},
+    {"_mdgm_run_mcmc_cpp",                  (DL_FUNC) &_mdgm_run_mcmc_cpp,                  10},
     {NULL, NULL, 0}
 };
 }

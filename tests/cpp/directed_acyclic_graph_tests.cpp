@@ -19,9 +19,9 @@ TEST(DirectedAcyclicGraph, BasicConstruction) {
   std::vector<std::size_t> col_ind = {1, 2};
   GraphCOO coo(3, row_ind, col_ind);
 
-  EXPECT_NO_THROW({ DirectedAcyclicGraph dag(coo, kSpanningTree); });
+  EXPECT_NO_THROW({ DirectedAcyclicGraph dag(coo, DagType::kSpanningTree); });
 
-  DirectedAcyclicGraph dag(coo, kSpanningTree);
+  DirectedAcyclicGraph dag(coo, DagType::kSpanningTree);
   EXPECT_EQ(dag.nvertices(), 3);
   EXPECT_EQ(dag.nedges(), 2);
 }
@@ -31,7 +31,7 @@ TEST(DirectedAcyclicGraph, ChildrenQuery) {
   std::vector<std::size_t> row_ind = {0, 1};
   std::vector<std::size_t> col_ind = {1, 2};
   GraphCOO coo(3, row_ind, col_ind);
-  DirectedAcyclicGraph dag(coo, kSpanningTree);
+  DirectedAcyclicGraph dag(coo, DagType::kSpanningTree);
 
   EXPECT_EQ(ToVec(dag.children(0)), (std::vector<std::size_t>{1}));
   EXPECT_EQ(ToVec(dag.children(1)), (std::vector<std::size_t>{2}));
@@ -43,7 +43,7 @@ TEST(DirectedAcyclicGraph, ParentsQuery) {
   std::vector<std::size_t> row_ind = {0, 1};
   std::vector<std::size_t> col_ind = {1, 2};
   GraphCOO coo(3, row_ind, col_ind);
-  DirectedAcyclicGraph dag(coo, kSpanningTree);
+  DirectedAcyclicGraph dag(coo, DagType::kSpanningTree);
 
   EXPECT_EQ(ToVec(dag.parents(0)), (std::vector<std::size_t>{}));
   EXPECT_EQ(ToVec(dag.parents(1)), (std::vector<std::size_t>{0}));
@@ -55,7 +55,7 @@ TEST(DirectedAcyclicGraph, ChildrenParentsConsistency) {
   std::vector<std::size_t> row_ind = {0, 0, 1, 2};
   std::vector<std::size_t> col_ind = {1, 2, 3, 3};
   GraphCOO coo(4, row_ind, col_ind);
-  DirectedAcyclicGraph dag(coo, kAcyclicOrientation);
+  DirectedAcyclicGraph dag(coo, DagType::kAcyclicOrientation);
 
   // For every u, for every v in children(u): u must be in parents(v)
   for (std::size_t u = 0; u < dag.nvertices(); ++u) {
@@ -80,7 +80,7 @@ TEST(DirectedAcyclicGraph, OutOfRangeAccess) {
   std::vector<std::size_t> row_ind = {0};
   std::vector<std::size_t> col_ind = {1};
   GraphCOO coo(2, row_ind, col_ind);
-  DirectedAcyclicGraph dag(coo, kSpanningTree);
+  DirectedAcyclicGraph dag(coo, DagType::kSpanningTree);
 
   EXPECT_THROW(dag.children(2), std::out_of_range);
   EXPECT_THROW(dag.parents(2), std::out_of_range);
@@ -91,9 +91,9 @@ TEST(DirectedAcyclicGraph, OutOfRangeAccess) {
 TEST(DirectedAcyclicGraph, SingleVertexGraph) {
   GraphCOO coo(1, {}, {});
 
-  EXPECT_NO_THROW({ DirectedAcyclicGraph dag(coo, kRooted); });
+  EXPECT_NO_THROW({ DirectedAcyclicGraph dag(coo, DagType::kRooted); });
 
-  DirectedAcyclicGraph dag(coo, kRooted);
+  DirectedAcyclicGraph dag(coo, DagType::kRooted);
   EXPECT_EQ(dag.nvertices(), 1);
   EXPECT_EQ(dag.nedges(), 0);
   EXPECT_EQ(ToVec(dag.children(0)), (std::vector<std::size_t>{}));
@@ -105,7 +105,7 @@ TEST(DirectedAcyclicGraph, BranchingDAG) {
   std::vector<std::size_t> row_ind = {0, 0, 1, 2};
   std::vector<std::size_t> col_ind = {1, 2, 3, 3};
   GraphCOO coo(4, row_ind, col_ind);
-  DirectedAcyclicGraph dag(coo, kAcyclicOrientation);
+  DirectedAcyclicGraph dag(coo, DagType::kAcyclicOrientation);
 
   EXPECT_EQ(dag.nvertices(), 4);
   EXPECT_EQ(dag.nedges(), 4);
@@ -125,7 +125,7 @@ TEST(DirectedAcyclicGraph, CopySemantics) {
   std::vector<std::size_t> row_ind = {0, 0, 1};
   std::vector<std::size_t> col_ind = {1, 2, 2};
   GraphCOO coo(3, row_ind, col_ind);
-  DirectedAcyclicGraph dag(coo, kSpanningTree);
+  DirectedAcyclicGraph dag(coo, DagType::kSpanningTree);
 
   DirectedAcyclicGraph dag_copy = dag;  // copy constructor
   EXPECT_EQ(dag_copy.nvertices(), dag.nvertices());

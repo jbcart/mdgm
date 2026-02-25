@@ -5,7 +5,7 @@
 
 namespace mdgm {
 
-DirectedAcyclicGraph::DirectedAcyclicGraph(const GraphCOO& coo, DAGType type)
+DirectedAcyclicGraph::DirectedAcyclicGraph(const GraphCOO& coo, DagType type)
     : csr_(coo), transpose_(coo.Transpose()), type_(type) {}
 
 std::span<const std::size_t> DirectedAcyclicGraph::children(std::size_t vertex) const {

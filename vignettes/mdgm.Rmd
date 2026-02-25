@@ -1,0 +1,145 @@
+---
+title: "Getting Started with mdgm"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with mdgm}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(mdgm)
+```
+
+## What is mdgm?
+
+The **mdgm** package implements Bayesian inference for discrete spatial random
+fields using **Mixtures of Directed Graphical Models**. Like a Markov random
+field (MRF), the MDGM takes an undirected graph as input to represent spatial
+structure. However, instead of specifying a single joint distribution with an
+intractable normalizing constant, the MDGM defines a mixture over directed
+acyclic graphs (DAGs) compatible with the undirected graph. Each DAG admits an
+efficient factorization, avoiding the computational burden of the MRF partition
+function while providing valid probabilistic inference.
+
+The approach is described in:
+
+> Carter, J. B. and Calder, C. A. (2024). Mixture of Directed Graphical Models
+> for Discrete Spatial Random Fields.
+> [arXiv:2406.15700](https://arxiv.org/abs/2406.15700)
+
+## Installation
+
+Install the development version from GitHub:
+
+```r
+# install.packages("remotes")
+remotes::install_github("jbcart/mdgm")
+```
+
+The package requires a C++20 compiler.
+
+## Quick example
+
+The basic workflow is:
+
+1. **Build a graph** — Define the undirected neighborhood structure.
+2. **Specify a model** — Choose the DAG type and (optionally) an emission
+   distribution.
+3. **Run MCMC** — Sample from the posterior.
+4. **Analyze results** — Inspect posterior summaries, edge inclusion
+   probabilities, etc.
+
+### Step 1: Build a graph
+
+Create a 4x4 grid graph using an adjacency matrix with rook neighbors:
+
+```{r grid-graph}
+n_row <- 4
+n_col <- 4
+n <- n_row * n_col
+A <- matrix(0, n, n)
+for (i in 1:n) {
+  ri <- (i - 1) %/% n_col + 1
+  ci <- (i - 1) %% n_col + 1
+  for (j in 1:n) {
+    rj <- (j - 1) %/% n_col + 1
+    cj <- (j - 1) %% n_col + 1
+    if (abs(ri - rj) + abs(ci - cj) == 1) {
+      A[i, j] <- 1
+    }
+  }
+}
+nug <- nug_from_adj_mat(A, seed = 42L)
+nug$nvertices()
+nug$nedges()
+```
+
+### Step 2: Define a model
+
+Create a hierarchical model with spanning-tree DAGs and a Bernoulli emission:
+
+```{r model}
+model <- mdgm_model(nug, dag_type = "spanning_tree", n_colors = 2L,
+                     emission = "bernoulli")
+model$has_emission()
+model$ncolors()
+```
+
+For a **standalone** model (where the spatial field is observed directly), omit
+the `emission` argument:
+
+```r
+model_standalone <- mdgm_model(nug, dag_type = "spanning_tree")
+```
+
+### Step 3: Run MCMC
+
+Simulate some binary observations and run the sampler:
+
+```{r mcmc}
+set.seed(1)
+# Simulate observations: vertex i gets a few Bernoulli draws
+y <- lapply(1:n, function(i) rbinom(5, 1, ifelse(i <= 8, 0.2, 0.8)))
+
+# Initial values
+z_init <- rep(0:1, each = 8)
+result <- mcmc(model, y = y, z_init = z_init, psi_init = 0.5,
+               eta_init = c(0.3, 0.7), n_iter = 500L, seed = 42L)
+```
+
+### Step 4: Analyze results
+
+```{r results}
+result$summary()
+```
+
+Access posterior samples directly:
+
+```{r samples}
+# Psi trace
+psi_samples <- result$psi()
+plot(psi_samples, type = "l", xlab = "Iteration", ylab = expression(psi),
+     main = "Psi trace plot")
+
+# Acceptance rates
+result$acceptance_rates()
+```
+
+Compute edge inclusion probabilities (discarding the first 100 iterations as
+burn-in):
+
+```{r edge-probs}
+eip <- result$edge_inclusion_probs(nug, burnin = 100L)
+head(eip[order(-eip$prob), ])
+```
+
+See the [MDGM Model Specification](mdgm-models.html) vignette for details on
+the statistical model and DAG types.

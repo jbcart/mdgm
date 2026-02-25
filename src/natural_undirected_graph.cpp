@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <mdgm/graph_storage.hpp>
 #include <mdgm/natural_undirected_graph.hpp>
 #include <mdgm/rng.hpp>
@@ -104,14 +105,26 @@ std::size_t NaturalUndirectedGraph::nvertices() const noexcept { return csr_.nve
 
 std::size_t NaturalUndirectedGraph::nedges() const noexcept { return csr_.weights().size() / 2; }
 
+void NaturalUndirectedGraph::UpdateWeights(std::span<const int> z, double psi) {
+  auto& weights = csr_.mutable_weights();
+  const auto& row_ptr = csr_.row_ptr();
+  const auto& col_ind = csr_.col_ind();
+  for (std::size_t u = 0; u < csr_.nvertices(); ++u) {
+    for (std::size_t idx = row_ptr[u]; idx < row_ptr[u + 1]; ++idx) {
+      std::size_t v = col_ind[idx];
+      weights[idx] = std::exp(psi * static_cast<double>(z[u] == z[v]));
+    }
+  }
+}
+
 DirectedAcyclicGraph NaturalUndirectedGraph::SampleSpanningTree(RNG& rng, SpanningTreeMethod method,
                                                                 int k) const {
   switch (method) {
-    case kWilson:
+    case SpanningTreeMethod::kWilson:
       return SampleSpanningTreeWilson_(rng);
-    case kAldousBroder:
+    case SpanningTreeMethod::kAldousBroder:
       return SampleSpanningTreeAldousBroder_(rng);
-    case kFastForward:
+    case SpanningTreeMethod::kFastForward:
       return SampleSpanningTreeFastForward_(rng, k);
     default:
       throw std::invalid_argument("Unknown spanning tree method");
@@ -139,7 +152,7 @@ DirectedAcyclicGraph NaturalUndirectedGraph::SampleAcyclicOrientation(RNG& rng) 
     }
   }
   return DirectedAcyclicGraph(GraphCOO(csr_.nvertices(), row_ind, col_ind, weights),
-                              kAcyclicOrientation);
+                              DagType::kAcyclicOrientation);
 }
 
 std::size_t NaturalUndirectedGraph::NextVertex_(RNG& rng, std::size_t current) const {
@@ -245,7 +258,7 @@ DirectedAcyclicGraph NaturalUndirectedGraph::SampleSpanningTreeWilson_(RNG& rng)
   if (row_ind.size() != n - 1) {
     throw std::logic_error("Internal error in Wilson's algorithm: incorrect number of edges");
   }
-  return DirectedAcyclicGraph(GraphCOO(nvertices(), row_ind, col_ind), kSpanningTree);
+  return DirectedAcyclicGraph(GraphCOO(nvertices(), row_ind, col_ind), DagType::kSpanningTree);
 }
 
 DirectedAcyclicGraph NaturalUndirectedGraph::SampleSpanningTreeAldousBroder_(RNG& rng) const {
@@ -280,12 +293,12 @@ DirectedAcyclicGraph NaturalUndirectedGraph::SampleSpanningTreeAldousBroder_(RNG
   if (row_ind.size() != n - 1) {
     throw std::logic_error("Internal error in Aldous-Broder algorithm: incorrect number of edges");
   }
-  return DirectedAcyclicGraph(GraphCOO(nvertices(), row_ind, col_ind), kSpanningTree);
+  return DirectedAcyclicGraph(GraphCOO(nvertices(), row_ind, col_ind), DagType::kSpanningTree);
 }
 
 DirectedAcyclicGraph NaturalUndirectedGraph::SampleSpanningTreeFastForward_(RNG& rng, int k) const {
   // unimplemented
-  return DirectedAcyclicGraph(GraphCOO(0, {}, {}, {}), kSpanningTree);
+  return DirectedAcyclicGraph(GraphCOO(0, {}, {}, {}), DagType::kSpanningTree);
 }
 
 void NaturalUndirectedGraph::ValidateUndirected_() const {
@@ -329,12 +342,7 @@ void NaturalUndirectedGraph::ValidateConnected_() {
     }
   }
 
-  if (visit_count < n) {
-    is_connected_ = false;
-    std::fprintf(stderr, "warning: graph is not connected; spanning tree algorithms may fail.\n");
-  } else {
-    is_connected_ = true;
-  }
+  is_connected_ = (visit_count == n);
 }
 
 }  // namespace mdgm

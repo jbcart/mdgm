@@ -74,6 +74,7 @@ class GraphCSR {
   const std::vector<std::size_t>& row_ptr() const noexcept { return row_ptr_; }
   const std::vector<std::size_t>& col_ind() const noexcept { return col_ind_; }
   const std::vector<double>& weights() const noexcept { return weights_; }
+  std::vector<double>& mutable_weights() noexcept { return weights_; }
   const std::size_t nvertices() const noexcept { return nvertices_; }
 
   // Get adjacent vertices and weights for a given vertex

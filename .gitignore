@@ -58,3 +58,5 @@ build/
 .vscode/
 
 
+/doc/
+/Meta/

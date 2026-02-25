@@ -7,6 +7,12 @@ PKG_CPPFLAGS = \
 OBJECTS = \
   graph_storage.o \
   natural_undirected_graph.o \
+  directed_acyclic_graph.o \
+  mixture_directed_graphical_models.o \
+  emission.o \
+  model.o \
+  mcmc.o \
   R_natural_undirected_graph.o \
+  R_model.o \
   R_utils.o \
-  cpp11.o 
+  cpp11.o

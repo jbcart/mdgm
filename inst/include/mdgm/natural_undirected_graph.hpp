@@ -9,7 +9,7 @@
 
 namespace mdgm {
 
-enum SpanningTreeMethod {
+enum class SpanningTreeMethod {
   kWilson,
   kAldousBroder,
   kFastForward,
@@ -29,7 +29,10 @@ class NaturalUndirectedGraph {
   std::size_t nvertices() const noexcept;
   std::size_t nedges() const noexcept;
 
-  DirectedAcyclicGraph SampleSpanningTree(RNG& rng, SpanningTreeMethod method = kWilson, int k = 1000) const;
+  DirectedAcyclicGraph SampleSpanningTree(RNG& rng, SpanningTreeMethod method = SpanningTreeMethod::kWilson, int k = 1000) const;
+
+  // Update edge weights for posterior sampling: w(u,v) = exp(psi * I(z_u == z_v))
+  void UpdateWeights(std::span<const int> z, double psi);
   DirectedAcyclicGraph SampleAcyclicOrientation(RNG& rng) const;
 
  private:

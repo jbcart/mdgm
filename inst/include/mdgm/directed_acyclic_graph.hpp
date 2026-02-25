@@ -7,7 +7,7 @@
 
 namespace mdgm {
 
-enum DAGType {
+enum class DagType {
   kSpanningTree,
   kAcyclicOrientation,
   kRooted,
@@ -15,7 +15,7 @@ enum DAGType {
 
 class DirectedAcyclicGraph {
  public:
-  DirectedAcyclicGraph(const GraphCOO& coo, DAGType type);
+  DirectedAcyclicGraph(const GraphCOO& coo, DagType type);
 
   ~DirectedAcyclicGraph() = default;
   DirectedAcyclicGraph(const DirectedAcyclicGraph&) = default;
@@ -27,12 +27,10 @@ class DirectedAcyclicGraph {
   std::size_t nvertices() const noexcept;
   std::size_t nedges() const noexcept;
 
-
-
  private:
   GraphCSR csr_;
   GraphCSR transpose_;
-  DAGType type_;
+  DagType type_;
 };
 
 }  // namespace mdgm

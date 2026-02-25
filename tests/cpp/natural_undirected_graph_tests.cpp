@@ -112,12 +112,11 @@ TEST(NaturalUndirectedGraph, ValidateConnected) {
   weights = {1.0, 1.0};
   GraphCOO disconnected_coo(3, row_ind, col_ind, weights);
 
-  testing::internal::CaptureStderr();
-  EXPECT_NO_THROW({
-    NaturalUndirectedGraph graph(disconnected_coo);
-  });
-  std::string output = testing::internal::GetCapturedStderr();
-  EXPECT_NE(output.find("warning: graph is not connected"), std::string::npos);
+  // Construction succeeds but spanning tree sampling should throw
+  NaturalUndirectedGraph graph(disconnected_coo);
+  EXPECT_EQ(graph.nvertices(), 3);
+  RNG rng(42);
+  EXPECT_THROW(graph.SampleSpanningTree(rng, SpanningTreeMethod::kWilson), std::runtime_error);
 }
 
 TEST(NaturalUndirectedGraph, SingleVertexGraph) {
@@ -164,7 +163,7 @@ TEST(NaturalUndirectedGraph, SpanningTreeSamplers) {
   NaturalUndirectedGraph graph(coo);
 
   RNG rng(42);
-  DirectedAcyclicGraph spanning_tree = graph.SampleSpanningTree(rng, kWilson);
+  DirectedAcyclicGraph spanning_tree = graph.SampleSpanningTree(rng, SpanningTreeMethod::kWilson);
 
   // Spanning tree must have n-1 edges
   EXPECT_EQ(spanning_tree.nvertices(), 4);
@@ -173,7 +172,7 @@ TEST(NaturalUndirectedGraph, SpanningTreeSamplers) {
     EXPECT_LE(spanning_tree.parents(v).size(), 1);
   }
 
-  spanning_tree = graph.SampleSpanningTree(rng, kAldousBroder);
+  spanning_tree = graph.SampleSpanningTree(rng, SpanningTreeMethod::kAldousBroder);
 
   // Spanning tree must have n-1 edges
   EXPECT_EQ(spanning_tree.nvertices(), 4);
@@ -187,11 +186,11 @@ TEST(NaturalUndirectedGraph, DeterministicRandomness) {
   NaturalUndirectedGraph graph = GenerateRegularGraph({3, 3}, 1);
 
   RNG rng1(42);
-  DirectedAcyclicGraph tree1 = graph.SampleSpanningTree(rng1, kWilson);
+  DirectedAcyclicGraph tree1 = graph.SampleSpanningTree(rng1, SpanningTreeMethod::kWilson);
   DirectedAcyclicGraph ao1 = graph.SampleAcyclicOrientation(rng1);
 
   RNG rng2(42);
-  DirectedAcyclicGraph tree2 = graph.SampleSpanningTree(rng2, kWilson);
+  DirectedAcyclicGraph tree2 = graph.SampleSpanningTree(rng2, SpanningTreeMethod::kWilson);
   DirectedAcyclicGraph ao2 = graph.SampleAcyclicOrientation(rng2);
 
   // Same seed should produce same spanning tree

@@ -12,11 +12,15 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Source Library
-file(GLOB 
-  SRC_FILES 
+file(GLOB
+  SRC_FILES
   src/graph_storage.cpp
   src/natural_undirected_graph.cpp
   src/directed_acyclic_graph.cpp
+  src/mixture_directed_graphical_models.cpp
+  src/emission.cpp
+  src/model.cpp
+  src/mcmc.cpp
 )
 add_library(mdgm_objs OBJECT ${SRC_FILES})
 target_include_directories(mdgm_objs PUBLIC 

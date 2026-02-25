@@ -5,8 +5,16 @@ Date: 2024-06-10
 Depends: R (>= 4.2.0)
 Authors@R: 
     person("Brandon", "Carter", , "brandon.carter@duke.edu", role = c("aut", "cre"))
-Description: Implementation of mixture of directed graphical models for discrete spatial random fields with discrete-valued outcomes.
+Description: Bayesian inference for discrete spatial random fields using mixtures
+    of directed graphical models (MDGM). Implements MCMC sampling over directed
+    acyclic graph structures (spanning trees, acyclic orientations) with optional
+    emission models for hierarchical observation processes. The C++ core provides
+    efficient graph algorithms and sampling; the R interface exposes model
+    construction, MCMC execution, and posterior summaries. Based on Carter and
+    Calder (2024) <doi:10.48550/arXiv.2406.15700>.
 License: MIT + file LICENSE
+URL: https://github.com/jbcart/mdgm
+BugReports: https://github.com/jbcart/mdgm/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
@@ -14,9 +22,11 @@ LinkingTo: cpp11
 SystemRequirements: C++20
 Imports:
   R6
-Suggests: 
+Suggests:
   knitr,
   rmarkdown,
   igraph,
-  sf
+  sf,
+  testthat (>= 3.0.0)
+Config/testthat/edition: 3
 VignetteBuilder: knitr
