@@ -235,8 +235,22 @@ MdgmResult <- R6::R6Class(
 
       # Diagnostics
       diag <- self$diagnostics(burnin = burnin)
-      cat(sprintf("  Psi R-hat: %.4f, ESS: %.0f\n",
+      cat(sprintf("  Diagnostics:\n"))
+      cat(sprintf("    psi — R-hat: %.4f, ESS: %.0f\n",
                   diag$psi$rhat, diag$psi$ess))
+
+      if (!is.null(private$.raw$theta)) {
+        # Find the theta diagnostics (keyed by emission type)
+        diag_keys <- setdiff(names(diag), "psi")
+        if (length(diag_keys) > 0) {
+          theta_diag <- diag[[diag_keys[1]]]
+          for (i in seq_along(param_names)) {
+            cat(sprintf("    %s — R-hat: %.4f, ESS: %.0f\n",
+                        param_names[i], theta_diag$rhat[i], theta_diag$ess[i]))
+          }
+        }
+      }
+
       out$diagnostics <- diag
 
       invisible(out)
@@ -419,7 +433,7 @@ split_rhat <- function(x) {
   B <- chain_n / (m - 1L) * sum((chain_means - overall_mean)^2)
   W <- mean(chain_vars)
 
-  if (W == 0) return(NA_real_)
+  if (is.na(W) || W == 0) return(NA_real_)
   var_hat <- (chain_n - 1L) / chain_n * W + B / chain_n
   sqrt(var_hat / W)
 }
