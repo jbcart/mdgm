@@ -78,7 +78,7 @@ grow_regions <- function(nug, n_colors, seed = NULL) {
 nug <- nug_from_grid(8, 8, seed = 42L)
 n <- nug$nvertices()
 
-z_true <- grow_regions(nug, n_colors = 2, seed = 7)
+z_true <- grow_regions(nug, n_colors = 2, seed = 28)
 
 grid_df <- data.frame(
   x = rep(1:8, 8), y = rep(8:1, each = 8),
@@ -100,7 +100,7 @@ are needed for identifiability in the Bernoulli case.
 
 ### Example: binary indicators on a grid
 
-```{r bernoulli-sim}
+```{r bernoulli-sim, fig.width = 5, fig.height = 4}
 set.seed(1)
 p_true <- c(0.3, 0.7)
 
@@ -108,6 +108,17 @@ p_true <- c(0.3, 0.7)
 y_bern <- lapply(seq_len(n), function(i) {
   rbinom(5, 1, p_true[z_true[i] + 1])
 })
+
+# Visualize average response per vertex
+obs_df_b <- data.frame(
+  x = rep(1:8, 8), y = rep(8:1, each = 8),
+  value = vapply(y_bern, mean, numeric(1))
+)
+ggplot(obs_df_b, aes(x, y, fill = value)) +
+  geom_tile(color = "white", linewidth = 0.3) +
+  scale_fill_gradient(low = "#440154", high = "#fde725") +
+  coord_equal() + theme_minimal() +
+  labs(title = "Average observed response (5 replicates)", fill = expression(bar(y)))
 ```
 
 Fit the model:
@@ -129,6 +140,14 @@ result_b$summary(burnin = 1000L)
 ```
 
 ### Posterior trace plots
+
+```{r bernoulli-psi-trace, fig.width = 6, fig.height = 3}
+psi_df_b <- data.frame(iteration = seq_along(result_b$psi()), psi = result_b$psi())
+ggplot(psi_df_b, aes(iteration, psi)) +
+  geom_line(alpha = 0.6, linewidth = 0.3) +
+  theme_minimal() +
+  labs(title = "Bernoulli: psi trace", x = "Iteration", y = expression(psi))
+```
 
 ```{r bernoulli-trace, fig.width = 6, fig.height = 4}
 ep_b <- result_b$emission_params()
@@ -212,7 +231,15 @@ result_g <- mcmc(model_g, y = y_gauss,
 result_g$summary(burnin = 1000L)
 ```
 
-### Posterior emission parameters
+### Posterior trace plots
+
+```{r gaussian-psi-trace, fig.width = 6, fig.height = 3}
+psi_df_g <- data.frame(iteration = seq_along(result_g$psi()), psi = result_g$psi())
+ggplot(psi_df_g, aes(iteration, psi)) +
+  geom_line(alpha = 0.6, linewidth = 0.3) +
+  theme_minimal() +
+  labs(title = "Gaussian: psi trace", x = "Iteration", y = expression(psi))
+```
 
 ```{r gaussian-trace, fig.width = 6, fig.height = 4}
 ep_g <- result_g$emission_params()
@@ -306,6 +333,14 @@ result_p$summary(burnin = 1000L)
 ```
 
 ### Posterior trace plots
+
+```{r poisson-psi-trace, fig.width = 6, fig.height = 3}
+psi_df_p <- data.frame(iteration = seq_along(result_p$psi()), psi = result_p$psi())
+ggplot(psi_df_p, aes(iteration, psi)) +
+  geom_line(alpha = 0.6, linewidth = 0.3) +
+  theme_minimal() +
+  labs(title = "Poisson: psi trace", x = "Iteration", y = expression(psi))
+```
 
 ```{r poisson-trace, fig.width = 6, fig.height = 4}
 ep_p <- result_p$emission_params()
