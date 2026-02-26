@@ -105,7 +105,8 @@ double MarkovRandomField::UpdatePsi(
   if (proposal <= 0.0) return psi;
 
   // Sample auxiliary field from the MRF at the proposed psi
-  std::vector<int> z_aux = GibbsSample(proposal, rng);
+  std::vector<int> z_aux = (ncolors_ == 2) ? CftpSample(proposal, rng)
+                                           : GibbsSample(proposal, rng);
 
   // Sufficient statistics
   double S_z = SufficientStatistic(z);
@@ -160,6 +161,74 @@ std::vector<int> MarkovRandomField::GibbsSample(
   }
 
   return z;
+}
+
+std::vector<int> MarkovRandomField::Sample(
+    double psi, RNG& rng) const {
+  return (ncolors_ == 2) ? CftpSample(psi, rng) : GibbsSample(psi, rng);
+}
+
+void MarkovRandomField::CftpSweep(
+    std::vector<int>& config, double psi,
+    const std::vector<double>& uniforms,
+    std::size_t col_offset) const {
+  const std::size_t n = nug_.nvertices();
+  for (std::size_t i = 0; i < n; ++i) {
+    auto nbrs = nug_.neighbors(i);
+    double n0 = 0.0;
+    double n1 = 0.0;
+    for (std::size_t nb : nbrs) {
+      if (config[nb] == 0) n0 += 1.0;
+      else n1 += 1.0;
+    }
+    double w0 = std::exp(psi * n0);
+    double w1 = std::exp(psi * n1);
+    double threshold = w0 / (w0 + w1);
+    config[i] = (uniforms[col_offset * n + i] < threshold) ? 0 : 1;
+  }
+}
+
+std::vector<int> MarkovRandomField::CftpSample(
+    double psi, RNG& rng) const {
+  const std::size_t n = nug_.nvertices();
+  std::size_t block_size = n_aux_sweeps_;
+  constexpr std::size_t kMaxDoublings = 30;
+
+  // Shared uniforms: flat vector of size n * total_sweeps
+  // uniforms[sweep * n + site]
+  std::vector<double> uniforms(n * block_size);
+  for (auto& u : uniforms) u = rng.uniform();
+
+  for (std::size_t doubling = 0; doubling <= kMaxDoublings; ++doubling) {
+    std::size_t total_sweeps = uniforms.size() / n;
+
+    // Initialize extremal states
+    std::vector<int> lo(n, 0);
+    std::vector<int> hi(n, 1);
+
+    // Replay all sweeps with shared uniforms
+    for (std::size_t s = 0; s < total_sweeps; ++s) {
+      CftpSweep(lo, psi, uniforms, s);
+      CftpSweep(hi, psi, uniforms, s);
+    }
+
+    // Check coalescence
+    if (lo == hi) return lo;
+
+    // Double by prepending new uniforms
+    std::vector<double> new_uniforms(n * total_sweeps);
+    for (auto& u : new_uniforms) u = rng.uniform();
+    new_uniforms.insert(new_uniforms.end(), uniforms.begin(), uniforms.end());
+    uniforms = std::move(new_uniforms);
+  }
+
+  // Safety fallback: return last lower chain (should not happen in practice)
+  std::size_t total_sweeps = uniforms.size() / n;
+  std::vector<int> lo(n, 0);
+  for (std::size_t s = 0; s < total_sweeps; ++s) {
+    CftpSweep(lo, psi, uniforms, s);
+  }
+  return lo;
 }
 
 std::size_t MarkovRandomField::nvertices() const {

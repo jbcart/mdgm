@@ -136,6 +136,27 @@ cpp11::sexp model_emission_type_cpp(cpp11::external_pointer<mdgm::Model> model) 
   }
 }
 
+// --- Standalone MRF sampling ---
+
+[[cpp11::register]]
+cpp11::writable::integers sample_mrf_cpp(
+    cpp11::external_pointer<mdgm::NaturalUndirectedGraph> nug,
+    double psi, int n_colors, int n_sweeps,
+    cpp11::external_pointer<mdgm::RNG> rng) {
+  mdgm::MarkovRandomField mrf(
+      *nug, mdgm::PsiMethod::kExchange,
+      static_cast<std::size_t>(n_colors),
+      static_cast<std::size_t>(n_sweeps));
+
+  std::vector<int> z = mrf.Sample(psi, *rng);
+
+  cpp11::writable::integers result(static_cast<R_xlen_t>(z.size()));
+  for (std::size_t i = 0; i < z.size(); ++i) {
+    result[static_cast<R_xlen_t>(i)] = z[i];
+  }
+  return result;
+}
+
 // --- MCMC ---
 
 [[cpp11::register]]

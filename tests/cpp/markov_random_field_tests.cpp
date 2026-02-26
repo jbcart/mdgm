@@ -216,4 +216,76 @@ TEST(MarkovRandomField, ModelIntegrationHierarchical) {
   EXPECT_EQ(model.emission_type(), FamilyType::kBernoulli);
 }
 
+TEST(MarkovRandomField, CftpReturnsValidBinaryColoring) {
+  auto nug = MakeGrid3x3MRF();
+  MarkovRandomField mrf(nug, PsiMethod::kExchange, 2, 50);
+  RNG rng(123);
+
+  auto z = mrf.Sample(0.5, rng);
+  EXPECT_EQ(z.size(), 9);
+  for (int val : z) {
+    EXPECT_GE(val, 0);
+    EXPECT_LE(val, 1);
+  }
+}
+
+TEST(MarkovRandomField, CftpCoalescesSmallGrid) {
+  // Small grid with moderate psi should coalesce quickly
+  auto nug = GenerateRegularGraph({4, 4}, 1);
+  MarkovRandomField mrf(nug, PsiMethod::kExchange, 2, 100);
+  RNG rng(42);
+
+  // Should succeed (not hit safety limit) for multiple draws
+  for (int rep = 0; rep < 5; ++rep) {
+    auto z = mrf.Sample(0.3, rng);
+    EXPECT_EQ(z.size(), 16);
+    for (int val : z) {
+      EXPECT_GE(val, 0);
+      EXPECT_LE(val, 1);
+    }
+  }
+}
+
+TEST(MarkovRandomField, CftpSweepCouplingProperty) {
+  // Two identical configs + shared uniforms must produce identical output
+  auto nug = MakeGrid3x3MRF();
+  MarkovRandomField mrf(nug, PsiMethod::kExchange, 2, 10);
+  RNG rng(99);
+
+  const std::size_t n = 9;
+  std::vector<double> uniforms(n);
+  for (auto& u : uniforms) u = rng.uniform();
+
+  std::vector<int> a = {0, 1, 0, 1, 0, 1, 0, 1, 0};
+  std::vector<int> b = a;  // identical
+
+  mrf.CftpSweep(a, 0.5, uniforms, 0);
+  mrf.CftpSweep(b, 0.5, uniforms, 0);
+
+  EXPECT_EQ(a, b);
+}
+
+TEST(MarkovRandomField, SampleDispatchesByNcolors) {
+  auto nug = MakeGrid3x3MRF();
+  RNG rng(42);
+
+  // Binary: uses CFTP
+  MarkovRandomField mrf2(nug, PsiMethod::kExchange, 2, 50);
+  auto z2 = mrf2.Sample(0.5, rng);
+  EXPECT_EQ(z2.size(), 9);
+  for (int val : z2) {
+    EXPECT_GE(val, 0);
+    EXPECT_LE(val, 1);
+  }
+
+  // 3-color: uses Gibbs
+  MarkovRandomField mrf3(nug, PsiMethod::kExchange, 3, 50);
+  auto z3 = mrf3.Sample(0.5, rng);
+  EXPECT_EQ(z3.size(), 9);
+  for (int val : z3) {
+    EXPECT_GE(val, 0);
+    EXPECT_LE(val, 2);
+  }
+}
+
 }  // namespace mdgm

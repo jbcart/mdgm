@@ -45,12 +45,26 @@ class MarkovRandomField : public SpatialRandomField {
   std::size_t nvertices() const override;
   std::size_t ncolors() const override;
 
+  // Draw an exact (binary, CFTP) or approximate (Potts, Gibbs) sample.
+  std::vector<int> Sample(double psi, RNG& rng) const;
+
+  // Single CFTP sweep: deterministic update of config using shared uniforms.
+  // uniforms is a flat vector of size n * total_sweeps; col_offset selects
+  // which sweep's column of uniforms to use.
+  void CftpSweep(std::vector<int>& config, double psi,
+                 const std::vector<double>& uniforms,
+                 std::size_t col_offset) const;
+
  private:
   // Sufficient statistic: count of same-color neighbor pairs (edge-based)
   double SufficientStatistic(std::span<const int> z) const;
 
   // Gibbs sample from MRF at given psi (for exchange algorithm auxiliary field)
   std::vector<int> GibbsSample(double psi, RNG& rng) const;
+
+  // CFTP (Propp-Wilson) exact sample from binary MRF via monotone coupling.
+  // Only valid for ncolors_ == 2.
+  std::vector<int> CftpSample(double psi, RNG& rng) const;
 
   NaturalUndirectedGraph nug_;
   PsiMethod method_;

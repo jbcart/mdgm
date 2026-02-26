@@ -32,6 +32,10 @@ model_emission_type_cpp <- function(model) {
   .Call(`_mdgm_model_emission_type_cpp`, model)
 }
 
+sample_mrf_cpp <- function(nug, psi, n_colors, n_sweeps, rng) {
+  .Call(`_mdgm_sample_mrf_cpp`, nug, psi, n_colors, n_sweeps, rng)
+}
+
 run_mcmc_cpp <- function(model, obs_data, obs_ptr, z_init, psi_init, theta_init, n_iterations, psi_tune, emission_prior_params, rng) {
   .Call(`_mdgm_run_mcmc_cpp`, model, obs_data, obs_ptr, z_init, psi_init, theta_init, n_iterations, psi_tune, emission_prior_params, rng)
 }
