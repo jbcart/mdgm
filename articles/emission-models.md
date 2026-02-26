@@ -64,7 +64,7 @@ grow_regions <- function(nug, n_colors, seed = NULL) {
 nug <- nug_from_grid(8, 8, seed = 42L)
 n <- nug$nvertices()
 
-z_true <- grow_regions(nug, n_colors = 2, seed = 7)
+z_true <- grow_regions(nug, n_colors = 2, seed = 28)
 
 grid_df <- data.frame(
   x = rep(1:8, 8), y = rep(8:1, each = 8),
@@ -97,7 +97,20 @@ p_true <- c(0.3, 0.7)
 y_bern <- lapply(seq_len(n), function(i) {
   rbinom(5, 1, p_true[z_true[i] + 1])
 })
+
+# Visualize average response per vertex
+obs_df_b <- data.frame(
+  x = rep(1:8, 8), y = rep(8:1, each = 8),
+  value = vapply(y_bern, mean, numeric(1))
+)
+ggplot(obs_df_b, aes(x, y, fill = value)) +
+  geom_tile(color = "white", linewidth = 0.3) +
+  scale_fill_gradient(low = "#440154", high = "#fde725") +
+  coord_equal() + theme_minimal() +
+  labs(title = "Average observed response (5 replicates)", fill = expression(bar(y)))
 ```
+
+![](emission-models_files/figure-html/bernoulli-sim-1.png)
 
 Fit the model:
 
@@ -118,15 +131,25 @@ result_b$summary(burnin = 1000L)
 #> MDGM MCMC Results
 #>   Vertices: 64, Colors: 2
 #>   Iterations: 5000 (burnin: 1000)
-#>   Psi acceptance rate: 0.409
-#>   Psi posterior mean: 1.9176 (sd: 2.1736)
+#>   Psi acceptance rate: 0.390
+#>   Psi posterior mean: 1.5658 (sd: 0.6204)
 #>   Emission type: bernoulli
-#>   p_1 posterior mean: 0.4607 (sd: 0.1545)
-#>   p_2 posterior mean: 0.7394 (sd: 0.0478)
-#>   Psi R-hat: 1.0002, ESS: 32
+#>   p_1 posterior mean: 0.3097 (sd: 0.0550)
+#>   p_2 posterior mean: 0.7461 (sd: 0.0425)
+#>   Psi R-hat: 0.9998, ESS: 204
 ```
 
 ### Posterior trace plots
+
+``` r
+psi_df_b <- data.frame(iteration = seq_along(result_b$psi()), psi = result_b$psi())
+ggplot(psi_df_b, aes(iteration, psi)) +
+  geom_line(alpha = 0.6, linewidth = 0.3) +
+  theme_minimal() +
+  labs(title = "Bernoulli: psi trace", x = "Iteration", y = expression(psi))
+```
+
+![](emission-models_files/figure-html/bernoulli-psi-trace-1.png)
 
 ``` r
 ep_b <- result_b$emission_params()
@@ -218,17 +241,27 @@ result_g$summary(burnin = 1000L)
 #> MDGM MCMC Results
 #>   Vertices: 64, Colors: 2
 #>   Iterations: 5000 (burnin: 1000)
-#>   Psi acceptance rate: 0.496
-#>   Psi posterior mean: 2.6787 (sd: 1.1109)
+#>   Psi acceptance rate: 0.379
+#>   Psi posterior mean: 1.6287 (sd: 0.7845)
 #>   Emission type: gaussian
-#>   mu_1 posterior mean: 3.0386 (sd: 2.3124)
-#>   mu_2 posterior mean: 12.7544 (sd: 0.6093)
-#>   sigma2_1 posterior mean: 12.8009 (sd: 11.9612)
-#>   sigma2_2 posterior mean: 12.0755 (sd: 3.0299)
-#>   Psi R-hat: 1.0005, ESS: 66
+#>   mu_1 posterior mean: 5.5150 (sd: 0.9295)
+#>   mu_2 posterior mean: 12.8036 (sd: 1.0608)
+#>   sigma2_1 posterior mean: 11.7869 (sd: 4.7116)
+#>   sigma2_2 posterior mean: 12.8191 (sd: 5.9121)
+#>   Psi R-hat: 1.0025, ESS: 102
 ```
 
-### Posterior emission parameters
+### Posterior trace plots
+
+``` r
+psi_df_g <- data.frame(iteration = seq_along(result_g$psi()), psi = result_g$psi())
+ggplot(psi_df_g, aes(iteration, psi)) +
+  geom_line(alpha = 0.6, linewidth = 0.3) +
+  theme_minimal() +
+  labs(title = "Gaussian: psi trace", x = "Iteration", y = expression(psi))
+```
+
+![](emission-models_files/figure-html/gaussian-psi-trace-1.png)
 
 ``` r
 ep_g <- result_g$emission_params()
@@ -331,15 +364,25 @@ result_p$summary(burnin = 1000L)
 #> MDGM MCMC Results
 #>   Vertices: 64, Colors: 2
 #>   Iterations: 5000 (burnin: 1000)
-#>   Psi acceptance rate: 0.449
-#>   Psi posterior mean: 2.0454 (sd: 1.2352)
+#>   Psi acceptance rate: 0.412
+#>   Psi posterior mean: 1.8797 (sd: 0.7296)
 #>   Emission type: poisson
-#>   lambda_1 posterior mean: 5.0662 (sd: 1.6861)
-#>   lambda_2 posterior mean: 9.8492 (sd: 0.7673)
-#>   Psi R-hat: 1.0080, ESS: 44
+#>   lambda_1 posterior mean: 4.0756 (sd: 0.5852)
+#>   lambda_2 posterior mean: 9.0175 (sd: 0.7055)
+#>   Psi R-hat: 1.0000, ESS: 201
 ```
 
 ### Posterior trace plots
+
+``` r
+psi_df_p <- data.frame(iteration = seq_along(result_p$psi()), psi = result_p$psi())
+ggplot(psi_df_p, aes(iteration, psi)) +
+  geom_line(alpha = 0.6, linewidth = 0.3) +
+  theme_minimal() +
+  labs(title = "Poisson: psi trace", x = "Iteration", y = expression(psi))
+```
+
+![](emission-models_files/figure-html/poisson-psi-trace-1.png)
 
 ``` r
 ep_p <- result_p$emission_params()
