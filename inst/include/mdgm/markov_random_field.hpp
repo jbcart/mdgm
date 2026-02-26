@@ -5,6 +5,7 @@
 #include <mdgm/rng.hpp>
 #include <mdgm/spatial_random_field.hpp>
 #include <span>
+#include <string>
 #include <vector>
 
 namespace mdgm {
@@ -45,8 +46,11 @@ class MarkovRandomField : public SpatialRandomField {
   std::size_t nvertices() const override;
   std::size_t ncolors() const override;
 
-  // Draw an exact (binary, CFTP) or approximate (Potts, Gibbs) sample.
-  std::vector<int> Sample(double psi, RNG& rng) const;
+  // Draw an exact (binary, CFTP) or approximate (Potts, SW/Gibbs) sample.
+  // method: "auto" (CFTP for k=2, SW for k>2), "swendsen_wang", "gibbs",
+  // "cftp" (k=2 only).
+  std::vector<int> Sample(double psi, RNG& rng,
+                          const std::string& method = "auto") const;
 
   // Single CFTP sweep: deterministic update of config using shared uniforms.
   // uniforms is a flat vector of size n * total_sweeps; col_offset selects
@@ -61,6 +65,10 @@ class MarkovRandomField : public SpatialRandomField {
 
   // Gibbs sample from MRF at given psi (for exchange algorithm auxiliary field)
   std::vector<int> GibbsSample(double psi, RNG& rng) const;
+
+  // Swendsen-Wang cluster sampler: bond percolation + component relabeling.
+  // Works for arbitrary k. Runs n_aux_sweeps_ SW sweeps.
+  std::vector<int> SwSample(double psi, RNG& rng) const;
 
   // CFTP (Propp-Wilson) exact sample from binary MRF via monotone coupling.
   // Only valid for ncolors_ == 2.

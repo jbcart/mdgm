@@ -62,10 +62,10 @@ extern "C" SEXP _mdgm_model_emission_type_cpp(SEXP model) {
   END_CPP11
 }
 // R_model.cpp
-cpp11::writable::integers sample_mrf_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> nug, double psi, int n_colors, int n_sweeps, cpp11::external_pointer<mdgm::RNG> rng);
-extern "C" SEXP _mdgm_sample_mrf_cpp(SEXP nug, SEXP psi, SEXP n_colors, SEXP n_sweeps, SEXP rng) {
+cpp11::writable::integers sample_mrf_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> nug, double psi, int n_colors, int n_sweeps, cpp11::strings method, cpp11::external_pointer<mdgm::RNG> rng);
+extern "C" SEXP _mdgm_sample_mrf_cpp(SEXP nug, SEXP psi, SEXP n_colors, SEXP n_sweeps, SEXP method, SEXP rng) {
   BEGIN_CPP11
-    return cpp11::as_sexp(sample_mrf_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::NaturalUndirectedGraph>>>(nug), cpp11::as_cpp<cpp11::decay_t<double>>(psi), cpp11::as_cpp<cpp11::decay_t<int>>(n_colors), cpp11::as_cpp<cpp11::decay_t<int>>(n_sweeps), cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::RNG>>>(rng)));
+    return cpp11::as_sexp(sample_mrf_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::NaturalUndirectedGraph>>>(nug), cpp11::as_cpp<cpp11::decay_t<double>>(psi), cpp11::as_cpp<cpp11::decay_t<int>>(n_colors), cpp11::as_cpp<cpp11::decay_t<int>>(n_sweeps), cpp11::as_cpp<cpp11::decay_t<cpp11::strings>>(method), cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::RNG>>>(rng)));
   END_CPP11
 }
 // R_model.cpp
@@ -209,7 +209,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_mdgm_rng_uniform_cpp",                   (DL_FUNC) &_mdgm_rng_uniform_cpp,                    3},
     {"_mdgm_rng_uniform_int_cpp",               (DL_FUNC) &_mdgm_rng_uniform_int_cpp,                3},
     {"_mdgm_run_mcmc_cpp",                      (DL_FUNC) &_mdgm_run_mcmc_cpp,                      10},
-    {"_mdgm_sample_mrf_cpp",                    (DL_FUNC) &_mdgm_sample_mrf_cpp,                     5},
+    {"_mdgm_sample_mrf_cpp",                    (DL_FUNC) &_mdgm_sample_mrf_cpp,                     6},
     {NULL, NULL, 0}
 };
 }

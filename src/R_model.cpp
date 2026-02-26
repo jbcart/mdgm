@@ -142,13 +142,15 @@ cpp11::sexp model_emission_type_cpp(cpp11::external_pointer<mdgm::Model> model) 
 cpp11::writable::integers sample_mrf_cpp(
     cpp11::external_pointer<mdgm::NaturalUndirectedGraph> nug,
     double psi, int n_colors, int n_sweeps,
+    cpp11::strings method,
     cpp11::external_pointer<mdgm::RNG> rng) {
   mdgm::MarkovRandomField mrf(
       *nug, mdgm::PsiMethod::kExchange,
       static_cast<std::size_t>(n_colors),
       static_cast<std::size_t>(n_sweeps));
 
-  std::vector<int> z = mrf.Sample(psi, *rng);
+  std::string method_str = static_cast<std::string>(method[0]);
+  std::vector<int> z = mrf.Sample(psi, *rng, method_str);
 
   cpp11::writable::integers result(static_cast<R_xlen_t>(z.size()));
   for (std::size_t i = 0; i < z.size(); ++i) {

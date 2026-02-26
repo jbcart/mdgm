@@ -5,6 +5,8 @@
 #include <mdgm/natural_undirected_graph.hpp>
 #include <mdgm/rng.hpp>
 #include <span>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace mdgm {
@@ -164,8 +166,90 @@ std::vector<int> MarkovRandomField::GibbsSample(
 }
 
 std::vector<int> MarkovRandomField::Sample(
+    double psi, RNG& rng, const std::string& method) const {
+  if (method == "cftp") {
+    if (ncolors_ != 2) {
+      throw std::invalid_argument("CFTP only supports k=2 (binary)");
+    }
+    return CftpSample(psi, rng);
+  }
+  if (method == "gibbs") {
+    return GibbsSample(psi, rng);
+  }
+  if (method == "swendsen_wang") {
+    return SwSample(psi, rng);
+  }
+  // "auto": CFTP for k=2, SW for k>2
+  return (ncolors_ == 2) ? CftpSample(psi, rng) : SwSample(psi, rng);
+}
+
+std::vector<int> MarkovRandomField::SwSample(
     double psi, RNG& rng) const {
-  return (ncolors_ == 2) ? CftpSample(psi, rng) : GibbsSample(psi, rng);
+  const std::size_t n = nug_.nvertices();
+  const double bond_prob = 1.0 - std::exp(-psi);
+
+  // Initialize with random coloring
+  std::vector<int> z(n);
+  for (std::size_t i = 0; i < n; ++i) {
+    z[i] = static_cast<int>(rng.uniform<std::size_t>(0, ncolors_ - 1));
+  }
+
+  // Union-find data structures (reused across sweeps)
+  std::vector<std::size_t> parent(n);
+  std::vector<std::size_t> rank(n);
+
+  // Union-find helpers (lambdas capturing parent/rank)
+  auto find = [&parent](std::size_t x) -> std::size_t {
+    while (parent[x] != x) {
+      parent[x] = parent[parent[x]];  // path halving
+      x = parent[x];
+    }
+    return x;
+  };
+
+  auto unite = [&parent, &rank, &find](std::size_t a, std::size_t b) {
+    a = find(a);
+    b = find(b);
+    if (a == b) return;
+    if (rank[a] < rank[b]) std::swap(a, b);
+    parent[b] = a;
+    if (rank[a] == rank[b]) ++rank[a];
+  };
+
+  for (std::size_t sweep = 0; sweep < n_aux_sweeps_; ++sweep) {
+    // Reset union-find
+    for (std::size_t i = 0; i < n; ++i) {
+      parent[i] = i;
+      rank[i] = 0;
+    }
+
+    // Bond percolation: for each edge (i,j) where z[i]==z[j],
+    // activate bond with probability bond_prob
+    for (std::size_t i = 0; i < n; ++i) {
+      auto nbrs = nug_.neighbors(i);
+      for (std::size_t nb : nbrs) {
+        if (nb > i && z[i] == z[nb]) {
+          if (rng.uniform() < bond_prob) {
+            unite(i, nb);
+          }
+        }
+      }
+    }
+
+    // Assign each component a uniform random color
+    // Use a sentinel to detect unassigned roots
+    constexpr std::size_t kUnassigned = SIZE_MAX;
+    std::vector<std::size_t> root_color(n, kUnassigned);
+    for (std::size_t i = 0; i < n; ++i) {
+      std::size_t root = find(i);
+      if (root_color[root] == kUnassigned) {
+        root_color[root] = rng.uniform<std::size_t>(0, ncolors_ - 1);
+      }
+      z[i] = static_cast<int>(root_color[root]);
+    }
+  }
+
+  return z;
 }
 
 void MarkovRandomField::CftpSweep(
