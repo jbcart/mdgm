@@ -99,7 +99,8 @@ result$summary()
 #>   Iterations: 2000 (burnin: 0)
 #>   Psi acceptance rate: 0.478
 #>   Psi posterior mean: 0.8446 (sd: 0.5612)
-#>   Psi R-hat: 1.0013, ESS: 272
+#>   Diagnostics:
+#>     psi — R-hat: 1.0013, ESS: 272
 ```
 
 We can color the graph vertices by their field values:
@@ -225,7 +226,10 @@ result_h$summary()
 #>   Emission type: bernoulli
 #>   p_1 posterior mean: 0.2284 (sd: 0.0792)
 #>   p_2 posterior mean: 0.8089 (sd: 0.0675)
-#>   Psi R-hat: 1.0124, ESS: 6
+#>   Diagnostics:
+#>     psi — R-hat: 1.0124, ESS: 6
+#>     p_1 — R-hat: 1.0025, ESS: 63
+#>     p_2 — R-hat: 0.9989, ESS: 207
 ```
 
 ## Next steps

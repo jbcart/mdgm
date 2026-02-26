@@ -136,7 +136,10 @@ result_b$summary(burnin = 1000L)
 #>   Emission type: bernoulli
 #>   p_1 posterior mean: 0.3097 (sd: 0.0550)
 #>   p_2 posterior mean: 0.7461 (sd: 0.0425)
-#>   Psi R-hat: 0.9998, ESS: 204
+#>   Diagnostics:
+#>     psi — R-hat: 0.9998, ESS: 204
+#>     p_1 — R-hat: 0.9998, ESS: 640
+#>     p_2 — R-hat: 1.0022, ESS: 599
 ```
 
 ### Posterior trace plots
@@ -248,7 +251,12 @@ result_g$summary(burnin = 1000L)
 #>   mu_2 posterior mean: 12.8036 (sd: 1.0608)
 #>   sigma2_1 posterior mean: 11.7869 (sd: 4.7116)
 #>   sigma2_2 posterior mean: 12.8191 (sd: 5.9121)
-#>   Psi R-hat: 1.0025, ESS: 102
+#>   Diagnostics:
+#>     psi — R-hat: 1.0025, ESS: 102
+#>     mu_1 — R-hat: 1.0008, ESS: 255
+#>     mu_2 — R-hat: 1.0012, ESS: 283
+#>     sigma2_1 — R-hat: 1.0010, ESS: 292
+#>     sigma2_2 — R-hat: 1.0001, ESS: 359
 ```
 
 ### Posterior trace plots
@@ -369,7 +377,10 @@ result_p$summary(burnin = 1000L)
 #>   Emission type: poisson
 #>   lambda_1 posterior mean: 4.0756 (sd: 0.5852)
 #>   lambda_2 posterior mean: 9.0175 (sd: 0.7055)
-#>   Psi R-hat: 1.0000, ESS: 201
+#>   Diagnostics:
+#>     psi — R-hat: 1.0000, ESS: 201
+#>     lambda_1 — R-hat: 1.0054, ESS: 246
+#>     lambda_2 — R-hat: 1.0080, ESS: 390
 ```
 
 ### Posterior trace plots

@@ -164,7 +164,8 @@ grid:</p>
 <span><span class="co">#&gt;   Iterations: 2000 (burnin: 0)</span></span>
 <span><span class="co">#&gt;   Psi acceptance rate: 0.478</span></span>
 <span><span class="co">#&gt;   Psi posterior mean: 0.8446 (sd: 0.5612)</span></span>
-<span><span class="co">#&gt;   Psi R-hat: 1.0013, ESS: 272</span></span></code></pre></div>
+<span><span class="co">#&gt;   Diagnostics:</span></span>
+<span><span class="co">#&gt;     psi — R-hat: 1.0013, ESS: 272</span></span></code></pre></div>
 <p>We can color the graph vertices by their field values:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">g</span>, layout <span class="op">=</span> <span class="va">coords</span>, vertex.size <span class="op">=</span> <span class="fl">20</span>, vertex.label <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="va">n</span>,</span>
@@ -275,7 +276,10 @@ distribution. Here we use a Bernoulli emission:</p>
 <span><span class="co">#&gt;   Emission type: bernoulli</span></span>
 <span><span class="co">#&gt;   p_1 posterior mean: 0.2284 (sd: 0.0792)</span></span>
 <span><span class="co">#&gt;   p_2 posterior mean: 0.8089 (sd: 0.0675)</span></span>
-<span><span class="co">#&gt;   Psi R-hat: 1.0124, ESS: 6</span></span></code></pre></div>
+<span><span class="co">#&gt;   Diagnostics:</span></span>
+<span><span class="co">#&gt;     psi — R-hat: 1.0124, ESS: 6</span></span>
+<span><span class="co">#&gt;     p_1 — R-hat: 1.0025, ESS: 63</span></span>
+<span><span class="co">#&gt;     p_2 — R-hat: 0.9989, ESS: 207</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="next-steps">Next steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
