@@ -12,12 +12,15 @@ reference:
       - nug_from_grid
 
   - title: Model & Inference
-    desc: Specify MDGM models and run MCMC.
+    desc: Specify spatial random field models and run MCMC.
     contents:
-      - mdgm_model
+      - srf_model
+      - mdgm
+      - mrf
       - mcmc
-      - MdgmModel
+      - SrfModel
       - MdgmResult
+      - mdgm_model
 
 navbar:
   structure:

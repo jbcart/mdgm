@@ -9,12 +9,18 @@
 
 Full documentation: <https://jbcart.github.io/mdgm/>
 
-**mdgm** (Mixture of Directed Graphical Models) provides Bayesian
-inference for discrete spatial random fields. Instead of working with a
-Markov random field and its intractable normalizing constant, the MDGM
-defines a mixture over directed acyclic graphs (DAGs) compatible with an
-undirected neighborhood graph. Each DAG admits a tractable likelihood,
-avoiding the partition function entirely.
+**mdgm** provides Bayesian inference for discrete spatial random fields.
+It supports two spatial model families on undirected graphs:
+
+- **Mixture of Directed Graphical Models (MDGM)** — avoids the
+  intractable MRF partition function by defining a mixture over
+  compatible DAGs.
+- **Markov Random Field (MRF)** — classical Potts/Ising model with
+  inference via the exchange algorithm (exact) or pseudo-likelihood
+  (approximate).
+
+Both can be combined with emission distributions (Bernoulli, Gaussian,
+Poisson) for hierarchical models where the spatial field is latent.
 
 See [Carter and Calder (2024)](https://arxiv.org/abs/2406.15700) for the
 full methodological details.
@@ -47,7 +53,7 @@ z <- c(0L, 0L, 0L, 1L,
        0L, 0L, 1L, 1L,
        1L, 1L, 1L, 0L,
        1L, 1L, 0L, 0L)
-model <- mdgm_model(nug, dag_type = "spanning_tree")
+model <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"))
 result <- mcmc(model, z_init = z, psi_init = 0.5,
                n_iter = 2000L, psi_tune = 1.0, seed = 42L)
 result$summary()
@@ -56,7 +62,25 @@ result$summary()
 #>   Iterations: 2000 (burnin: 0)
 #>   Psi acceptance rate: 0.462
 #>   Psi posterior mean: 0.8447 (sd: 0.5658)
-#>   Psi R-hat: 1.0035, ESS: 308
+#>   Diagnostics:
+#>     psi — R-hat: 1.0035, ESS: 308
+```
+
+### MRF example
+
+``` r
+# Fit an MRF with pseudo-likelihood
+model_mrf <- srf_model(nug, spatial = mrf(method = "pseudo_likelihood"))
+result_mrf <- mcmc(model_mrf, z_init = z, psi_init = 0.5,
+                   n_iter = 2000L, psi_tune = 0.5, seed = 42L)
+result_mrf$summary()
+#> MRF MCMC Results
+#>   Vertices: 16, Colors: 2
+#>   Iterations: 2000 (burnin: 0)
+#>   Psi acceptance rate: 0.699
+#>   Psi posterior mean: 1.0303 (sd: 0.5364)
+#>   Diagnostics:
+#>     psi — R-hat: 1.0044, ESS: 110
 ```
 
 See `vignette("mdgm")` for a full walkthrough including visualization

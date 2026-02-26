@@ -16,10 +16,13 @@ MdgmResult <- R6::R6Class(
     #' @param raw List of raw MCMC output from C++.
     #' @param emission_type Character string or NULL.
     #' @param nug A `NaturalUndirectedGraph` or NULL.
-    initialize = function(raw, emission_type = NULL, nug = NULL) {
+    #' @param model_type Character string: `"mdgm"` or `"mrf"`.
+    initialize = function(raw, emission_type = NULL, nug = NULL,
+                          model_type = "mdgm") {
       private$.raw <- raw
       private$.emission_type <- emission_type
       private$.nug <- nug
+      private$.model_type <- model_type
     },
 
     #' @description Get the latent field samples.
@@ -80,9 +83,11 @@ MdgmResult <- R6::R6Class(
     #' @description Get the DAG parent vector samples.
     #' @param iteration Optional integer iteration to extract (1-indexed).
     #'   If `NULL`, returns the full `n x J` matrix.
-    #' @return Integer matrix (`n x J`) or integer vector (length `n`).
+    #' @return Integer matrix (`n x J`) or integer vector (length `n`), or
+    #'   `NULL` for MRF models (which have no DAG structure).
     #'   Values are 1-indexed parent vertex IDs; `NA` indicates a root.
     dag = function(iteration = NULL) {
+      if (private$.model_type == "mrf") return(NULL)
       if (is.null(iteration)) return(private$.raw$dag)
       private$.raw$dag[, iteration]
     },
@@ -93,6 +98,10 @@ MdgmResult <- R6::R6Class(
     #' @param burnin Number of initial iterations to discard (default 0).
     #' @return A data frame with columns `vertex1`, `vertex2`, and `prob`.
     edge_inclusion_probs = function(nug = NULL, burnin = 0L) {
+      if (private$.model_type == "mrf") {
+        warning("Edge inclusion probabilities are not applicable for MRF models.")
+        return(NULL)
+      }
       if (is.null(nug)) nug <- private$.nug
       if (is.null(nug)) stop("No graph available. Pass nug argument.")
 
@@ -193,7 +202,9 @@ MdgmResult <- R6::R6Class(
 
       psi_post <- private$.raw$psi[start:J]
 
-      cat(sprintf("MDGM MCMC Results\n"))
+      mt <- private$.model_type
+      label <- if (mt == "mrf") "MRF" else "MDGM"
+      cat(sprintf("%s MCMC Results\n", label))
       cat(sprintf("  Vertices: %d, Colors: %d\n", n, nc))
       cat(sprintf("  Iterations: %d (burnin: %d)\n", J, burnin))
       cat(sprintf("  Psi acceptance rate: %.3f\n", rates["psi"]))
@@ -408,7 +419,8 @@ MdgmResult <- R6::R6Class(
   private = list(
     .raw = NULL,
     .emission_type = NULL,
-    .nug = NULL
+    .nug = NULL,
+    .model_type = "mdgm"
   )
 )
 

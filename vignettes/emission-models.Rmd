@@ -21,9 +21,9 @@ library(ggplot2)
 
 ## Overview
 
-In a hierarchical MDGM, the spatial field $z$ is latent and observations $y$
-are generated through an **emission distribution**. The mdgm package supports
-three emission families:
+In a hierarchical model, the spatial field $z$ is latent and observations $y$
+are generated through an **emission distribution**. Both MDGM and MRF spatial
+models support the same three emission families:
 
 | Family | Observation type | Parameters | Prior |
 |:-------|:-----------------|:-----------|:------|
@@ -124,8 +124,8 @@ ggplot(obs_df_b, aes(x, y, fill = value)) +
 Fit the model:
 
 ```{r bernoulli-fit}
-model_b <- mdgm_model(nug, dag_type = "spanning_tree",
-                       n_colors = 2L, emission = "bernoulli")
+model_b <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"),
+                     emission = "bernoulli")
 
 result_b <- mcmc(model_b, y = y_bern,
                  z_init = sample(0:1, n, replace = TRUE),
@@ -215,8 +215,8 @@ ggplot(obs_df, aes(x, y, fill = value)) +
 Fit with Gaussian emission:
 
 ```{r gaussian-fit}
-model_g <- mdgm_model(nug, dag_type = "spanning_tree",
-                       n_colors = 2L, emission = "gaussian")
+model_g <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"),
+                     emission = "gaussian")
 
 # theta_init: c(mu_1, mu_2, sigma2_1, sigma2_2)
 result_g <- mcmc(model_g, y = y_gauss,
@@ -317,8 +317,8 @@ ggplot(obs_df_p, aes(x, y, fill = value)) +
 Fit with Poisson emission:
 
 ```{r poisson-fit}
-model_p <- mdgm_model(nug, dag_type = "spanning_tree",
-                       n_colors = 2L, emission = "poisson")
+model_p <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"),
+                     emission = "poisson")
 
 result_p <- mcmc(model_p, y = y_pois,
                  z_init = sample(0:1, n, replace = TRUE),

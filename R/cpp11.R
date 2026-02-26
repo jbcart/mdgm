@@ -8,6 +8,14 @@ model_create_hierarchical_cpp <- function(nug, dag_type, n_colors, emission) {
   .Call(`_mdgm_model_create_hierarchical_cpp`, nug, dag_type, n_colors, emission)
 }
 
+model_create_mrf_standalone_cpp <- function(nug, method, n_colors, n_aux_sweeps) {
+  .Call(`_mdgm_model_create_mrf_standalone_cpp`, nug, method, n_colors, n_aux_sweeps)
+}
+
+model_create_mrf_hierarchical_cpp <- function(nug, method, n_colors, emission, n_aux_sweeps) {
+  .Call(`_mdgm_model_create_mrf_hierarchical_cpp`, nug, method, n_colors, emission, n_aux_sweeps)
+}
+
 model_has_emission_cpp <- function(model) {
   .Call(`_mdgm_model_has_emission_cpp`, model)
 }

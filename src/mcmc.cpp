@@ -9,16 +9,6 @@
 
 namespace mdgm {
 
-namespace {
-
-// Half-Cauchy log-prior: log(2 / (pi * (1 + psi^2))) for psi > 0
-double LogPriorPsi(double psi) {
-  if (psi <= 0.0) return -1e300;
-  return std::log(2.0 / M_PI) - std::log(1.0 + psi * psi);
-}
-
-}  // namespace
-
 McmcSamples RunMcmc(
     Model& model,
     const Observations& y,
@@ -78,18 +68,8 @@ McmcSamples RunMcmc(
       }
     }
 
-    // Step 3: Update psi (MH random walk)
-    {
-      double proposal = psi + rng.normal(0.0, config.psi_tune);
-      double log_proposed = model.SpatialLogLikelihood(z, proposal) +
-                            LogPriorPsi(proposal);
-      double log_current = model.SpatialLogLikelihood(z, psi) +
-                           LogPriorPsi(psi);
-      if (std::log(rng.uniform()) < log_proposed - log_current) {
-        psi = proposal;
-        ++samples.psi_accepted;
-      }
-    }
+    // Step 3: Update psi (delegates to spatial field — default is MH random walk)
+    psi = model.UpdatePsi(z, psi, config.psi_tune, samples.psi_accepted, rng);
 
     // Step 4: Update emission params (only if hierarchical)
     if (model.has_emission()) {

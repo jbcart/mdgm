@@ -21,6 +21,8 @@ file(GLOB
   src/emission.cpp
   src/model.cpp
   src/mcmc.cpp
+  src/spatial_random_field.cpp
+  src/markov_random_field.cpp
 )
 add_library(mdgm_objs OBJECT ${SRC_FILES})
 target_include_directories(mdgm_objs PUBLIC 

@@ -40,6 +40,10 @@ class Model {
       std::span<const double> theta, std::span<const double> prior_params,
       RNG& rng) const;
 
+  // Update psi (delegates to spatial field's UpdatePsi)
+  double UpdatePsi(std::span<const int> z, double psi,
+                   double psi_tune, std::size_t& accepted, RNG& rng);
+
   // Store current graph sample
   void StoreDagSample(std::vector<std::size_t>& dag_data,
                       std::size_t iteration) const;

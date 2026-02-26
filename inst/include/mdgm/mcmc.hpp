@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <cstddef>
 #include <mdgm/model.hpp>
 #include <mdgm/observations.hpp>
@@ -7,6 +8,12 @@
 #include <vector>
 
 namespace mdgm {
+
+// Half-Cauchy log-prior: log(2 / (pi * (1 + psi^2))) for psi > 0
+inline double LogPriorPsi(double psi) {
+  if (psi <= 0.0) return -1e300;
+  return std::log(2.0 / M_PI) - std::log(1.0 + psi * psi);
+}
 
 struct McmcConfig {
   std::size_t n_iterations;

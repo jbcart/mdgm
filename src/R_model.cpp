@@ -1,6 +1,7 @@
 #include <cpp11.hpp>
 #include <cstddef>
 #include <mdgm/directed_acyclic_graph.hpp>
+#include <mdgm/markov_random_field.hpp>
 #include <mdgm/mcmc.hpp>
 #include <mdgm/mixture_directed_graphical_models.hpp>
 #include <mdgm/model.hpp>
@@ -20,6 +21,12 @@ inline mdgm::DagType ParseDagType(const std::string& type) {
   if (type == "acyclic_orientation") return mdgm::DagType::kAcyclicOrientation;
   if (type == "rooted") return mdgm::DagType::kRooted;
   throw std::invalid_argument("Unknown DAG type: " + type);
+}
+
+inline mdgm::PsiMethod ParsePsiMethod(const std::string& method) {
+  if (method == "exchange") return mdgm::PsiMethod::kExchange;
+  if (method == "pseudo_likelihood") return mdgm::PsiMethod::kPseudoLikelihood;
+  throw std::invalid_argument("Unknown MRF method: " + method);
 }
 
 inline mdgm::FamilyType ParseFamilyType(const std::string& type) {
@@ -66,6 +73,34 @@ cpp11::external_pointer<mdgm::Model> model_create_hierarchical_cpp(
   auto ft = ParseFamilyType(static_cast<std::string>(emission[0]));
   auto spatial = std::make_unique<mdgm::MixtureDirectedGraphicalModels>(
       *nug, dt, static_cast<std::size_t>(n_colors));
+  auto model = std::make_unique<mdgm::Model>(std::move(spatial), ft);
+  return cpp11::external_pointer<mdgm::Model>(model.release());
+}
+
+// --- MRF model creation ---
+
+[[cpp11::register]]
+cpp11::external_pointer<mdgm::Model> model_create_mrf_standalone_cpp(
+    cpp11::external_pointer<mdgm::NaturalUndirectedGraph> nug,
+    cpp11::strings method, int n_colors, int n_aux_sweeps) {
+  auto pm = ParsePsiMethod(static_cast<std::string>(method[0]));
+  auto spatial = std::make_unique<mdgm::MarkovRandomField>(
+      *nug, pm, static_cast<std::size_t>(n_colors),
+      static_cast<std::size_t>(n_aux_sweeps));
+  auto model = std::make_unique<mdgm::Model>(std::move(spatial));
+  return cpp11::external_pointer<mdgm::Model>(model.release());
+}
+
+[[cpp11::register]]
+cpp11::external_pointer<mdgm::Model> model_create_mrf_hierarchical_cpp(
+    cpp11::external_pointer<mdgm::NaturalUndirectedGraph> nug,
+    cpp11::strings method, int n_colors, cpp11::strings emission,
+    int n_aux_sweeps) {
+  auto pm = ParsePsiMethod(static_cast<std::string>(method[0]));
+  auto ft = ParseFamilyType(static_cast<std::string>(emission[0]));
+  auto spatial = std::make_unique<mdgm::MarkovRandomField>(
+      *nug, pm, static_cast<std::size_t>(n_colors),
+      static_cast<std::size_t>(n_aux_sweeps));
   auto model = std::make_unique<mdgm::Model>(std::move(spatial), ft);
   return cpp11::external_pointer<mdgm::Model>(model.release());
 }

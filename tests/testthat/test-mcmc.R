@@ -13,7 +13,7 @@ test_that("standalone MCMC runs and returns correct structure", {
                  psi_tune = 0.1,
                  seed = 123L)
 
-  expect_s3_class(result, "MdgmResult")
+  expect_s3_class(result, "MdgmResult")  # backwards compat alias
 
   # Check z dimensions
   z_mat <- result$z()
@@ -52,7 +52,7 @@ test_that("hierarchical MCMC runs with Bernoulli emission", {
                  emission_prior_params = c(1, 1),
                  seed = 123L)
 
-  expect_s3_class(result, "MdgmResult")
+  expect_s3_class(result, "MdgmResult")  # backwards compat alias
 
   # Check emission_params
   ep <- result$emission_params()
@@ -294,4 +294,135 @@ test_that("standalone emission_params returns NULL", {
                  psi_tune = 0.1, seed = 42L)
 
   expect_null(result$emission_params())
+})
+
+# --- srf_model() with mdgm() config ---
+
+test_that("srf_model with mdgm() config works", {
+  edges <- rbind(c(1, 2), c(2, 1), c(2, 3), c(3, 2), c(1, 3), c(3, 1))
+  nug <- nug_from_edge_list(3, edges, seed = 42L)
+  model <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"))
+
+  expect_s3_class(model, "SrfModel")
+  expect_equal(model$model_type(), "mdgm")
+  expect_equal(model$nvertices(), 3L)
+  expect_false(model$has_emission())
+})
+
+# --- MRF tests ---
+
+test_that("srf_model with mrf() config creates valid model", {
+  edges <- rbind(
+    c(1, 2), c(2, 1), c(2, 3), c(3, 2),
+    c(1, 3), c(3, 1), c(3, 4), c(4, 3)
+  )
+  nug <- nug_from_edge_list(4, edges, seed = 42L)
+
+  model <- srf_model(nug, spatial = mrf(method = "exchange"),
+                     emission = "bernoulli")
+  expect_s3_class(model, "SrfModel")
+  expect_equal(model$model_type(), "mrf")
+  expect_true(model$has_emission())
+  expect_equal(model$nvertices(), 4L)
+})
+
+test_that("MRF pseudo-likelihood MCMC runs and returns valid result", {
+  edges <- rbind(
+    c(1, 2), c(2, 1), c(2, 3), c(3, 2),
+    c(1, 3), c(3, 1), c(3, 4), c(4, 3)
+  )
+  nug <- nug_from_edge_list(4, edges, seed = 42L)
+  model <- srf_model(nug, spatial = mrf(method = "pseudo_likelihood"),
+                     emission = "bernoulli")
+
+  y <- list(c(1L, 0L, 1L), c(0L, 0L), c(1L, 1L, 1L), c(0L, 1L))
+
+  result <- mcmc(model, y = y,
+                 z_init = c(0L, 0L, 1L, 1L),
+                 psi_init = 0.5,
+                 theta_init = c(0.3, 0.7),
+                 n_iter = 50L,
+                 psi_tune = 0.3,
+                 emission_prior_params = c(1, 1),
+                 seed = 123L)
+
+  expect_s3_class(result, "MdgmResult")
+  expect_equal(dim(result$z()), c(4L, 50L))
+  expect_length(result$psi(), 50L)
+  expect_true(all(is.finite(result$psi())))
+
+  # dag() should return NULL for MRF
+  expect_null(result$dag())
+})
+
+test_that("MRF exchange algorithm MCMC runs and returns valid result", {
+  edges <- rbind(
+    c(1, 2), c(2, 1), c(2, 3), c(3, 2),
+    c(1, 3), c(3, 1), c(3, 4), c(4, 3)
+  )
+  nug <- nug_from_edge_list(4, edges, seed = 42L)
+  model <- srf_model(nug, spatial = mrf(method = "exchange", n_aux_sweeps = 10L),
+                     emission = "bernoulli")
+
+  y <- list(c(1L, 0L, 1L), c(0L, 0L), c(1L, 1L, 1L), c(0L, 1L))
+
+  result <- mcmc(model, y = y,
+                 z_init = c(0L, 0L, 1L, 1L),
+                 psi_init = 0.5,
+                 theta_init = c(0.3, 0.7),
+                 n_iter = 50L,
+                 psi_tune = 0.3,
+                 emission_prior_params = c(1, 1),
+                 seed = 123L)
+
+  expect_s3_class(result, "MdgmResult")
+  expect_equal(dim(result$z()), c(4L, 50L))
+  expect_true(all(is.finite(result$psi())))
+  # All psi should be positive for exchange algorithm
+  expect_true(all(result$psi() > 0))
+})
+
+test_that("MRF standalone model runs", {
+  edges <- rbind(
+    c(1, 2), c(2, 1), c(2, 3), c(3, 2),
+    c(1, 3), c(3, 1)
+  )
+  nug <- nug_from_edge_list(3, edges, seed = 42L)
+  model <- srf_model(nug, spatial = mrf(method = "pseudo_likelihood"))
+
+  result <- mcmc(model,
+                 z_init = c(0L, 0L, 1L),
+                 psi_init = 0.5,
+                 n_iter = 50L,
+                 psi_tune = 0.3,
+                 seed = 42L)
+
+  expect_equal(dim(result$z()), c(3L, 50L))
+  expect_null(result$dag())
+})
+
+test_that("MRF edge_inclusion_probs warns", {
+  edges <- rbind(c(1, 2), c(2, 1), c(2, 3), c(3, 2))
+  nug <- nug_from_edge_list(3, edges, seed = 42L)
+  model <- srf_model(nug, spatial = mrf(method = "pseudo_likelihood"))
+
+  result <- mcmc(model, z_init = c(0L, 0L, 1L),
+                 psi_init = 0.5, n_iter = 20L,
+                 psi_tune = 0.1, seed = 42L)
+
+  expect_warning(result$edge_inclusion_probs(nug),
+                 "not applicable for MRF")
+})
+
+test_that("MRF summary prints without error", {
+  edges <- rbind(c(1, 2), c(2, 1), c(2, 3), c(3, 2), c(1, 3), c(3, 1))
+  nug <- nug_from_edge_list(3, edges, seed = 42L)
+  model <- srf_model(nug, spatial = mrf(method = "pseudo_likelihood"))
+
+  result <- mcmc(model, z_init = c(0L, 0L, 1L),
+                 psi_init = 0.5, n_iter = 50L,
+                 psi_tune = 0.3, seed = 42L)
+
+  out <- expect_output(result$summary(), "MRF MCMC Results")
+  expect_type(out, "list")
 })

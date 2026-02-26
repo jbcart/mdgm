@@ -20,6 +20,20 @@ extern "C" SEXP _mdgm_model_create_hierarchical_cpp(SEXP nug, SEXP dag_type, SEX
   END_CPP11
 }
 // R_model.cpp
+cpp11::external_pointer<mdgm::Model> model_create_mrf_standalone_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> nug, cpp11::strings method, int n_colors, int n_aux_sweeps);
+extern "C" SEXP _mdgm_model_create_mrf_standalone_cpp(SEXP nug, SEXP method, SEXP n_colors, SEXP n_aux_sweeps) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(model_create_mrf_standalone_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::NaturalUndirectedGraph>>>(nug), cpp11::as_cpp<cpp11::decay_t<cpp11::strings>>(method), cpp11::as_cpp<cpp11::decay_t<int>>(n_colors), cpp11::as_cpp<cpp11::decay_t<int>>(n_aux_sweeps)));
+  END_CPP11
+}
+// R_model.cpp
+cpp11::external_pointer<mdgm::Model> model_create_mrf_hierarchical_cpp(cpp11::external_pointer<mdgm::NaturalUndirectedGraph> nug, cpp11::strings method, int n_colors, cpp11::strings emission, int n_aux_sweeps);
+extern "C" SEXP _mdgm_model_create_mrf_hierarchical_cpp(SEXP nug, SEXP method, SEXP n_colors, SEXP emission, SEXP n_aux_sweeps) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(model_create_mrf_hierarchical_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::NaturalUndirectedGraph>>>(nug), cpp11::as_cpp<cpp11::decay_t<cpp11::strings>>(method), cpp11::as_cpp<cpp11::decay_t<int>>(n_colors), cpp11::as_cpp<cpp11::decay_t<cpp11::strings>>(emission), cpp11::as_cpp<cpp11::decay_t<int>>(n_aux_sweeps)));
+  END_CPP11
+}
+// R_model.cpp
 bool model_has_emission_cpp(cpp11::external_pointer<mdgm::Model> model);
 extern "C" SEXP _mdgm_model_has_emission_cpp(SEXP model) {
   BEGIN_CPP11
@@ -164,28 +178,30 @@ extern "C" SEXP _mdgm_rng_discrete_cpp(SEXP rng, SEXP weights) {
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
-    {"_mdgm_model_create_hierarchical_cpp", (DL_FUNC) &_mdgm_model_create_hierarchical_cpp,  4},
-    {"_mdgm_model_create_standalone_cpp",   (DL_FUNC) &_mdgm_model_create_standalone_cpp,    3},
-    {"_mdgm_model_emission_type_cpp",       (DL_FUNC) &_mdgm_model_emission_type_cpp,        1},
-    {"_mdgm_model_has_emission_cpp",        (DL_FUNC) &_mdgm_model_has_emission_cpp,         1},
-    {"_mdgm_model_ncolors_cpp",             (DL_FUNC) &_mdgm_model_ncolors_cpp,              1},
-    {"_mdgm_model_nvertices_cpp",           (DL_FUNC) &_mdgm_model_nvertices_cpp,            1},
-    {"_mdgm_nug_create_cpp",                (DL_FUNC) &_mdgm_nug_create_cpp,                 4},
-    {"_mdgm_nug_generate_regular_cpp",      (DL_FUNC) &_mdgm_nug_generate_regular_cpp,       3},
-    {"_mdgm_nug_nedges_cpp",                (DL_FUNC) &_mdgm_nug_nedges_cpp,                 1},
-    {"_mdgm_nug_neighbor_weights_cpp",      (DL_FUNC) &_mdgm_nug_neighbor_weights_cpp,       2},
-    {"_mdgm_nug_neighbors_cpp",             (DL_FUNC) &_mdgm_nug_neighbors_cpp,              2},
-    {"_mdgm_nug_nvertices_cpp",             (DL_FUNC) &_mdgm_nug_nvertices_cpp,              1},
-    {"_mdgm_nug_sample_spanning_tree_cpp",  (DL_FUNC) &_mdgm_nug_sample_spanning_tree_cpp,   4},
-    {"_mdgm_rng_create_cpp",                (DL_FUNC) &_mdgm_rng_create_cpp,                 0},
-    {"_mdgm_rng_create_seed_cpp",           (DL_FUNC) &_mdgm_rng_create_seed_cpp,            1},
-    {"_mdgm_rng_discrete_cpp",              (DL_FUNC) &_mdgm_rng_discrete_cpp,               2},
-    {"_mdgm_rng_normal_cpp",                (DL_FUNC) &_mdgm_rng_normal_cpp,                 3},
-    {"_mdgm_rng_reseed_random_cpp",         (DL_FUNC) &_mdgm_rng_reseed_random_cpp,          1},
-    {"_mdgm_rng_set_seed_cpp",              (DL_FUNC) &_mdgm_rng_set_seed_cpp,               2},
-    {"_mdgm_rng_uniform_cpp",               (DL_FUNC) &_mdgm_rng_uniform_cpp,                3},
-    {"_mdgm_rng_uniform_int_cpp",           (DL_FUNC) &_mdgm_rng_uniform_int_cpp,            3},
-    {"_mdgm_run_mcmc_cpp",                  (DL_FUNC) &_mdgm_run_mcmc_cpp,                  10},
+    {"_mdgm_model_create_hierarchical_cpp",     (DL_FUNC) &_mdgm_model_create_hierarchical_cpp,      4},
+    {"_mdgm_model_create_mrf_hierarchical_cpp", (DL_FUNC) &_mdgm_model_create_mrf_hierarchical_cpp,  5},
+    {"_mdgm_model_create_mrf_standalone_cpp",   (DL_FUNC) &_mdgm_model_create_mrf_standalone_cpp,    4},
+    {"_mdgm_model_create_standalone_cpp",       (DL_FUNC) &_mdgm_model_create_standalone_cpp,        3},
+    {"_mdgm_model_emission_type_cpp",           (DL_FUNC) &_mdgm_model_emission_type_cpp,            1},
+    {"_mdgm_model_has_emission_cpp",            (DL_FUNC) &_mdgm_model_has_emission_cpp,             1},
+    {"_mdgm_model_ncolors_cpp",                 (DL_FUNC) &_mdgm_model_ncolors_cpp,                  1},
+    {"_mdgm_model_nvertices_cpp",               (DL_FUNC) &_mdgm_model_nvertices_cpp,                1},
+    {"_mdgm_nug_create_cpp",                    (DL_FUNC) &_mdgm_nug_create_cpp,                     4},
+    {"_mdgm_nug_generate_regular_cpp",          (DL_FUNC) &_mdgm_nug_generate_regular_cpp,           3},
+    {"_mdgm_nug_nedges_cpp",                    (DL_FUNC) &_mdgm_nug_nedges_cpp,                     1},
+    {"_mdgm_nug_neighbor_weights_cpp",          (DL_FUNC) &_mdgm_nug_neighbor_weights_cpp,           2},
+    {"_mdgm_nug_neighbors_cpp",                 (DL_FUNC) &_mdgm_nug_neighbors_cpp,                  2},
+    {"_mdgm_nug_nvertices_cpp",                 (DL_FUNC) &_mdgm_nug_nvertices_cpp,                  1},
+    {"_mdgm_nug_sample_spanning_tree_cpp",      (DL_FUNC) &_mdgm_nug_sample_spanning_tree_cpp,       4},
+    {"_mdgm_rng_create_cpp",                    (DL_FUNC) &_mdgm_rng_create_cpp,                     0},
+    {"_mdgm_rng_create_seed_cpp",               (DL_FUNC) &_mdgm_rng_create_seed_cpp,                1},
+    {"_mdgm_rng_discrete_cpp",                  (DL_FUNC) &_mdgm_rng_discrete_cpp,                   2},
+    {"_mdgm_rng_normal_cpp",                    (DL_FUNC) &_mdgm_rng_normal_cpp,                     3},
+    {"_mdgm_rng_reseed_random_cpp",             (DL_FUNC) &_mdgm_rng_reseed_random_cpp,              1},
+    {"_mdgm_rng_set_seed_cpp",                  (DL_FUNC) &_mdgm_rng_set_seed_cpp,                   2},
+    {"_mdgm_rng_uniform_cpp",                   (DL_FUNC) &_mdgm_rng_uniform_cpp,                    3},
+    {"_mdgm_rng_uniform_int_cpp",               (DL_FUNC) &_mdgm_rng_uniform_int_cpp,                3},
+    {"_mdgm_run_mcmc_cpp",                      (DL_FUNC) &_mdgm_run_mcmc_cpp,                      10},
     {NULL, NULL, 0}
 };
 }

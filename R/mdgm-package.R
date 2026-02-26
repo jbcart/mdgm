@@ -19,8 +19,9 @@
 #' \itemize{
 #'   \item Graph construction: [nug_from_edge_list()], [nug_from_adj_list()],
 #'     [nug_from_adj_mat()]
-#'   \item Model specification: `mdgm_model()`
-#'   \item MCMC inference: `mcmc()`
+#'   \item Model specification: [srf_model()] with [mdgm()] or [mrf()]
+#'     configuration helpers
+#'   \item MCMC inference: [mcmc()]
 #' }
 #'
 #' @references

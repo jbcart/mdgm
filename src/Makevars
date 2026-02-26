@@ -9,6 +9,8 @@ OBJECTS = \
   natural_undirected_graph.o \
   directed_acyclic_graph.o \
   mixture_directed_graphical_models.o \
+  markov_random_field.o \
+  spatial_random_field.o \
   emission.o \
   model.o \
   mcmc.o \

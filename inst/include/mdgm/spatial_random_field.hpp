@@ -33,6 +33,11 @@ class SpatialRandomField {
   virtual void StoreSample(std::vector<std::size_t>& dag_data,
                            std::size_t iteration, std::size_t n) const = 0;
 
+  // Update psi via MH step. Default: random walk with LogLikelihood + Half-Cauchy prior.
+  // Subclasses (e.g., MRF exchange algorithm) may override.
+  virtual double UpdatePsi(std::span<const int> z, double psi,
+                           double psi_tune, std::size_t& accepted, RNG& rng);
+
   virtual std::size_t nvertices() const = 0;
   virtual std::size_t ncolors() const = 0;
 };

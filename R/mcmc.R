@@ -1,10 +1,12 @@
-#' Run MCMC inference for an MDGM model
+#' Run MCMC inference for a spatial random field model
 #'
 #' Performs Markov chain Monte Carlo sampling to estimate the posterior
-#' distribution of the spatial field, DAG structure, dependence parameter,
-#' and (for hierarchical models) emission parameters.
+#' distribution of the spatial field, dependence parameter, and (for
+#' hierarchical models) emission parameters. For MDGM models, the DAG
+#' structure is also sampled.
 #'
-#' @param model An [MdgmModel] object created by [mdgm_model()].
+#' @param model An [SrfModel] object created by [srf_model()] or
+#'   [mdgm_model()].
 #' @param y Observation data. For hierarchical models, a list of numeric
 #'   vectors where `y[[i]]` contains the observations for vertex `i`.
 #'   For Bernoulli, values should be 0 or 1; for Poisson, non-negative
@@ -32,7 +34,7 @@
 #' @param nug Optional `NaturalUndirectedGraph` object. If provided, stored
 #'   in the result for use by `edge_inclusion_probs()` and `plot()`.
 #' @return An [MdgmResult] object containing posterior samples.
-#' @seealso [mdgm_model()] for model construction, [MdgmResult] for
+#' @seealso [srf_model()] for model construction, [MdgmResult] for
 #'   accessing results.
 #' @examples
 #' \dontrun{
@@ -43,7 +45,7 @@
 #' nug <- nug_from_adj_mat(A, seed = 42L)
 #'
 #' # Standalone model
-#' model <- mdgm_model(nug, dag_type = "spanning_tree")
+#' model <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"))
 #' result <- mcmc(model, z_init = c(0L, 0L, 1L, 1L),
 #'                psi_init = 0.5, n_iter = 100L)
 #' result$summary()
@@ -55,7 +57,7 @@ mcmc <- function(model, y = NULL, z_init, psi_init,
                  emission_prior_params = NULL,
                  seed = NULL,
                  nug = NULL) {
-  stopifnot(inherits(model, "MdgmModel"))
+  stopifnot(inherits(model, "SrfModel"))
 
   # Set non-informative prior defaults based on emission type
   if (is.null(emission_prior_params)) {
@@ -109,5 +111,6 @@ mcmc <- function(model, y = NULL, z_init, psi_init,
 
   MdgmResult$new(raw,
                   emission_type = model$emission_type(),
-                  nug = nug)
+                  nug = nug,
+                  model_type = model$model_type())
 }

@@ -66,6 +66,11 @@ std::vector<double> Model::UpdateEmissionParams(
                                      spatial_->ncolors(), *emission_type_, rng);
 }
 
+double Model::UpdatePsi(std::span<const int> z, double psi,
+                        double psi_tune, std::size_t& accepted, RNG& rng) {
+  return spatial_->UpdatePsi(z, psi, psi_tune, accepted, rng);
+}
+
 void Model::StoreDagSample(std::vector<std::size_t>& dag_data,
                            std::size_t iteration) const {
   spatial_->StoreSample(dag_data, iteration, spatial_->nvertices());
