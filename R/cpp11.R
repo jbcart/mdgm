@@ -36,8 +36,8 @@ sample_mrf_cpp <- function(nug, psi, n_colors, n_sweeps, method, rng) {
   .Call(`_mdgm_sample_mrf_cpp`, nug, psi, n_colors, n_sweeps, method, rng)
 }
 
-run_mcmc_cpp <- function(model, obs_data, obs_ptr, z_init, psi_init, theta_init, n_iterations, psi_tune, emission_prior_params, rng) {
-  .Call(`_mdgm_run_mcmc_cpp`, model, obs_data, obs_ptr, z_init, psi_init, theta_init, n_iterations, psi_tune, emission_prior_params, rng)
+run_mcmc_cpp <- function(model, obs_data, obs_ptr, z_init, psi_init, theta_init, n_iterations, psi_tune, emission_prior_params, rng, store_z) {
+  .Call(`_mdgm_run_mcmc_cpp`, model, obs_data, obs_ptr, z_init, psi_init, theta_init, n_iterations, psi_tune, emission_prior_params, rng, store_z)
 }
 
 nug_create_cpp <- function(nvertices, row, col, weights) {

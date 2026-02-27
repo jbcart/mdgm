@@ -69,10 +69,10 @@ extern "C" SEXP _mdgm_sample_mrf_cpp(SEXP nug, SEXP psi, SEXP n_colors, SEXP n_s
   END_CPP11
 }
 // R_model.cpp
-cpp11::writable::list run_mcmc_cpp(cpp11::external_pointer<mdgm::Model> model, const cpp11::doubles& obs_data, const cpp11::integers& obs_ptr, const cpp11::integers& z_init, double psi_init, const cpp11::doubles& theta_init, int n_iterations, double psi_tune, const cpp11::doubles& emission_prior_params, cpp11::external_pointer<mdgm::RNG> rng);
-extern "C" SEXP _mdgm_run_mcmc_cpp(SEXP model, SEXP obs_data, SEXP obs_ptr, SEXP z_init, SEXP psi_init, SEXP theta_init, SEXP n_iterations, SEXP psi_tune, SEXP emission_prior_params, SEXP rng) {
+cpp11::writable::list run_mcmc_cpp(cpp11::external_pointer<mdgm::Model> model, const cpp11::doubles& obs_data, const cpp11::integers& obs_ptr, const cpp11::integers& z_init, double psi_init, const cpp11::doubles& theta_init, int n_iterations, double psi_tune, const cpp11::doubles& emission_prior_params, cpp11::external_pointer<mdgm::RNG> rng, bool store_z);
+extern "C" SEXP _mdgm_run_mcmc_cpp(SEXP model, SEXP obs_data, SEXP obs_ptr, SEXP z_init, SEXP psi_init, SEXP theta_init, SEXP n_iterations, SEXP psi_tune, SEXP emission_prior_params, SEXP rng, SEXP store_z) {
   BEGIN_CPP11
-    return cpp11::as_sexp(run_mcmc_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::Model>>>(model), cpp11::as_cpp<cpp11::decay_t<const cpp11::doubles&>>(obs_data), cpp11::as_cpp<cpp11::decay_t<const cpp11::integers&>>(obs_ptr), cpp11::as_cpp<cpp11::decay_t<const cpp11::integers&>>(z_init), cpp11::as_cpp<cpp11::decay_t<double>>(psi_init), cpp11::as_cpp<cpp11::decay_t<const cpp11::doubles&>>(theta_init), cpp11::as_cpp<cpp11::decay_t<int>>(n_iterations), cpp11::as_cpp<cpp11::decay_t<double>>(psi_tune), cpp11::as_cpp<cpp11::decay_t<const cpp11::doubles&>>(emission_prior_params), cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::RNG>>>(rng)));
+    return cpp11::as_sexp(run_mcmc_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::Model>>>(model), cpp11::as_cpp<cpp11::decay_t<const cpp11::doubles&>>(obs_data), cpp11::as_cpp<cpp11::decay_t<const cpp11::integers&>>(obs_ptr), cpp11::as_cpp<cpp11::decay_t<const cpp11::integers&>>(z_init), cpp11::as_cpp<cpp11::decay_t<double>>(psi_init), cpp11::as_cpp<cpp11::decay_t<const cpp11::doubles&>>(theta_init), cpp11::as_cpp<cpp11::decay_t<int>>(n_iterations), cpp11::as_cpp<cpp11::decay_t<double>>(psi_tune), cpp11::as_cpp<cpp11::decay_t<const cpp11::doubles&>>(emission_prior_params), cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<mdgm::RNG>>>(rng), cpp11::as_cpp<cpp11::decay_t<bool>>(store_z)));
   END_CPP11
 }
 // R_natural_undirected_graph.cpp
@@ -208,7 +208,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_mdgm_rng_set_seed_cpp",                  (DL_FUNC) &_mdgm_rng_set_seed_cpp,                   2},
     {"_mdgm_rng_uniform_cpp",                   (DL_FUNC) &_mdgm_rng_uniform_cpp,                    3},
     {"_mdgm_rng_uniform_int_cpp",               (DL_FUNC) &_mdgm_rng_uniform_int_cpp,                3},
-    {"_mdgm_run_mcmc_cpp",                      (DL_FUNC) &_mdgm_run_mcmc_cpp,                      10},
+    {"_mdgm_run_mcmc_cpp",                      (DL_FUNC) &_mdgm_run_mcmc_cpp,                      11},
     {"_mdgm_sample_mrf_cpp",                    (DL_FUNC) &_mdgm_sample_mrf_cpp,                     6},
     {NULL, NULL, 0}
 };

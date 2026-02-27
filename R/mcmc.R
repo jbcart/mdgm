@@ -5,8 +5,7 @@
 #' hierarchical models) emission parameters. For MDGM models, the DAG
 #' structure is also sampled.
 #'
-#' @param model An [SrfModel] object created by [srf_model()] or
-#'   [mdgm_model()].
+#' @param model An [SrfModel] object created by [srf_model()].
 #' @param y Observation data. For hierarchical models, a list of numeric
 #'   vectors where `y[[i]]` contains the observations for vertex `i`.
 #'   For Bernoulli, values should be 0 or 1; for Poisson, non-negative
@@ -30,11 +29,16 @@
 #'   independently. For Poisson: `c(alpha_0, beta_0)` for
 #'   `Gamma(alpha_0, beta_0)` prior. Default: `c(1, 1)` for Bernoulli/Poisson,
 #'   `c(0, 10000, 0.01, 0.01)` for Gaussian (non-informative).
+#' @param store_z Logical; if `TRUE`, store the full latent field matrix
+#'   (`n x n_iter`). Default is `FALSE` to conserve memory --- on large grids
+#'   (e.g. 1000x1000 with 10,000 iterations), the z matrix alone requires
+#'   ~40 GB. When `FALSE`, per-iteration summary statistics (allocation
+#'   counts, sufficient statistics, MAP configuration) are still computed.
 #' @param seed Optional integer seed for reproducibility.
 #' @param nug Optional `NaturalUndirectedGraph` object. If provided, stored
 #'   in the result for use by `edge_inclusion_probs()` and `plot()`.
-#' @return An [MdgmResult] object containing posterior samples.
-#' @seealso [srf_model()] for model construction, [MdgmResult] for
+#' @return An [SrfResult] object containing posterior samples.
+#' @seealso [srf_model()] for model construction, [SrfResult] for
 #'   accessing results.
 #' @examples
 #' \dontrun{
@@ -55,6 +59,7 @@ mcmc <- function(model, y = NULL, z_init, psi_init,
                  theta_init = numeric(0),
                  n_iter = 1000L, psi_tune = 0.1,
                  emission_prior_params = NULL,
+                 store_z = FALSE,
                  seed = NULL,
                  nug = NULL) {
   stopifnot(inherits(model, "SrfModel"))
@@ -106,10 +111,11 @@ mcmc <- function(model, y = NULL, z_init, psi_init,
     as.double(theta_init),
     as.integer(n_iter), as.double(psi_tune),
     as.double(emission_prior_params),
-    rng_ptr
+    rng_ptr,
+    as.logical(store_z)
   )
 
-  MdgmResult$new(raw,
+  SrfResult$new(raw,
                   emission_type = model$emission_type(),
                   nug = nug,
                   model_type = model$model_type())

@@ -2,7 +2,7 @@
 % Please edit documentation in R/model.R
 \name{mdgm_model}
 \alias{mdgm_model}
-\title{Create an MDGM model}
+\title{Create an MDGM model (legacy interface)}
 \usage{
 mdgm_model(
   nug,
@@ -24,17 +24,11 @@ mdgm_model(
 creates a standalone model where the spatial field is observed directly.}
 }
 \value{
-An \link{MdgmModel} object.
+An \link{SrfModel} object.
 }
 \description{
-Constructs a mixture of directed graphical models for a discrete spatial
-random field defined on an undirected graph.
-}
-\examples{
-# Standalone model on a triangle graph
-edges <- rbind(c(1, 2), c(2, 1), c(2, 3), c(3, 2), c(1, 3), c(3, 1))
-nug <- nug_from_edge_list(3, edges, seed = 42L)
-model <- mdgm_model(nug, dag_type = "spanning_tree")
-model$nvertices()
-model$has_emission()
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}}
+
+\code{mdgm_model()} is superseded by \code{\link[=srf_model]{srf_model()}} with \code{\link[=mdgm]{mdgm()}} configuration.
+It is kept for backwards compatibility.
 }

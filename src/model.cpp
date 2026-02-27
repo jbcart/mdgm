@@ -51,6 +51,10 @@ double Model::SpatialLogLikelihood(std::span<const int> z, double psi) const {
   return spatial_->LogLikelihood(z, psi);
 }
 
+double Model::SufficientStatistic(std::span<const int> z) const {
+  return spatial_->SufficientStatistic(z);
+}
+
 void Model::UpdateGraph(std::span<const int> z, double psi, RNG& rng) {
   spatial_->UpdateGraph(z, psi, rng);
 }

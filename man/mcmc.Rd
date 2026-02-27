@@ -2,7 +2,7 @@
 % Please edit documentation in R/mcmc.R
 \name{mcmc}
 \alias{mcmc}
-\title{Run MCMC inference for an MDGM model}
+\title{Run MCMC inference for a spatial random field model}
 \usage{
 mcmc(
   model,
@@ -13,12 +13,13 @@ mcmc(
   n_iter = 1000L,
   psi_tune = 0.1,
   emission_prior_params = NULL,
+  store_z = FALSE,
   seed = NULL,
   nug = NULL
 )
 }
 \arguments{
-\item{model}{An \link{MdgmModel} object created by \code{\link[=mdgm_model]{mdgm_model()}}.}
+\item{model}{An \link{SrfModel} object created by \code{\link[=srf_model]{srf_model()}}.}
 
 \item{y}{Observation data. For hierarchical models, a list of numeric
 vectors where \code{y[[i]]} contains the observations for vertex \code{i}.
@@ -50,18 +51,25 @@ independently. For Poisson: \code{c(alpha_0, beta_0)} for
 \code{Gamma(alpha_0, beta_0)} prior. Default: \code{c(1, 1)} for Bernoulli/Poisson,
 \code{c(0, 10000, 0.01, 0.01)} for Gaussian (non-informative).}
 
+\item{store_z}{Logical; if \code{TRUE}, store the full latent field matrix
+(\verb{n x n_iter}). Default is \code{FALSE} to conserve memory --- on large grids
+(e.g. 1000x1000 with 10,000 iterations), the z matrix alone requires
+~40 GB. When \code{FALSE}, per-iteration summary statistics (allocation
+counts, sufficient statistics, MAP configuration) are still computed.}
+
 \item{seed}{Optional integer seed for reproducibility.}
 
 \item{nug}{Optional \code{NaturalUndirectedGraph} object. If provided, stored
 in the result for use by \code{edge_inclusion_probs()} and \code{plot()}.}
 }
 \value{
-An \link{MdgmResult} object containing posterior samples.
+An \link{SrfResult} object containing posterior samples.
 }
 \description{
 Performs Markov chain Monte Carlo sampling to estimate the posterior
-distribution of the spatial field, DAG structure, dependence parameter,
-and (for hierarchical models) emission parameters.
+distribution of the spatial field, dependence parameter, and (for
+hierarchical models) emission parameters. For MDGM models, the DAG
+structure is also sampled.
 }
 \examples{
 \dontrun{
@@ -72,13 +80,13 @@ A[3, 4] <- A[4, 3] <- 1
 nug <- nug_from_adj_mat(A, seed = 42L)
 
 # Standalone model
-model <- mdgm_model(nug, dag_type = "spanning_tree")
+model <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"))
 result <- mcmc(model, z_init = c(0L, 0L, 1L, 1L),
                psi_init = 0.5, n_iter = 100L)
 result$summary()
 }
 }
 \seealso{
-\code{\link[=mdgm_model]{mdgm_model()}} for model construction, \link{MdgmResult} for
+\code{\link[=srf_model]{srf_model()}} for model construction, \link{SrfResult} for
 accessing results.
 }

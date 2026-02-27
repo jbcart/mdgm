@@ -8,11 +8,11 @@ utils::globalVariables(c("iteration", "value", "parameter", "x", "y", "z"))
 #'
 #' @importFrom R6 R6Class
 #' @export
-MdgmResult <- R6::R6Class(
-  classname = "MdgmResult",
+SrfResult <- R6::R6Class(
+  classname = "SrfResult",
   cloneable = FALSE,
   public = list(
-    #' @description Create a new MdgmResult. Use [mcmc()] instead.
+    #' @description Create a new SrfResult. Use [mcmc()] instead.
     #' @param raw List of raw MCMC output from C++.
     #' @param emission_type Character string or NULL.
     #' @param nug A `NaturalUndirectedGraph` or NULL.
@@ -30,8 +30,36 @@ MdgmResult <- R6::R6Class(
     #'   If `NULL`, returns the full `n x J` matrix.
     #' @return Integer matrix (`n x J`) or integer vector (length `n`).
     z = function(iteration = NULL) {
+      if (is.null(private$.raw$z)) {
+        stop("Full z matrix was not stored. Rerun mcmc() with store_z = TRUE.")
+      }
       if (is.null(iteration)) return(private$.raw$z)
       private$.raw$z[, iteration]
+    },
+
+    #' @description Get allocation counts (always available).
+    #' @return Integer matrix (`n x k`) of per-site class counts across
+    #'   all iterations.
+    alloc = function() {
+      private$.raw$alloc
+    },
+
+    #' @description Get per-iteration sufficient statistic T(z)
+    #'   (same-color edge count).
+    #' @return Numeric vector of length `J`.
+    sufficient_stat = function() {
+      private$.raw$sufficient_stat
+    },
+
+    #' @description Get the joint MAP configuration.
+    #' @return Named list with `z` (integer vector), `log_posterior`
+    #'   (scalar), and `iteration` (1-indexed integer).
+    z_map = function() {
+      list(
+        z = private$.raw$z_map,
+        log_posterior = private$.raw$log_posterior_map,
+        iteration = private$.raw$map_iteration + 1L
+      )
     },
 
     #' @description Get the psi (dependence parameter) samples.
@@ -106,13 +134,13 @@ MdgmResult <- R6::R6Class(
       if (is.null(nug)) stop("No graph available. Pass nug argument.")
 
       dag_mat <- private$.raw$dag
-      n <- nrow(dag_mat)
       J <- ncol(dag_mat)
       start <- as.integer(burnin) + 1L
       if (start > J) stop("burnin exceeds number of iterations")
       dag_sub <- dag_mat[, start:J, drop = FALSE]
       J_eff <- ncol(dag_sub)
 
+      n <- private$.raw$n_vertices
       edges <- list()
       for (v in seq_len(n)) {
         nbrs <- nug$neighbors(v)
@@ -339,7 +367,7 @@ MdgmResult <- R6::R6Class(
           message("igraph is required for edge inclusion plot.")
         } else {
           eip <- self$edge_inclusion_probs(burnin = burnin)
-          n_v <- nrow(private$.raw$z)
+          n_v <- private$.raw$n_vertices
 
           # Build igraph object
           el <- as.matrix(eip[, c("vertex1", "vertex2")])
@@ -355,13 +383,8 @@ MdgmResult <- R6::R6Class(
           }
 
           # Color vertices by posterior mode of z
-          z_post <- private$.raw$z[, (as.integer(burnin) + 1L):ncol(private$.raw$z),
-                                    drop = FALSE]
           nc <- private$.raw$n_colors
-          z_mode <- apply(z_post, 1, function(row) {
-            tbl <- tabulate(row + 1L, nbins = nc)
-            which.max(tbl) - 1L
-          })
+          z_mode <- private$compute_z_mode_(burnin)
           pal <- if (nc == 2) c("#440154", "#fde725") else
                    grDevices::hcl.colors(nc, palette = "viridis")
           vcol <- pal[z_mode + 1L]
@@ -382,13 +405,8 @@ MdgmResult <- R6::R6Class(
         if (is.null(nug)) {
           message("No graph stored; cannot plot posterior field.")
         } else {
-          z_post <- private$.raw$z[, start:J, drop = FALSE]
           nc <- private$.raw$n_colors
-          # Posterior mode per vertex
-          z_mode <- apply(z_post, 1, function(row) {
-            tbl <- tabulate(row + 1L, nbins = nc)
-            which.max(tbl) - 1L
-          })
+          z_mode <- private$compute_z_mode_(burnin)
           n <- length(z_mode)
           nside <- as.integer(sqrt(n))
           if (nside * nside == n) {
@@ -420,7 +438,25 @@ MdgmResult <- R6::R6Class(
     .raw = NULL,
     .emission_type = NULL,
     .nug = NULL,
-    .model_type = "mdgm"
+    .model_type = "mdgm",
+
+    # Compute posterior mode per site. Uses alloc when z is not stored.
+    compute_z_mode_ = function(burnin = 0L) {
+      nc <- private$.raw$n_colors
+      if (!is.null(private$.raw$z)) {
+        start <- as.integer(burnin) + 1L
+        J <- private$.raw$n_iterations
+        z_post <- private$.raw$z[, start:J, drop = FALSE]
+        apply(z_post, 1, function(row) {
+          tbl <- tabulate(row + 1L, nbins = nc)
+          which.max(tbl) - 1L
+        })
+      } else {
+        # Use alloc counts (no burnin adjustment possible here)
+        alloc_mat <- private$.raw$alloc  # n x nc
+        apply(alloc_mat, 1, which.max) - 1L
+      }
+    }
   )
 )
 

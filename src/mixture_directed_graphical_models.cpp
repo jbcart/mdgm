@@ -199,6 +199,21 @@ std::size_t MixtureDirectedGraphicalModels::ncolors() const {
   return ncolors_;
 }
 
+double MixtureDirectedGraphicalModels::SufficientStatistic(
+    std::span<const int> z) const {
+  double count = 0.0;
+  const std::size_t n = nug_.nvertices();
+  for (std::size_t i = 0; i < n; ++i) {
+    auto nbrs = nug_.neighbors(i);
+    for (std::size_t nb : nbrs) {
+      if (nb > i) {
+        count += static_cast<double>(z[i] == z[nb]);
+      }
+    }
+  }
+  return count;
+}
+
 const DirectedAcyclicGraph& MixtureDirectedGraphicalModels::current_dag() const {
   return current_dag_;
 }

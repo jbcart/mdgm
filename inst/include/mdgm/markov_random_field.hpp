@@ -43,6 +43,8 @@ class MarkovRandomField : public SpatialRandomField {
                    double psi_tune, std::size_t& accepted,
                    RNG& rng) override;
 
+  double SufficientStatistic(std::span<const int> z) const override;
+
   std::size_t nvertices() const override;
   std::size_t ncolors() const override;
 
@@ -60,9 +62,6 @@ class MarkovRandomField : public SpatialRandomField {
                  std::size_t col_offset) const;
 
  private:
-  // Sufficient statistic: count of same-color neighbor pairs (edge-based)
-  double SufficientStatistic(std::span<const int> z) const;
-
   // Gibbs sample from MRF at given psi (for exchange algorithm auxiliary field)
   std::vector<int> GibbsSample(double psi, RNG& rng) const;
 

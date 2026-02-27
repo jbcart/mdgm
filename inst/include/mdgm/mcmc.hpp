@@ -19,10 +19,11 @@ struct McmcConfig {
   std::size_t n_iterations;
   double psi_tune;
   std::vector<double> emission_prior_params;
+  bool store_z = false;
 };
 
 struct McmcSamples {
-  std::vector<int> z;                    // n x J column-major
+  std::vector<int> z;                    // n x J column-major (empty if !store_z)
   std::vector<double> psi;               // length J
   std::vector<double> theta;             // n_theta x J
   std::vector<std::size_t> dag_data;     // n x J compact DAG storage
@@ -32,6 +33,13 @@ struct McmcSamples {
   std::size_t n_vertices;
   std::size_t n_colors;
   std::size_t n_theta;  // number of emission params per iteration
+
+  // Always computed (cheap):
+  std::vector<std::size_t> alloc;        // n x k allocation counts (post-burnin)
+  std::vector<double> sufficient_stat;   // length J: T(z) same-color edge count
+  std::vector<int> z_map;                // length n: joint MAP configuration
+  double log_posterior_map = -1e300;      // score of z_map
+  std::size_t map_iteration = 0;         // iteration index of z_map
 };
 
 McmcSamples RunMcmc(

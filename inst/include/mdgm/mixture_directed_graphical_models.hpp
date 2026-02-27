@@ -32,6 +32,8 @@ class MixtureDirectedGraphicalModels : public SpatialRandomField {
   void StoreSample(std::vector<std::size_t>& dag_data,
                    std::size_t iteration, std::size_t n) const override;
 
+  double SufficientStatistic(std::span<const int> z) const override;
+
   std::size_t nvertices() const override;
   std::size_t ncolors() const override;
 

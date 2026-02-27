@@ -169,7 +169,8 @@ cpp11::writable::list run_mcmc_cpp(
     const cpp11::doubles& theta_init,
     int n_iterations, double psi_tune,
     const cpp11::doubles& emission_prior_params,
-    cpp11::external_pointer<mdgm::RNG> rng) {
+    cpp11::external_pointer<mdgm::RNG> rng,
+    bool store_z) {
   using namespace cpp11::literals;
 
   // Build Observations
@@ -187,6 +188,7 @@ cpp11::writable::list run_mcmc_cpp(
   config.psi_tune = psi_tune;
   config.emission_prior_params.assign(
       emission_prior_params.begin(), emission_prior_params.end());
+  config.store_z = store_z;
 
   // Run
   mdgm::McmcSamples samples =
@@ -198,13 +200,19 @@ cpp11::writable::list run_mcmc_cpp(
   const std::size_t nc = samples.n_colors;
   const std::size_t n_theta = samples.n_theta;
 
-  // z: integer matrix n x J (column-major, already stored that way)
-  cpp11::writable::integers z_r(static_cast<R_xlen_t>(n * J));
-  for (std::size_t i = 0; i < n * J; ++i) {
-    z_r[static_cast<R_xlen_t>(i)] = samples.z[i];
+  // z: integer matrix n x J (only if store_z)
+  cpp11::sexp z_r;
+  if (store_z) {
+    cpp11::writable::integers z_tmp(static_cast<R_xlen_t>(n * J));
+    for (std::size_t i = 0; i < n * J; ++i) {
+      z_tmp[static_cast<R_xlen_t>(i)] = samples.z[i];
+    }
+    z_tmp.attr("dim") = cpp11::writable::integers({
+        static_cast<int>(n), static_cast<int>(J)});
+    z_r = z_tmp;
+  } else {
+    z_r = R_NilValue;
   }
-  z_r.attr("dim") = cpp11::writable::integers({
-      static_cast<int>(n), static_cast<int>(J)});
 
   // psi: numeric vector length J
   cpp11::writable::doubles psi_r(static_cast<R_xlen_t>(J));
@@ -240,11 +248,36 @@ cpp11::writable::list run_mcmc_cpp(
   dag_r.attr("dim") = cpp11::writable::integers({
       static_cast<int>(n), static_cast<int>(J)});
 
+  // alloc: integer matrix n x nc
+  cpp11::writable::integers alloc_r(static_cast<R_xlen_t>(n * nc));
+  for (std::size_t i = 0; i < n * nc; ++i) {
+    alloc_r[static_cast<R_xlen_t>(i)] = static_cast<int>(samples.alloc[i]);
+  }
+  alloc_r.attr("dim") = cpp11::writable::integers({
+      static_cast<int>(n), static_cast<int>(nc)});
+
+  // sufficient_stat: numeric vector length J
+  cpp11::writable::doubles ss_r(static_cast<R_xlen_t>(J));
+  for (std::size_t j = 0; j < J; ++j) {
+    ss_r[static_cast<R_xlen_t>(j)] = samples.sufficient_stat[j];
+  }
+
+  // z_map: integer vector length n
+  cpp11::writable::integers z_map_r(static_cast<R_xlen_t>(n));
+  for (std::size_t i = 0; i < n; ++i) {
+    z_map_r[static_cast<R_xlen_t>(i)] = samples.z_map[i];
+  }
+
   return cpp11::writable::list({
       "z"_nm = z_r,
       "psi"_nm = psi_r,
       "theta"_nm = theta_r,
       "dag"_nm = dag_r,
+      "alloc"_nm = alloc_r,
+      "sufficient_stat"_nm = ss_r,
+      "z_map"_nm = z_map_r,
+      "log_posterior_map"_nm = samples.log_posterior_map,
+      "map_iteration"_nm = static_cast<int>(samples.map_iteration),
       "psi_accepted"_nm = static_cast<int>(samples.psi_accepted),
       "graph_accepted"_nm = static_cast<int>(samples.graph_accepted),
       "n_iterations"_nm = static_cast<int>(J),

@@ -4,16 +4,17 @@ test_that("standalone MCMC runs and returns correct structure", {
     c(1, 3), c(3, 1), c(3, 4), c(4, 3)
   )
   nug <- nug_from_edge_list(4, edges, seed = 42L)
-  model <- mdgm_model(nug, dag_type = "spanning_tree")
+  model <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"))
 
   result <- mcmc(model,
                  z_init = c(0L, 0L, 1L, 1L),
                  psi_init = 0.5,
                  n_iter = 50L,
                  psi_tune = 0.1,
-                 seed = 123L)
+                 seed = 123L,
+                 store_z = TRUE)
 
-  expect_s3_class(result, "MdgmResult")  # backwards compat alias
+  expect_s3_class(result, "SrfResult")
 
   # Check z dimensions
   z_mat <- result$z()
@@ -38,8 +39,8 @@ test_that("hierarchical MCMC runs with Bernoulli emission", {
     c(1, 3), c(3, 1), c(3, 4), c(4, 3)
   )
   nug <- nug_from_edge_list(4, edges, seed = 42L)
-  model <- mdgm_model(nug, dag_type = "spanning_tree",
-                       emission = "bernoulli")
+  model <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"),
+                     emission = "bernoulli")
 
   y <- list(c(1L, 0L, 1L), c(0L, 0L), c(1L, 1L, 1L), c(0L, 1L))
 
@@ -52,7 +53,7 @@ test_that("hierarchical MCMC runs with Bernoulli emission", {
                  emission_prior_params = c(1, 1),
                  seed = 123L)
 
-  expect_s3_class(result, "MdgmResult")  # backwards compat alias
+  expect_s3_class(result, "SrfResult")
 
   # Check emission_params
   ep <- result$emission_params()
@@ -67,7 +68,7 @@ test_that("hierarchical MCMC runs with Bernoulli emission", {
 test_that("acceptance rates are computed", {
   edges <- rbind(c(1, 2), c(2, 1), c(2, 3), c(3, 2), c(1, 3), c(3, 1))
   nug <- nug_from_edge_list(3, edges, seed = 42L)
-  model <- mdgm_model(nug, dag_type = "spanning_tree")
+  model <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"))
 
   result <- mcmc(model, z_init = c(0L, 0L, 1L),
                  psi_init = 0.5, n_iter = 100L,
@@ -81,7 +82,7 @@ test_that("acceptance rates are computed", {
 test_that("summary prints and returns structured data", {
   edges <- rbind(c(1, 2), c(2, 1), c(2, 3), c(3, 2), c(1, 3), c(3, 1))
   nug <- nug_from_edge_list(3, edges, seed = 42L)
-  model <- mdgm_model(nug, dag_type = "spanning_tree")
+  model <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"))
 
   result <- mcmc(model, z_init = c(0L, 0L, 1L),
                  psi_init = 0.5, n_iter = 50L,
@@ -96,8 +97,8 @@ test_that("summary prints and returns structured data", {
 test_that("diagnostics returns R-hat and ESS", {
   edges <- rbind(c(1, 2), c(2, 1), c(2, 3), c(3, 2), c(1, 3), c(3, 1))
   nug <- nug_from_edge_list(3, edges, seed = 42L)
-  model <- mdgm_model(nug, dag_type = "spanning_tree",
-                       emission = "bernoulli")
+  model <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"),
+                     emission = "bernoulli")
   y <- list(c(1L, 0L), c(0L, 0L), c(1L, 1L))
 
   result <- mcmc(model, y = y, z_init = c(0L, 0L, 1L),
@@ -120,14 +121,16 @@ test_that("standalone MCMC works with n_colors = 3", {
     c(1, 3), c(3, 1), c(3, 4), c(4, 3)
   )
   nug <- nug_from_edge_list(4, edges, seed = 42L)
-  model <- mdgm_model(nug, dag_type = "spanning_tree", n_colors = 3L)
+  model <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"),
+                     n_colors = 3L)
 
   result <- mcmc(model,
                  z_init = c(0L, 1L, 2L, 0L),
                  psi_init = 0.5,
                  n_iter = 50L,
                  psi_tune = 0.1,
-                 seed = 123L)
+                 seed = 123L,
+                 store_z = TRUE)
 
   z_mat <- result$z()
   expect_equal(dim(z_mat), c(4L, 50L))
@@ -140,8 +143,8 @@ test_that("hierarchical MCMC works with n_colors = 3 Bernoulli", {
     c(1, 3), c(3, 1), c(3, 4), c(4, 3)
   )
   nug <- nug_from_edge_list(4, edges, seed = 42L)
-  model <- mdgm_model(nug, dag_type = "spanning_tree",
-                       n_colors = 3L, emission = "bernoulli")
+  model <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"),
+                     n_colors = 3L, emission = "bernoulli")
 
   y <- list(c(1L, 0L, 1L), c(0L, 0L), c(1L, 1L, 1L), c(0L, 1L))
 
@@ -176,8 +179,8 @@ test_that("hierarchical MCMC works with Gaussian emission", {
     c(1, 3), c(3, 1), c(3, 4), c(4, 3)
   )
   nug <- nug_from_edge_list(4, edges, seed = 42L)
-  model <- mdgm_model(nug, dag_type = "spanning_tree",
-                       emission = "gaussian")
+  model <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"),
+                     emission = "gaussian")
 
   # Gaussian observations (encoded as integers)
   y <- list(c(1L, 2L, 3L), c(2L, 1L), c(8L, 9L, 10L), c(7L, 8L))
@@ -203,8 +206,8 @@ test_that("hierarchical MCMC works with Poisson emission", {
     c(1, 3), c(3, 1), c(3, 4), c(4, 3)
   )
   nug <- nug_from_edge_list(4, edges, seed = 42L)
-  model <- mdgm_model(nug, dag_type = "spanning_tree",
-                       emission = "poisson")
+  model <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"),
+                     emission = "poisson")
 
   y <- list(c(0L, 1L, 0L), c(1L, 0L), c(5L, 6L, 4L), c(3L, 5L))
 
@@ -230,7 +233,7 @@ test_that("edge inclusion probabilities work", {
     c(1, 3), c(3, 1)
   )
   nug <- nug_from_edge_list(3, edges, seed = 42L)
-  model <- mdgm_model(nug, dag_type = "spanning_tree")
+  model <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"))
 
   result <- mcmc(model, z_init = c(0L, 0L, 1L),
                  psi_init = 0.5, n_iter = 100L,
@@ -250,7 +253,7 @@ test_that("edge inclusion probabilities work with burnin", {
     c(1, 3), c(3, 1)
   )
   nug <- nug_from_edge_list(3, edges, seed = 42L)
-  model <- mdgm_model(nug, dag_type = "spanning_tree")
+  model <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"))
 
   result <- mcmc(model, z_init = c(0L, 0L, 1L),
                  psi_init = 0.5, n_iter = 100L,
@@ -270,7 +273,7 @@ test_that("edge_inclusion_probs uses stored graph", {
     c(1, 3), c(3, 1)
   )
   nug <- nug_from_edge_list(3, edges, seed = 42L)
-  model <- mdgm_model(nug, dag_type = "spanning_tree")
+  model <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"))
 
   result <- mcmc(model, z_init = c(0L, 0L, 1L),
                  psi_init = 0.5, n_iter = 50L,
@@ -287,7 +290,7 @@ test_that("edge_inclusion_probs uses stored graph", {
 test_that("standalone emission_params returns NULL", {
   edges <- rbind(c(1, 2), c(2, 1), c(2, 3), c(3, 2))
   nug <- nug_from_edge_list(3, edges, seed = 42L)
-  model <- mdgm_model(nug, dag_type = "spanning_tree")
+  model <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"))
 
   result <- mcmc(model, z_init = c(0L, 0L, 1L),
                  psi_init = 0.5, n_iter = 20L,
@@ -344,9 +347,10 @@ test_that("MRF pseudo-likelihood MCMC runs and returns valid result", {
                  n_iter = 50L,
                  psi_tune = 0.3,
                  emission_prior_params = c(1, 1),
-                 seed = 123L)
+                 seed = 123L,
+                 store_z = TRUE)
 
-  expect_s3_class(result, "MdgmResult")
+  expect_s3_class(result, "SrfResult")
   expect_equal(dim(result$z()), c(4L, 50L))
   expect_length(result$psi(), 50L)
   expect_true(all(is.finite(result$psi())))
@@ -373,9 +377,10 @@ test_that("MRF exchange algorithm MCMC runs and returns valid result", {
                  n_iter = 50L,
                  psi_tune = 0.3,
                  emission_prior_params = c(1, 1),
-                 seed = 123L)
+                 seed = 123L,
+                 store_z = TRUE)
 
-  expect_s3_class(result, "MdgmResult")
+  expect_s3_class(result, "SrfResult")
   expect_equal(dim(result$z()), c(4L, 50L))
   expect_true(all(is.finite(result$psi())))
   # All psi should be positive for exchange algorithm
@@ -395,7 +400,8 @@ test_that("MRF standalone model runs", {
                  psi_init = 0.5,
                  n_iter = 50L,
                  psi_tune = 0.3,
-                 seed = 42L)
+                 seed = 42L,
+                 store_z = TRUE)
 
   expect_equal(dim(result$z()), c(3L, 50L))
   expect_null(result$dag())

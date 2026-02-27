@@ -19,8 +19,8 @@ reference:
       - mrf
       - mcmc
       - SrfModel
-      - MdgmResult
-      - mdgm_model
+      - SrfResult
+      - sample_mrf
 
 navbar:
   structure:

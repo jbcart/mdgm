@@ -38,6 +38,9 @@ class SpatialRandomField {
   virtual double UpdatePsi(std::span<const int> z, double psi,
                            double psi_tune, std::size_t& accepted, RNG& rng);
 
+  // Sufficient statistic: count of same-color neighbor pairs (each edge once)
+  virtual double SufficientStatistic(std::span<const int> z) const = 0;
+
   virtual std::size_t nvertices() const = 0;
   virtual std::size_t ncolors() const = 0;
 };

@@ -31,6 +31,9 @@ class Model {
   // Spatial log-likelihood (for beta MH ratio)
   double SpatialLogLikelihood(std::span<const int> z, double psi) const;
 
+  // Sufficient statistic: same-color edge count
+  double SufficientStatistic(std::span<const int> z) const;
+
   // Update graph (delegates to spatial field)
   void UpdateGraph(std::span<const int> z, double psi, RNG& rng);
 
