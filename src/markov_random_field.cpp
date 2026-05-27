@@ -107,9 +107,18 @@ double MarkovRandomField::UpdatePsi(
   double proposal = psi + rng.normal(0.0, psi_tune);
   if (proposal <= 0.0) return psi;
 
-  // Sample auxiliary field from the MRF at the proposed psi
-  std::vector<int> z_aux = (ncolors_ == 2) ? CftpSample(proposal, rng)
-                                           : GibbsSample(proposal, rng);
+  // Sample auxiliary field from the MRF at the proposed psi.
+  // For k=2, use CFTP below 1.2 * beta_c (phase transition threshold);
+  // above that CFTP is unlikely to coalesce, so use Swendsen-Wang.
+  // For k>2, use Swendsen-Wang always.
+  std::vector<int> z_aux;
+  if (ncolors_ == 2) {
+    const double beta_c = std::log(1.0 + std::sqrt(2.0));
+    z_aux = (proposal < 1.2 * beta_c) ? CftpSample(proposal, rng)
+                                       : SwSample(proposal, rng);
+  } else {
+    z_aux = SwSample(proposal, rng);
+  }
 
   // Sufficient statistics
   double S_z = SufficientStatistic(z);
