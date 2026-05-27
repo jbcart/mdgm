@@ -306,9 +306,9 @@ std::vector<int> MarkovRandomField::CftpSample(
     // Check if doubling would exceed memory cap
     if (uniforms.size() * 2 > kMaxDoubles) {
       Rf_warning("CFTP did not coalesce within memory limit (psi=%.4f, "
-                 "%zu doublings, %zu sweeps); falling back to Gibbs sampling",
+                 "%zu doublings, %zu sweeps); falling back to Swendsen-Wang",
                  psi, doubling + 1, total_sweeps);
-      return GibbsSample(psi, rng);
+      return SwSample(psi, rng);
     }
 
     // Double by prepending new uniforms
@@ -319,9 +319,9 @@ std::vector<int> MarkovRandomField::CftpSample(
   }
 
   // Fallback if loop exhausted without coalescence
-  Rf_warning("CFTP did not coalesce after 30 doublings (psi=%.4f); "
-             "falling back to Gibbs sampling", psi);
-  return GibbsSample(psi, rng);
+  Rf_warning("CFTP did not coalesce after %zu doublings (psi=%.4f); "
+             "falling back to Swendsen-Wang", kMaxDoublings, psi);
+  return SwSample(psi, rng);
 }
 
 std::size_t MarkovRandomField::nvertices() const {
