@@ -1,3 +1,4 @@
+#include <R_ext/Error.h>
 #include <cmath>
 #include <cstddef>
 #include <mdgm/markov_random_field.hpp>
@@ -276,6 +277,9 @@ std::vector<int> MarkovRandomField::CftpSample(
     double psi, RNG& rng) const {
   const std::size_t n = nug_.nvertices();
   std::size_t block_size = n_aux_sweeps_;
+
+  // Cap total uniforms at ~512 MB (each double = 8 bytes; 67M doubles ≈ 512 MB)
+  constexpr std::size_t kMaxDoubles = 67'108'864;
   constexpr std::size_t kMaxDoublings = 30;
 
   // Shared uniforms: flat vector of size n * total_sweeps
@@ -283,7 +287,7 @@ std::vector<int> MarkovRandomField::CftpSample(
   std::vector<double> uniforms(n * block_size);
   for (auto& u : uniforms) u = rng.uniform();
 
-  for (std::size_t doubling = 0; doubling <= kMaxDoublings; ++doubling) {
+  for (std::size_t doubling = 0; doubling < kMaxDoublings; ++doubling) {
     std::size_t total_sweeps = uniforms.size() / n;
 
     // Initialize extremal states
@@ -299,6 +303,14 @@ std::vector<int> MarkovRandomField::CftpSample(
     // Check coalescence
     if (lo == hi) return lo;
 
+    // Check if doubling would exceed memory cap
+    if (uniforms.size() * 2 > kMaxDoubles) {
+      Rf_warning("CFTP did not coalesce within memory limit (psi=%.4f, "
+                 "%zu doublings, %zu sweeps); falling back to Gibbs sampling",
+                 psi, doubling + 1, total_sweeps);
+      return GibbsSample(psi, rng);
+    }
+
     // Double by prepending new uniforms
     std::vector<double> new_uniforms(n * total_sweeps);
     for (auto& u : new_uniforms) u = rng.uniform();
@@ -306,13 +318,10 @@ std::vector<int> MarkovRandomField::CftpSample(
     uniforms = std::move(new_uniforms);
   }
 
-  // Safety fallback: return last lower chain (should not happen in practice)
-  std::size_t total_sweeps = uniforms.size() / n;
-  std::vector<int> lo(n, 0);
-  for (std::size_t s = 0; s < total_sweeps; ++s) {
-    CftpSweep(lo, psi, uniforms, s);
-  }
-  return lo;
+  // Fallback if loop exhausted without coalescence
+  Rf_warning("CFTP did not coalesce after 30 doublings (psi=%.4f); "
+             "falling back to Gibbs sampling", psi);
+  return GibbsSample(psi, rng);
 }
 
 std::size_t MarkovRandomField::nvertices() const {
