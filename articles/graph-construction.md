@@ -1,6 +1,7 @@
 # Working with Undirected Graphs
 
 ``` r
+
 library(mdgm)
 ```
 
@@ -22,6 +23,7 @@ appear twice (once per direction). An optional third column gives edge
 weights.
 
 ``` r
+
 # Triangle: 1 -- 2 -- 3 -- 1
 edges <- rbind(
   c(1, 2), c(2, 1),
@@ -41,6 +43,7 @@ An adjacency list is a list where the i-th element is an integer vector
 of vertex i’s neighbors.
 
 ``` r
+
 # 4-vertex star: vertex 1 connected to 2, 3, 4
 adj <- list(
   c(2L, 3L, 4L),
@@ -61,6 +64,7 @@ A symmetric matrix where nonzero entries indicate edges. The entry
 values are used as edge weights.
 
 ``` r
+
 # 3x3 grid (rook adjacency)
 n <- 9
 A <- matrix(0, n, n)
@@ -85,6 +89,7 @@ g$nedges()
 ## Querying graph structure
 
 ``` r
+
 g$nvertices()
 #> [1] 9
 g$nedges()
@@ -101,6 +106,7 @@ Spanning trees are sampled uniformly (or with edge weights) using
 Wilson’s algorithm, Aldous-Broder, or the fast-forward hybrid method.
 
 ``` r
+
 # Sample with Wilson's algorithm (default)
 tree <- g$sample_spanning_tree("wilson")
 ```
@@ -119,6 +125,7 @@ Available methods:
 If the igraph package is installed, you can convert and plot the graph.
 
 ``` r
+
 library(igraph)
 #> 
 #> Attaching package: 'igraph'

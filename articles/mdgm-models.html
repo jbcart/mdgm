@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>MDGM Model Specification • mdgm</title>
+<title>Model Specification • mdgm</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="MDGM Model Specification">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Model Specification">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -59,7 +59,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>MDGM Model Specification</h1>
+      <h1>Model Specification</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/jbcart/mdgm/blob/main/vignettes/mdgm-models.Rmd" class="external-link"><code>vignettes/mdgm-models.Rmd</code></a></small>
@@ -82,22 +82,42 @@ a mixture over compatible directed acyclic graphs (DAGs). Each DAG
 admits a tractable factorization, so the MDGM avoids the partition
 function entirely. The joint distribution marginalizes over the DAG
 space:
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐳</mi><mo>∣</mo><mi>𝛏</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msub><mo>∑</mo><mi>D</mi></msub><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>D</mi><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.167em"></mspace><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐳</mi><mo>∣</mo><mi>D</mi><mo>,</mo><mi>𝛏</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">p(\mathbf{z} \mid \boldsymbol{\xi}) = \sum_D p(D)\, p(\mathbf{z} \mid D, \boldsymbol{\xi})</annotation></semantics></math>.</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>𝐳</mi><mo>∣</mo><mi>𝛏</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mo>∑</mo><mi>D</mi></msub><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>D</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>𝐳</mi><mo>∣</mo><mi>D</mi><mo>,</mo><mi>𝛏</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">p(\mathbf{z} \mid \boldsymbol{\xi}) = \sum_D p(D)\, p(\mathbf{z} \mid D, \boldsymbol{\xi})</annotation></semantics></math>.</p>
+<p>The <strong>mdgm</strong> package supports both spatial model types
+through a unified interface: use <code><a href="../reference/srf_model.html">srf_model()</a></code> with either an
+<code><a href="../reference/mdgm.html">mdgm()</a></code> or <code><a href="../reference/mrf.html">mrf()</a></code> configuration.</p>
 <p>For full details, see <a href="https://arxiv.org/abs/2406.15700" class="external-link">Carter and Calder
 (2024)</a>.</p>
+</div>
+<div class="section level2">
+<h2 id="creating-models">Creating models<a class="anchor" aria-label="anchor" href="#creating-models"></a>
+</h2>
+<p>All models are created via <code><a href="../reference/srf_model.html">srf_model()</a></code> with a spatial
+configuration:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># MDGM with spanning tree</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/srf_model.html">srf_model</a></span><span class="op">(</span><span class="va">nug</span>, spatial <span class="op">=</span> <span class="fu"><a href="../reference/mdgm.html">mdgm</a></span><span class="op">(</span>dag_type <span class="op">=</span> <span class="st">"spanning_tree"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># MRF with exchange algorithm</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/srf_model.html">srf_model</a></span><span class="op">(</span><span class="va">nug</span>, spatial <span class="op">=</span> <span class="fu"><a href="../reference/mrf.html">mrf</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"exchange"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Add an emission layer for hierarchical models</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/srf_model.html">srf_model</a></span><span class="op">(</span><span class="va">nug</span>, spatial <span class="op">=</span> <span class="fu"><a href="../reference/mdgm.html">mdgm</a></span><span class="op">(</span><span class="op">)</span>, emission <span class="op">=</span> <span class="st">"bernoulli"</span><span class="op">)</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/srf_model.html">srf_model</a></span><span class="op">(</span><span class="va">nug</span>, spatial <span class="op">=</span> <span class="fu"><a href="../reference/mrf.html">mrf</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"pseudo_likelihood"</span><span class="op">)</span>,</span>
+<span>                   emission <span class="op">=</span> <span class="st">"gaussian"</span>, n_colors <span class="op">=</span> <span class="fl">3L</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="the-mdgm-prior">The MDGM prior<a class="anchor" aria-label="anchor" href="#the-mdgm-prior"></a>
 </h2>
 <p>Let
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>V</mi><mo>,</mo><mi>E</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">G = (V, E)</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>V</mi><mo>,</mo><mi>E</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">G = (V, E)</annotation></semantics></math>
 be an undirected graph (the “natural undirected graph” or NUG) encoding
 potential neighbor relationships. The MDGM places a prior over DAGs
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>
 that are compatible with
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>:
 every directed edge
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(u, v)</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(u, v)</annotation></semantics></math>
 in
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>
 corresponds to an undirected edge
@@ -115,7 +135,7 @@ of
 is a connected, acyclic subgraph containing all vertices. Edges are
 directed from child to parent. The posterior sampling uses Wilson’s
 algorithm with data-dependent edge weights:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>w</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mo>exp</mo><mo minsize="1.2" maxsize="1.2" stretchy="false" form="prefix">(</mo><mi>ψ</mi><mo>⋅</mo><mn>𝟏</mn><mrow><mo stretchy="true" form="prefix">[</mo><msub><mi>z</mi><mi>u</mi></msub><mo>=</mo><msub><mi>z</mi><mi>v</mi></msub><mo stretchy="true" form="postfix">]</mo></mrow><mo minsize="1.2" maxsize="1.2" stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">w(u, v) = \exp\bigl(\psi \cdot \mathbf{1}[z_u = z_v]\bigr)</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>w</mi><mo stretchy="false" form="prefix">(</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mi>ψ</mi><mo>⋅</mo><mn>𝟏</mn><mo stretchy="false" form="prefix">[</mo><msub><mi>z</mi><mi>u</mi></msub><mo>=</mo><msub><mi>z</mi><mi>v</mi></msub><mo stretchy="false" form="postfix">]</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">w(u, v) = \exp\bigl(\psi \cdot \mathbf{1}[z_u = z_v]\bigr)</annotation></semantics></math></p>
 <p>where
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\psi &gt; 0</annotation></semantics></math>
 is the spatial dependence parameter and
@@ -134,9 +154,9 @@ vertex permutation
 edge
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\{u, v\}</annotation></semantics></math>
 is directed as
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(u, v)</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(u, v)</annotation></semantics></math>
 if
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>&gt;</mo><mi>σ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>v</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\sigma(u) &gt; \sigma(v)</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><mi>u</mi><mo stretchy="false" form="postfix">)</mo><mo>&gt;</mo><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\sigma(u) &gt; \sigma(v)</annotation></semantics></math>.
 The MCMC proposes new permutations and accepts via a Metropolis-Hastings
 step based on the exact DAG log-likelihood ratio.</p>
 </div>
@@ -152,25 +172,90 @@ proposals on
 </div>
 </div>
 <div class="section level2">
+<h2 id="the-mrf-model">The MRF model<a class="anchor" aria-label="anchor" href="#the-mrf-model"></a>
+</h2>
+<p>The Markov random field (MRF) defines a Potts/Ising model on the
+undirected graph
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>.
+The joint distribution is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>𝐳</mi><mo>∣</mo><mi>ψ</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mrow><mi>C</mi><mo stretchy="false" form="prefix">(</mo><mi>ψ</mi><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><mi>ψ</mi><munder><mo>∑</mo><mrow><mo stretchy="false" form="prefix">{</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo stretchy="false" form="postfix">}</mo><mo>∈</mo><mi>E</mi></mrow></munder><mn>𝟏</mn><mo stretchy="false" form="prefix">[</mo><msub><mi>z</mi><mi>u</mi></msub><mo>=</mo><msub><mi>z</mi><mi>v</mi></msub><mo stretchy="false" form="postfix">]</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">p(\mathbf{z} \mid \psi) = \frac{1}{C(\psi)} \exp\Bigl(\psi \sum_{\{u,v\} \in E} \mathbf{1}[z_u = z_v]\Bigr)</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo stretchy="false" form="prefix">(</mo><mi>ψ</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">C(\psi)</annotation></semantics></math>
+is the intractable normalizing constant (partition function). Unlike the
+MDGM, the graph structure is fixed — no DAG sampling is performed.</p>
+<div class="section level3">
+<h3 id="inference-methods-for-psi">Inference methods for psi<a class="anchor" aria-label="anchor" href="#inference-methods-for-psi"></a>
+</h3>
+<p>The partition function makes standard Metropolis-Hastings infeasible
+for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ψ</mi><annotation encoding="application/x-tex">\psi</annotation></semantics></math>.
+Two alternatives are provided:</p>
+<div class="section level4">
+<h4 id="exchange-algorithm-method-exchange">Exchange algorithm (<code>method = "exchange"</code>)<a class="anchor" aria-label="anchor" href="#exchange-algorithm-method-exchange"></a>
+</h4>
+<p>The exchange algorithm (Murray, Ghahramani, and MacKay, 2006) cancels
+the partition function by introducing an auxiliary variable. At each
+MCMC iteration:</p>
+<ol style="list-style-type: decimal">
+<li>Propose
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>ψ</mi><mo>*</mo></msup><mo>∼</mo><mi>q</mi><mo stretchy="false" form="prefix">(</mo><mi>⋅</mi><mo>∣</mo><mi>ψ</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\psi^* \sim q(\cdot \mid \psi)</annotation></semantics></math>
+(normal random walk)</li>
+<li>Sample an auxiliary field
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>𝐳</mi><mo>*</mo></msup><annotation encoding="application/x-tex">\mathbf{z}^*</annotation></semantics></math>
+from the MRF at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>ψ</mi><mo>*</mo></msup><annotation encoding="application/x-tex">\psi^*</annotation></semantics></math>
+via Gibbs sweeps</li>
+<li>Accept with probability:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">min</mi><mo>⁡</mo></mrow><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><mn>1</mn><mo>,</mo><mspace width="0.278em"></mspace><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">[</mo><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>𝐳</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><msup><mi>ψ</mi><mo>*</mo></msup><mo>−</mo><mi>ψ</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>S</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>𝐳</mi><mo>*</mo></msup><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mi>ψ</mi><mo>−</mo><msup><mi>ψ</mi><mo>*</mo></msup><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">]</mo><mo>⋅</mo><mfrac><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>ψ</mi><mo>*</mo></msup><mo stretchy="false" form="postfix">)</mo></mrow><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>ψ</mi><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\min\Bigl(1,\; \exp\bigl[S(\mathbf{z})(\psi^* - \psi) + S(\mathbf{z}^*)(\psi - \psi^*)\bigr] \cdot \frac{p(\psi^*)}{p(\psi)}\Bigr)</annotation></semantics></math>
+</li>
+</ol>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>𝐳</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mo>∑</mo><mrow><mo stretchy="false" form="prefix">{</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo stretchy="false" form="postfix">}</mo><mo>∈</mo><mi>E</mi></mrow></msub><mn>𝟏</mn><mo stretchy="false" form="prefix">[</mo><msub><mi>z</mi><mi>u</mi></msub><mo>=</mo><msub><mi>z</mi><mi>v</mi></msub><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">S(\mathbf{z}) = \sum_{\{u,v\} \in E} \mathbf{1}[z_u = z_v]</annotation></semantics></math>
+is the sufficient statistic. The <code>n_aux_sweeps</code> parameter
+controls the number of Gibbs sweeps used to approximately sample
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>𝐳</mi><mo>*</mo></msup><annotation encoding="application/x-tex">\mathbf{z}^*</annotation></semantics></math>
+(default: 200).</p>
+<p>This method is exact (up to the quality of the auxiliary sample) but
+more expensive per iteration.</p>
+</div>
+<div class="section level4">
+<h4 id="pseudo-likelihood-method-pseudo_likelihood">Pseudo-likelihood (<code>method = "pseudo_likelihood"</code>)<a class="anchor" aria-label="anchor" href="#pseudo-likelihood-method-pseudo_likelihood"></a>
+</h4>
+<p>The pseudo-likelihood replaces the joint likelihood with the product
+of full conditionals:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">PL</mtext><mo stretchy="false" form="prefix">(</mo><mi>ψ</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munder><mo>∏</mo><mrow><mi>i</mi><mo>∈</mo><mi>V</mi></mrow></munder><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>z</mi><mi>i</mi></msub><mo>∣</mo><msub><mi>z</mi><mrow><mi>−</mi><mi>i</mi></mrow></msub><mo>,</mo><mi>ψ</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munder><mo>∏</mo><mrow><mi>i</mi><mo>∈</mo><mi>V</mi></mrow></munder><mfrac><mrow><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>ψ</mi><mo>⋅</mo><msub><mi>n</mi><mrow><mi>i</mi><mo>,</mo><msub><mi>z</mi><mi>i</mi></msub></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow><mrow><munder><mo>∑</mo><mi>k</mi></munder><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>ψ</mi><mo>⋅</mo><msub><mi>n</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow></mfrac></mrow><annotation encoding="application/x-tex">\text{PL}(\psi) = \prod_{i \in V} p(z_i \mid z_{-i}, \psi) = \prod_{i \in V} \frac{\exp(\psi \cdot n_{i,z_i})}{\sum_k \exp(\psi \cdot n_{ik})}</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><annotation encoding="application/x-tex">n_{ik}</annotation></semantics></math>
+is the number of neighbors of vertex
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
+with color
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>.
+This is a tractable approximation and uses the same MH random walk as
+the MDGM. It is fast but may underestimate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ψ</mi><annotation encoding="application/x-tex">\psi</annotation></semantics></math>.</p>
+</div>
+</div>
+</div>
+<div class="section level2">
 <h2 id="spatial-field-model">Spatial field model<a class="anchor" aria-label="anchor" href="#spatial-field-model"></a>
 </h2>
 <p>Given a DAG
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>,
-each vertex
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
-has a set of parents
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">pa</mtext><mi>D</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>i</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{pa}_D(i)</annotation></semantics></math>.
-The conditional distribution of the color
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>
+(MDGM) or the undirected graph
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+(MRF), the conditional distribution of the color
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>z</mi><mi>i</mi></msub><annotation encoding="application/x-tex">z_i</annotation></semantics></math>
-given its parents is:</p>
-<p><span class="math display">$$p(z_i = k \mid z_{\text{pa}(i)}, \psi)
-\propto
-  \exp\Bigl(\psi \sum_{j \in \text{pa}(i)} \mathbf{1}[z_j = k] +
-\alpha_k\Bigr)$$</span></p>
+given its neighbors is:</p>
+<p><strong>MDGM</strong> (parents in the DAG):
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>z</mi><mi>i</mi></msub><mo>=</mo><mi>k</mi><mo>∣</mo><msub><mi>z</mi><mrow><mtext mathvariant="normal">pa</mtext><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo>,</mo><mi>ψ</mi><mo stretchy="false" form="postfix">)</mo><mo>∝</mo><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><mi>ψ</mi><munder><mo>∑</mo><mrow><mi>j</mi><mo>∈</mo><mtext mathvariant="normal">pa</mtext><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo></mrow></munder><mn>𝟏</mn><mo stretchy="false" form="prefix">[</mo><msub><mi>z</mi><mi>j</mi></msub><mo>=</mo><mi>k</mi><mo stretchy="false" form="postfix">]</mo><mo>+</mo><msub><mi>α</mi><mi>k</mi></msub><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">p(z_i = k \mid z_{\text{pa}(i)}, \psi) \propto
+  \exp\Bigl(\psi \sum_{j \in \text{pa}(i)} \mathbf{1}[z_j = k] + \alpha_k\Bigr)</annotation></semantics></math></p>
+<p><strong>MRF</strong> (neighbors in the undirected graph):
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>z</mi><mi>i</mi></msub><mo>=</mo><mi>k</mi><mo>∣</mo><msub><mi>z</mi><mrow><mi>−</mi><mi>i</mi></mrow></msub><mo>,</mo><mi>ψ</mi><mo stretchy="false" form="postfix">)</mo><mo>∝</mo><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><mi>ψ</mi><munder><mo>∑</mo><mrow><mi>j</mi><mo>∈</mo><mtext mathvariant="normal">nbr</mtext><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo></mrow></munder><mn>𝟏</mn><mo stretchy="false" form="prefix">[</mo><msub><mi>z</mi><mi>j</mi></msub><mo>=</mo><mi>k</mi><mo stretchy="false" form="postfix">]</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">p(z_i = k \mid z_{-i}, \psi) \propto
+  \exp\Bigl(\psi \sum_{j \in \text{nbr}(i)} \mathbf{1}[z_j = k]\Bigr)</annotation></semantics></math></p>
 <p>where
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>α</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\alpha_k</annotation></semantics></math>
 are marginal log-probabilities (currently fixed at 0 for a uniform
-marginal).</p>
+marginal in MDGM).</p>
 </div>
 <div class="section level2">
 <h2 id="standalone-vs--hierarchical-models">Standalone vs. hierarchical models<a class="anchor" aria-label="anchor" href="#standalone-vs--hierarchical-models"></a>
@@ -180,12 +265,15 @@ marginal).</p>
 </h3>
 <p>In the standalone model, the spatial field
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math>
-is observed directly. The MCMC updates only the DAG structure
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>
-and the dependence parameter
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ψ</mi><annotation encoding="application/x-tex">\psi</annotation></semantics></math>.
+is observed directly. The MCMC updates the dependence parameter
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ψ</mi><annotation encoding="application/x-tex">\psi</annotation></semantics></math>
+and (for MDGM) the DAG structure
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>.
 This is useful when the data are categorical labels on a spatial
 domain.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/srf_model.html">srf_model</a></span><span class="op">(</span><span class="va">nug</span>, spatial <span class="op">=</span> <span class="fu"><a href="../reference/mdgm.html">mdgm</a></span><span class="op">(</span>dag_type <span class="op">=</span> <span class="st">"spanning_tree"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/srf_model.html">srf_model</a></span><span class="op">(</span><span class="va">nug</span>, spatial <span class="op">=</span> <span class="fu"><a href="../reference/mrf.html">mrf</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"exchange"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="hierarchical-model">Hierarchical model<a class="anchor" aria-label="anchor" href="#hierarchical-model"></a>
@@ -195,18 +283,22 @@ domain.</p>
 is a latent field and observations
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>y</mi><mi>i</mi></msub><annotation encoding="application/x-tex">y_i</annotation></semantics></math>
 are generated through an <strong>emission distribution</strong>:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>∣</mo><msub><mi>z</mi><mi>i</mi></msub><mo>,</mo><mi>θ</mi><mo>∼</mo><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>y</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>∣</mo><msub><mi>θ</mi><msub><mi>z</mi><mi>i</mi></msub></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">y_{ij} \mid z_i, \theta \sim f(y_{ij} \mid \theta_{z_i})</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>∣</mo><msub><mi>z</mi><mi>i</mi></msub><mo>,</mo><mi>θ</mi><mo>∼</mo><mi>f</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>∣</mo><msub><mi>θ</mi><msub><mi>z</mi><mi>i</mi></msub></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">y_{ij} \mid z_i, \theta \sim f(y_{ij} \mid \theta_{z_i})</annotation></semantics></math></p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/srf_model.html">srf_model</a></span><span class="op">(</span><span class="va">nug</span>, spatial <span class="op">=</span> <span class="fu"><a href="../reference/mdgm.html">mdgm</a></span><span class="op">(</span><span class="op">)</span>, emission <span class="op">=</span> <span class="st">"bernoulli"</span><span class="op">)</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/srf_model.html">srf_model</a></span><span class="op">(</span><span class="va">nug</span>, spatial <span class="op">=</span> <span class="fu"><a href="../reference/mrf.html">mrf</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"pseudo_likelihood"</span><span class="op">)</span>,</span>
+<span>                   emission <span class="op">=</span> <span class="st">"gaussian"</span><span class="op">)</span></span></code></pre></div>
 <p>Currently supported emission families:</p>
 <ul>
 <li>
 <strong>Bernoulli</strong>:
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>∣</mo><msub><mi>z</mi><mi>i</mi></msub><mo>=</mo><mi>k</mi><mo>∼</mo><mtext mathvariant="normal">Bernoulli</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>p</mi><mi>k</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">y_{ij} \mid z_i = k \sim \text{Bernoulli}(p_k)</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>∣</mo><msub><mi>z</mi><mi>i</mi></msub><mo>=</mo><mi>k</mi><mo>∼</mo><mtext mathvariant="normal">Bernoulli</mtext><mo stretchy="false" form="prefix">(</mo><msub><mi>p</mi><mi>k</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">y_{ij} \mid z_i = k \sim \text{Bernoulli}(p_k)</annotation></semantics></math>,
 with identifiability constraint
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mn>0</mn></msub><mo>&lt;</mo><msub><mi>p</mi><mn>1</mn></msub><mo>&lt;</mo><mi>⋯</mi></mrow><annotation encoding="application/x-tex">p_0 &lt; p_1 &lt; \cdots</annotation></semantics></math>
 enforced via truncated Beta posterior sampling.</li>
 <li>
 <strong>Gaussian</strong>:
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>∣</mo><msub><mi>z</mi><mi>i</mi></msub><mo>=</mo><mi>k</mi><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mi>k</mi></msub><mo>,</mo><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">y_{ij} \mid z_i = k \sim \mathcal{N}(\mu_k, \sigma_k^2)</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>∣</mo><msub><mi>z</mi><mi>i</mi></msub><mo>=</mo><mi>k</mi><mo>∼</mo><mi>𝒩</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>μ</mi><mi>k</mi></msub><mo>,</mo><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">y_{ij} \mid z_i = k \sim \mathcal{N}(\mu_k, \sigma_k^2)</annotation></semantics></math>,
 with identifiability constraint
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mn>0</mn></msub><mo>&lt;</mo><msub><mi>μ</mi><mn>1</mn></msub><mo>&lt;</mo><mi>⋯</mi></mrow><annotation encoding="application/x-tex">\mu_0 &lt; \mu_1 &lt; \cdots</annotation></semantics></math>.
 Independent Normal and Inverse-Gamma conjugate updates for
@@ -215,7 +307,7 @@ and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup><annotation encoding="application/x-tex">\sigma_k^2</annotation></semantics></math>.</li>
 <li>
 <strong>Poisson</strong>:
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>∣</mo><msub><mi>z</mi><mi>i</mi></msub><mo>=</mo><mi>k</mi><mo>∼</mo><mtext mathvariant="normal">Poisson</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>λ</mi><mi>k</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">y_{ij} \mid z_i = k \sim \text{Poisson}(\lambda_k)</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>∣</mo><msub><mi>z</mi><mi>i</mi></msub><mo>=</mo><mi>k</mi><mo>∼</mo><mtext mathvariant="normal">Poisson</mtext><mo stretchy="false" form="prefix">(</mo><msub><mi>λ</mi><mi>k</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">y_{ij} \mid z_i = k \sim \text{Poisson}(\lambda_k)</annotation></semantics></math>,
 with identifiability constraint
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mn>0</mn></msub><mo>&lt;</mo><msub><mi>λ</mi><mn>1</mn></msub><mo>&lt;</mo><mi>⋯</mi></mrow><annotation encoding="application/x-tex">\lambda_0 &lt; \lambda_1 &lt; \cdots</annotation></semantics></math>.
 Conjugate truncated Gamma updates.</li>
@@ -236,9 +328,10 @@ vignette for worked examples.</p>
 <p>The spatial dependence parameter
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\psi &gt; 0</annotation></semantics></math>
 has a half-Cauchy prior:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>ψ</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac><mn>2</mn><mrow><mi>π</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>+</mo><msup><mi>ψ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac><mo>,</mo><mspace width="1.0em"></mspace><mi>ψ</mi><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">p(\psi) = \frac{2}{\pi(1 + \psi^2)}, \quad \psi &gt; 0</annotation></semantics></math></p>
-<p>Updates use a Metropolis-Hastings random walk with a normal
-proposal.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>ψ</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>2</mn><mrow><mi>π</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>+</mo><msup><mi>ψ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mo>,</mo><mspace width="1.0em"></mspace><mi>ψ</mi><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">p(\psi) = \frac{2}{\pi(1 + \psi^2)}, \quad \psi &gt; 0</annotation></semantics></math></p>
+<p>Updates use a Metropolis-Hastings random walk with a normal proposal
+(MDGM and MRF pseudo-likelihood) or the exchange algorithm (MRF
+exchange).</p>
 </div>
 <div class="section level3">
 <h3 id="emission-parameters">Emission parameters<a class="anchor" aria-label="anchor" href="#emission-parameters"></a>
@@ -248,20 +341,20 @@ proposal.</p>
 <strong>Bernoulli</strong>: Each
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>p</mi><mi>k</mi></msub><annotation encoding="application/x-tex">p_k</annotation></semantics></math>
 has a
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Beta</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{Beta}(a, b)</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Beta</mtext><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{Beta}(a, b)</annotation></semantics></math>
 prior. <code>emission_prior_params = c(a, b)</code>.</li>
 <li>
 <strong>Gaussian</strong>:
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>k</mi></msub><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mn>0</mn></msub><mo>,</mo><msubsup><mi>σ</mi><mn>0</mn><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu_k \sim \mathcal{N}(\mu_0, \sigma^2_0)</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>k</mi></msub><mo>∼</mo><mi>𝒩</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>μ</mi><mn>0</mn></msub><mo>,</mo><msubsup><mi>σ</mi><mn>0</mn><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mu_k \sim \mathcal{N}(\mu_0, \sigma^2_0)</annotation></semantics></math>
 and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup><mo>∼</mo><mtext mathvariant="normal">InverseGamma</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>α</mi><mn>0</mn></msub><mo>,</mo><msub><mi>β</mi><mn>0</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\sigma_k^2 \sim \text{InverseGamma}(\alpha_0, \beta_0)</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup><mo>∼</mo><mtext mathvariant="normal">InverseGamma</mtext><mo stretchy="false" form="prefix">(</mo><msub><mi>α</mi><mn>0</mn></msub><mo>,</mo><msub><mi>β</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\sigma_k^2 \sim \text{InverseGamma}(\alpha_0, \beta_0)</annotation></semantics></math>,
 independently.
 <code>emission_prior_params = c(mu_0, sigma2_0, alpha_0, beta_0)</code>.</li>
 <li>
 <strong>Poisson</strong>: Each
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\lambda_k</annotation></semantics></math>
 has a
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Gamma</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>α</mi><mn>0</mn></msub><mo>,</mo><msub><mi>β</mi><mn>0</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{Gamma}(\alpha_0, \beta_0)</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Gamma</mtext><mo stretchy="false" form="prefix">(</mo><msub><mi>α</mi><mn>0</mn></msub><mo>,</mo><msub><mi>β</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{Gamma}(\alpha_0, \beta_0)</annotation></semantics></math>
 prior (rate parameterization).
 <code>emission_prior_params = c(alpha_0, beta_0)</code>.</li>
 </ul>
@@ -275,10 +368,9 @@ ordering for identifiability.</p>
 <p>Each iteration of the MCMC sampler performs:</p>
 <ol style="list-style-type: decimal">
 <li>
-<strong>Update DAG</strong>
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>
-— Sample a new spanning tree (direct posterior sample via Wilson’s) or
-propose a new acyclic orientation/root (MH step).</li>
+<strong>Update graph</strong> (MDGM only) — Sample a new spanning
+tree (direct posterior sample via Wilson’s) or propose a new acyclic
+orientation/root (MH step). For MRF, this step is a no-op.</li>
 <li>
 <strong>Update</strong>
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math>
@@ -288,13 +380,58 @@ likelihood.</li>
 <li>
 <strong>Update</strong>
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ψ</mi><annotation encoding="application/x-tex">\psi</annotation></semantics></math>
-— Metropolis-Hastings with normal random walk proposal.</li>
+— Metropolis-Hastings with normal random walk proposal (default), or
+exchange algorithm for MRF with <code>method = "exchange"</code>.</li>
 <li>
 <strong>Update</strong>
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
 (hierarchical only) — Conjugate posterior sampling with identifiability
 constraints.</li>
 </ol>
+</div>
+<div class="section level2">
+<h2 id="choosing-between-mdgm-and-mrf">Choosing between MDGM and MRF<a class="anchor" aria-label="anchor" href="#choosing-between-mdgm-and-mrf"></a>
+</h2>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="27%">
+<col width="22%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">Criterion</th>
+<th align="left">MDGM</th>
+<th align="left">MRF</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">Partition function</td>
+<td align="left">Avoided (tractable DAG likelihood)</td>
+<td align="left">Requires exchange algorithm or pseudo-likelihood</td>
+</tr>
+<tr class="even">
+<td align="left">Graph structure</td>
+<td align="left">Sampled (posterior over DAGs)</td>
+<td align="left">Fixed</td>
+</tr>
+<tr class="odd">
+<td align="left">Edge inclusion probabilities</td>
+<td align="left">Yes</td>
+<td align="left">Not applicable</td>
+</tr>
+<tr class="even">
+<td align="left">Speed (per iteration)</td>
+<td align="left">Fast</td>
+<td align="left">Fast (pseudo-likelihood) or slow (exchange)</td>
+</tr>
+<tr class="odd">
+<td align="left">Accuracy of psi</td>
+<td align="left">Exact</td>
+<td align="left">Exact (exchange) or approximate
+(pseudo-likelihood)</td>
+</tr>
+</tbody>
+</table>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

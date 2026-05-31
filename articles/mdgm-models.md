@@ -1,4 +1,4 @@
-# MDGM Model Specification
+# Model Specification
 
 ## Background
 
@@ -13,92 +13,197 @@ that takes the same undirected graph as input but defines a mixture over
 compatible directed acyclic graphs (DAGs). Each DAG admits a tractable
 factorization, so the MDGM avoids the partition function entirely. The
 joint distribution marginalizes over the DAG space:
-$p(\mathbf{z} \mid {\mathbf{ξ}}) = \sum_{D}p(D)\, p(\mathbf{z} \mid D,{\mathbf{ξ}})$.
+$`p(\mathbf{z} \mid \boldsymbol{\xi}) = \sum_D p(D)\, p(\mathbf{z} \mid D, \boldsymbol{\xi})`$.
+
+The **mdgm** package supports both spatial model types through a unified
+interface: use
+[`srf_model()`](https://jbcart.github.io/mdgm/reference/srf_model.md)
+with either an
+[`mdgm()`](https://jbcart.github.io/mdgm/reference/mdgm.md) or
+[`mrf()`](https://jbcart.github.io/mdgm/reference/mrf.md) configuration.
 
 For full details, see [Carter and Calder
 (2024)](https://arxiv.org/abs/2406.15700).
 
+## Creating models
+
+All models are created via
+[`srf_model()`](https://jbcart.github.io/mdgm/reference/srf_model.md)
+with a spatial configuration:
+
+``` r
+
+# MDGM with spanning tree
+model <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"))
+
+# MRF with exchange algorithm
+model <- srf_model(nug, spatial = mrf(method = "exchange"))
+
+# Add an emission layer for hierarchical models
+model <- srf_model(nug, spatial = mdgm(), emission = "bernoulli")
+model <- srf_model(nug, spatial = mrf(method = "pseudo_likelihood"),
+                   emission = "gaussian", n_colors = 3L)
+```
+
 ## The MDGM prior
 
-Let $G = (V,E)$ be an undirected graph (the “natural undirected graph”
-or NUG) encoding potential neighbor relationships. The MDGM places a
-prior over DAGs $D$ that are compatible with $G$: every directed edge
-$(u,v)$ in $D$ corresponds to an undirected edge $\{ u,v\}$ in $G$.
+Let $`G = (V, E)`$ be an undirected graph (the “natural undirected
+graph” or NUG) encoding potential neighbor relationships. The MDGM
+places a prior over DAGs $`D`$ that are compatible with $`G`$: every
+directed edge $`(u, v)`$ in $`D`$ corresponds to an undirected edge
+$`\{u, v\}`$ in $`G`$.
 
 Three DAG constructions are supported:
 
 ### Spanning trees
 
-A spanning tree $T$ of $G$ is a connected, acyclic subgraph containing
-all vertices. Edges are directed from child to parent. The posterior
-sampling uses Wilson’s algorithm with data-dependent edge weights:
+A spanning tree $`T`$ of $`G`$ is a connected, acyclic subgraph
+containing all vertices. Edges are directed from child to parent. The
+posterior sampling uses Wilson’s algorithm with data-dependent edge
+weights:
 
-$$w(u,v) = \exp(\psi \cdot \mathbf{1}\left\lbrack z_{u} = z_{v} \right\rbrack)$$
+``` math
+w(u, v) = \exp\bigl(\psi \cdot \mathbf{1}[z_u = z_v]\bigr)
+```
 
-where $\psi > 0$ is the spatial dependence parameter and $z$ is the
+where $`\psi > 0`$ is the spatial dependence parameter and $`z`$ is the
 color assignment. This provides a direct (non-MH) posterior sample of
 the spanning tree.
 
 ### Acyclic orientations
 
-An acyclic orientation assigns a direction to every edge in $G$ such
+An acyclic orientation assigns a direction to every edge in $`G`$ such
 that no directed cycle exists. Equivalently, this is defined by a vertex
-permutation $\sigma$: edge $\{ u,v\}$ is directed as $(u,v)$ if
-$\sigma(u) > \sigma(v)$. The MCMC proposes new permutations and accepts
-via a Metropolis-Hastings step based on the exact DAG log-likelihood
-ratio.
+permutation $`\sigma`$: edge $`\{u, v\}`$ is directed as $`(u, v)`$ if
+$`\sigma(u) > \sigma(v)`$. The MCMC proposes new permutations and
+accepts via a Metropolis-Hastings step based on the exact DAG
+log-likelihood ratio.
 
 ### Rooted DAGs
 
-A rooted DAG is constructed from $G$ by choosing a root vertex and
+A rooted DAG is constructed from $`G`$ by choosing a root vertex and
 orienting edges via a breadth-first or depth-first traversal. The MCMC
-updates the root via random walk proposals on $G$.
+updates the root via random walk proposals on $`G`$.
+
+## The MRF model
+
+The Markov random field (MRF) defines a Potts/Ising model on the
+undirected graph $`G`$. The joint distribution is:
+
+``` math
+p(\mathbf{z} \mid \psi) = \frac{1}{C(\psi)} \exp\Bigl(\psi \sum_{\{u,v\} \in E} \mathbf{1}[z_u = z_v]\Bigr)
+```
+
+where $`C(\psi)`$ is the intractable normalizing constant (partition
+function). Unlike the MDGM, the graph structure is fixed — no DAG
+sampling is performed.
+
+### Inference methods for psi
+
+The partition function makes standard Metropolis-Hastings infeasible for
+$`\psi`$. Two alternatives are provided:
+
+#### Exchange algorithm (`method = "exchange"`)
+
+The exchange algorithm (Murray, Ghahramani, and MacKay, 2006) cancels
+the partition function by introducing an auxiliary variable. At each
+MCMC iteration:
+
+1.  Propose $`\psi^* \sim q(\cdot \mid \psi)`$ (normal random walk)
+2.  Sample an auxiliary field $`\mathbf{z}^*`$ from the MRF at
+    $`\psi^*`$ via Gibbs sweeps
+3.  Accept with probability:
+    ``` math
+    \min\Bigl(1,\; \exp\bigl[S(\mathbf{z})(\psi^* - \psi) + S(\mathbf{z}^*)(\psi - \psi^*)\bigr] \cdot \frac{p(\psi^*)}{p(\psi)}\Bigr)
+    ```
+
+where $`S(\mathbf{z}) = \sum_{\{u,v\} \in E} \mathbf{1}[z_u = z_v]`$ is
+the sufficient statistic. The `n_aux_sweeps` parameter controls the
+number of Gibbs sweeps used to approximately sample $`\mathbf{z}^*`$
+(default: 200).
+
+This method is exact (up to the quality of the auxiliary sample) but
+more expensive per iteration.
+
+#### Pseudo-likelihood (`method = "pseudo_likelihood"`)
+
+The pseudo-likelihood replaces the joint likelihood with the product of
+full conditionals:
+
+``` math
+\text{PL}(\psi) = \prod_{i \in V} p(z_i \mid z_{-i}, \psi) = \prod_{i \in V} \frac{\exp(\psi \cdot n_{i,z_i})}{\sum_k \exp(\psi \cdot n_{ik})}
+```
+
+where $`n_{ik}`$ is the number of neighbors of vertex $`i`$ with color
+$`k`$. This is a tractable approximation and uses the same MH random
+walk as the MDGM. It is fast but may underestimate $`\psi`$.
 
 ## Spatial field model
 
-Given a DAG $D$, each vertex $i$ has a set of parents
-$\text{pa}_{D}(i)$. The conditional distribution of the color $z_{i}$
-given its parents is:
+Given a DAG $`D`$ (MDGM) or the undirected graph $`G`$ (MRF), the
+conditional distribution of the color $`z_i`$ given its neighbors is:
 
-\$\$p(z_i = k \mid z\_{\text{pa}(i)}, \psi) \propto \exp\Bigl(\psi
-\sum\_{j \in \text{pa}(i)} \mathbf{1}\[z_j = k\] + \alpha_k\Bigr)\$\$
+**MDGM** (parents in the DAG):
+``` math
+p(z_i = k \mid z_{\text{pa}(i)}, \psi) \propto
+  \exp\Bigl(\psi \sum_{j \in \text{pa}(i)} \mathbf{1}[z_j = k] + \alpha_k\Bigr)
+```
 
-where $\alpha_{k}$ are marginal log-probabilities (currently fixed at 0
-for a uniform marginal).
+**MRF** (neighbors in the undirected graph):
+``` math
+p(z_i = k \mid z_{-i}, \psi) \propto
+  \exp\Bigl(\psi \sum_{j \in \text{nbr}(i)} \mathbf{1}[z_j = k]\Bigr)
+```
+
+where $`\alpha_k`$ are marginal log-probabilities (currently fixed at 0
+for a uniform marginal in MDGM).
 
 ## Standalone vs. hierarchical models
 
 ### Standalone model
 
-In the standalone model, the spatial field $z$ is observed directly. The
-MCMC updates only the DAG structure $D$ and the dependence parameter
-$\psi$. This is useful when the data are categorical labels on a spatial
-domain.
+In the standalone model, the spatial field $`z`$ is observed directly.
+The MCMC updates the dependence parameter $`\psi`$ and (for MDGM) the
+DAG structure $`D`$. This is useful when the data are categorical labels
+on a spatial domain.
+
+``` r
+
+model <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"))
+model <- srf_model(nug, spatial = mrf(method = "exchange"))
+```
 
 ### Hierarchical model
 
-In the hierarchical model, $z$ is a latent field and observations
-$y_{i}$ are generated through an **emission distribution**:
+In the hierarchical model, $`z`$ is a latent field and observations
+$`y_i`$ are generated through an **emission distribution**:
 
-$$y_{ij} \mid z_{i},\theta \sim f\left( y_{ij} \mid \theta_{z_{i}} \right)$$
+``` math
+y_{ij} \mid z_i, \theta \sim f(y_{ij} \mid \theta_{z_i})
+```
+
+``` r
+
+model <- srf_model(nug, spatial = mdgm(), emission = "bernoulli")
+model <- srf_model(nug, spatial = mrf(method = "pseudo_likelihood"),
+                   emission = "gaussian")
+```
 
 Currently supported emission families:
 
-- **Bernoulli**:
-  $y_{ij} \mid z_{i} = k \sim \text{Bernoulli}\left( p_{k} \right)$,
-  with identifiability constraint $p_{0} < p_{1} < \cdots$ enforced via
+- **Bernoulli**: $`y_{ij} \mid z_i = k \sim \text{Bernoulli}(p_k)`$,
+  with identifiability constraint $`p_0 < p_1 < \cdots`$ enforced via
   truncated Beta posterior sampling.
 - **Gaussian**:
-  $y_{ij} \mid z_{i} = k \sim \mathcal{N}\left( \mu_{k},\sigma_{k}^{2} \right)$,
-  with identifiability constraint $\mu_{0} < \mu_{1} < \cdots$.
-  Independent Normal and Inverse-Gamma conjugate updates for $\mu_{k}$
-  and $\sigma_{k}^{2}$.
-- **Poisson**:
-  $y_{ij} \mid z_{i} = k \sim \text{Poisson}\left( \lambda_{k} \right)$,
-  with identifiability constraint $\lambda_{0} < \lambda_{1} < \cdots$.
+  $`y_{ij} \mid z_i = k \sim \mathcal{N}(\mu_k, \sigma_k^2)`$, with
+  identifiability constraint $`\mu_0 < \mu_1 < \cdots`$. Independent
+  Normal and Inverse-Gamma conjugate updates for $`\mu_k`$ and
+  $`\sigma_k^2`$.
+- **Poisson**: $`y_{ij} \mid z_i = k \sim \text{Poisson}(\lambda_k)`$,
+  with identifiability constraint $`\lambda_0 < \lambda_1 < \cdots`$.
   Conjugate truncated Gamma updates.
 
-The MCMC additionally updates $z$ (Gibbs scan over vertices) and the
+The MCMC additionally updates $`z`$ (Gibbs scan over vertices) and the
 emission parameters (conjugate updates). See the [Emission
 Models](https://jbcart.github.io/mdgm/articles/emission-models.md)
 vignette for worked examples.
@@ -107,24 +212,27 @@ vignette for worked examples.
 
 ### Dependence parameter
 
-The spatial dependence parameter $\psi > 0$ has a half-Cauchy prior:
+The spatial dependence parameter $`\psi > 0`$ has a half-Cauchy prior:
 
-$$p(\psi) = \frac{2}{\pi\left( 1 + \psi^{2} \right)},\quad\psi > 0$$
+``` math
+p(\psi) = \frac{2}{\pi(1 + \psi^2)}, \quad \psi > 0
+```
 
-Updates use a Metropolis-Hastings random walk with a normal proposal.
+Updates use a Metropolis-Hastings random walk with a normal proposal
+(MDGM and MRF pseudo-likelihood) or the exchange algorithm (MRF
+exchange).
 
 ### Emission parameters
 
-- **Bernoulli**: Each $p_{k}$ has a $\text{Beta}(a,b)$ prior.
+- **Bernoulli**: Each $`p_k`$ has a $`\text{Beta}(a, b)`$ prior.
   `emission_prior_params = c(a, b)`.
-- **Gaussian**:
-  $\mu_{k} \sim \mathcal{N}\left( \mu_{0},\sigma_{0}^{2} \right)$ and
-  $\sigma_{k}^{2} \sim \text{InverseGamma}\left( \alpha_{0},\beta_{0} \right)$,
+- **Gaussian**: $`\mu_k \sim \mathcal{N}(\mu_0, \sigma^2_0)`$ and
+  $`\sigma_k^2 \sim \text{InverseGamma}(\alpha_0, \beta_0)`$,
   independently.
   `emission_prior_params = c(mu_0, sigma2_0, alpha_0, beta_0)`.
-- **Poisson**: Each $\lambda_{k}$ has a
-  $\text{Gamma}\left( \alpha_{0},\beta_{0} \right)$ prior (rate
-  parameterization). `emission_prior_params = c(alpha_0, beta_0)`.
+- **Poisson**: Each $`\lambda_k`$ has a
+  $`\text{Gamma}(\alpha_0, \beta_0)`$ prior (rate parameterization).
+  `emission_prior_params = c(alpha_0, beta_0)`.
 
 All conjugate posteriors use truncated sampling to enforce parameter
 ordering for identifiability.
@@ -133,13 +241,24 @@ ordering for identifiability.
 
 Each iteration of the MCMC sampler performs:
 
-1.  **Update DAG** $D$ — Sample a new spanning tree (direct posterior
-    sample via Wilson’s) or propose a new acyclic orientation/root (MH
-    step).
-2.  **Update** $z$ (hierarchical only) — Gibbs scan over vertices in
+1.  **Update graph** (MDGM only) — Sample a new spanning tree (direct
+    posterior sample via Wilson’s) or propose a new acyclic
+    orientation/root (MH step). For MRF, this step is a no-op.
+2.  **Update** $`z`$ (hierarchical only) — Gibbs scan over vertices in
     random order. The full conditional combines the spatial prior with
     the emission likelihood.
-3.  **Update** $\psi$ — Metropolis-Hastings with normal random walk
-    proposal.
-4.  **Update** $\theta$ (hierarchical only) — Conjugate posterior
+3.  **Update** $`\psi`$ — Metropolis-Hastings with normal random walk
+    proposal (default), or exchange algorithm for MRF with
+    `method = "exchange"`.
+4.  **Update** $`\theta`$ (hierarchical only) — Conjugate posterior
     sampling with identifiability constraints.
+
+## Choosing between MDGM and MRF
+
+| Criterion | MDGM | MRF |
+|:---|:---|:---|
+| Partition function | Avoided (tractable DAG likelihood) | Requires exchange algorithm or pseudo-likelihood |
+| Graph structure | Sampled (posterior over DAGs) | Fixed |
+| Edge inclusion probabilities | Yes | Not applicable |
+| Speed (per iteration) | Fast | Fast (pseudo-likelihood) or slow (exchange) |
+| Accuracy of psi | Exact | Exact (exchange) or approximate (pseudo-likelihood) |

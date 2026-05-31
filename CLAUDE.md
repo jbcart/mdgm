@@ -41,6 +41,7 @@ After modifying `[[cpp11::register]]` annotated functions in
 `src/R_*.cpp`:
 
 ``` r
+
 cpp11::cpp_register()
 ```
 

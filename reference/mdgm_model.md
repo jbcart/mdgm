@@ -1,7 +1,11 @@
-# Create an MDGM model
+# Create an MDGM model (legacy interface)
 
-Constructs a mixture of directed graphical models for a discrete spatial
-random field defined on an undirected graph.
+**\[superseded\]**
+
+`mdgm_model()` is superseded by
+[`srf_model()`](https://jbcart.github.io/mdgm/reference/srf_model.md)
+with [`mdgm()`](https://jbcart.github.io/mdgm/reference/mdgm.md)
+configuration. It is kept for backwards compatibility.
 
 ## Usage
 
@@ -37,18 +41,5 @@ mdgm_model(
 
 ## Value
 
-An [MdgmModel](https://jbcart.github.io/mdgm/reference/MdgmModel.md)
+An [SrfModel](https://jbcart.github.io/mdgm/reference/SrfModel.md)
 object.
-
-## Examples
-
-``` r
-# Standalone model on a triangle graph
-edges <- rbind(c(1, 2), c(2, 1), c(2, 3), c(3, 2), c(1, 3), c(3, 1))
-nug <- nug_from_edge_list(3, edges, seed = 42L)
-model <- mdgm_model(nug, dag_type = "spanning_tree")
-model$nvertices()
-#> [1] 3
-model$has_emission()
-#> [1] FALSE
-```

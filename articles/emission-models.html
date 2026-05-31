@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Emission Models • mdgm</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Emission Models">
 </head>
@@ -74,12 +74,13 @@
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>In a hierarchical MDGM, the spatial field
+<p>In a hierarchical model, the spatial field
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math>
 is latent and observations
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>
-are generated through an <strong>emission distribution</strong>. The
-mdgm package supports three emission families:</p>
+are generated through an <strong>emission distribution</strong>. Both
+MDGM and MRF spatial models support the same three emission
+families:</p>
 <table class="table">
 <colgroup>
 <col width="17%">
@@ -100,7 +101,7 @@ mdgm package supports three emission families:</p>
 <td align="left">
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>p</mi><mi>k</mi></msub><annotation encoding="application/x-tex">p_k</annotation></semantics></math>
 (success probability)</td>
-<td align="left">Beta<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(a, b)</annotation></semantics></math>
+<td align="left">Beta<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(a, b)</annotation></semantics></math>
 </td>
 </tr>
 <tr class="even">
@@ -118,7 +119,7 @@ mdgm package supports three emission families:</p>
 <td align="left">
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\lambda_k</annotation></semantics></math>
 (rate)</td>
-<td align="left">Gamma<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mi>α</mi><mo>,</mo><mi>β</mi><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(\alpha, \beta)</annotation></semantics></math>
+<td align="left">Gamma<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>α</mi><mo>,</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(\alpha, \beta)</annotation></semantics></math>
 </td>
 </tr>
 </tbody>
@@ -193,7 +194,7 @@ producing blocky but asymmetric patterns:</p>
 can have multiple replicate observations
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mrow><mi>i</mi><mn>1</mn></mrow></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>y</mi><mrow><mi>i</mi><msub><mi>m</mi><mi>i</mi></msub></mrow></msub></mrow><annotation encoding="application/x-tex">y_{i1}, \ldots, y_{im_i}</annotation></semantics></math>,
 each drawn independently from
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Bernoulli</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>p</mi><msub><mi>z</mi><mi>i</mi></msub></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{Bernoulli}(p_{z_i})</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Bernoulli</mtext><mo stretchy="false" form="prefix">(</mo><msub><mi>p</mi><msub><mi>z</mi><mi>i</mi></msub></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{Bernoulli}(p_{z_i})</annotation></semantics></math>.
 Multiple replicates per vertex are needed for identifiability in the
 Bernoulli case.</p>
 <div class="section level3">
@@ -221,8 +222,8 @@ Bernoulli case.</p>
 <p><img src="emission-models_files/figure-html/bernoulli-sim-1.png" class="r-plt" alt="" width="480"></p>
 <p>Fit the model:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model_b</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mdgm_model.html">mdgm_model</a></span><span class="op">(</span><span class="va">nug</span>, dag_type <span class="op">=</span> <span class="st">"spanning_tree"</span>,</span>
-<span>                       n_colors <span class="op">=</span> <span class="fl">2L</span>, emission <span class="op">=</span> <span class="st">"bernoulli"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">model_b</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/srf_model.html">srf_model</a></span><span class="op">(</span><span class="va">nug</span>, spatial <span class="op">=</span> <span class="fu"><a href="../reference/mdgm.html">mdgm</a></span><span class="op">(</span>dag_type <span class="op">=</span> <span class="st">"spanning_tree"</span><span class="op">)</span>,</span>
+<span>                     emission <span class="op">=</span> <span class="st">"bernoulli"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">result_b</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mcmc.html">mcmc</a></span><span class="op">(</span><span class="va">model_b</span>, y <span class="op">=</span> <span class="va">y_bern</span>,</span>
 <span>                 z_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
@@ -230,6 +231,7 @@ Bernoulli case.</p>
 <span>                 theta_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">0.7</span><span class="op">)</span>,</span>
 <span>                 n_iter <span class="op">=</span> <span class="fl">5000L</span>,</span>
 <span>                 psi_tune <span class="op">=</span> <span class="fl">1.0</span>,</span>
+<span>                 store_z <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>                 seed <span class="op">=</span> <span class="fl">42L</span>,</span>
 <span>                 nug <span class="op">=</span> <span class="va">nug</span><span class="op">)</span></span>
 <span></span>
@@ -288,14 +290,14 @@ Bernoulli case.</p>
 </h2>
 <p>The Gaussian emission models continuous observations. Each
 observation is drawn from
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><msub><mi>z</mi><mi>i</mi></msub></msub><mo>,</mo><msubsup><mi>σ</mi><msub><mi>z</mi><mi>i</mi></msub><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{N}(\mu_{z_i}, \sigma_{z_i}^2)</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝒩</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>μ</mi><msub><mi>z</mi><mi>i</mi></msub></msub><mo>,</mo><msubsup><mi>σ</mi><msub><mi>z</mi><mi>i</mi></msub><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mathcal{N}(\mu_{z_i}, \sigma_{z_i}^2)</annotation></semantics></math>.
 A single observation per vertex is sufficient for identifiability.</p>
 <p>The priors on
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\mu_k</annotation></semantics></math>
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup><annotation encoding="application/x-tex">\sigma_k^2</annotation></semantics></math>
 are independent:
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>k</mi></msub><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mn>0</mn></msub><mo>,</mo><msubsup><mi>σ</mi><mn>0</mn><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup><mo>∼</mo><mtext mathvariant="normal">InverseGamma</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>α</mi><mn>0</mn></msub><mo>,</mo><msub><mi>β</mi><mn>0</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu_k \sim \mathcal{N}(\mu_0, \sigma^2_0), \qquad \sigma_k^2 \sim \text{InverseGamma}(\alpha_0, \beta_0)</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>k</mi></msub><mo>∼</mo><mi>𝒩</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>μ</mi><mn>0</mn></msub><mo>,</mo><msubsup><mi>σ</mi><mn>0</mn><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup><mo>∼</mo><mtext mathvariant="normal">InverseGamma</mtext><mo stretchy="false" form="prefix">(</mo><msub><mi>α</mi><mn>0</mn></msub><mo>,</mo><msub><mi>β</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mu_k \sim \mathcal{N}(\mu_0, \sigma^2_0), \qquad \sigma_k^2 \sim \text{InverseGamma}(\alpha_0, \beta_0)</annotation></semantics></math>
 where
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>σ</mi><mn>0</mn><mn>2</mn></msubsup><annotation encoding="application/x-tex">\sigma^2_0</annotation></semantics></math>
 is the prior variance for the mean.</p>
@@ -329,8 +331,8 @@ both the emission signal and the spatial structure:</p>
 <p><img src="emission-models_files/figure-html/gaussian-sim-1.png" class="r-plt" alt="" width="480"></p>
 <p>Fit with Gaussian emission:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model_g</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mdgm_model.html">mdgm_model</a></span><span class="op">(</span><span class="va">nug</span>, dag_type <span class="op">=</span> <span class="st">"spanning_tree"</span>,</span>
-<span>                       n_colors <span class="op">=</span> <span class="fl">2L</span>, emission <span class="op">=</span> <span class="st">"gaussian"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">model_g</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/srf_model.html">srf_model</a></span><span class="op">(</span><span class="va">nug</span>, spatial <span class="op">=</span> <span class="fu"><a href="../reference/mdgm.html">mdgm</a></span><span class="op">(</span>dag_type <span class="op">=</span> <span class="st">"spanning_tree"</span><span class="op">)</span>,</span>
+<span>                     emission <span class="op">=</span> <span class="st">"gaussian"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># theta_init: c(mu_1, mu_2, sigma2_1, sigma2_2)</span></span>
 <span><span class="va">result_g</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mcmc.html">mcmc</a></span><span class="op">(</span><span class="va">model_g</span>, y <span class="op">=</span> <span class="va">y_gauss</span>,</span>
@@ -339,6 +341,7 @@ both the emission signal and the spatial structure:</p>
 <span>                 theta_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">14</span>, <span class="fl">9</span>, <span class="fl">9</span><span class="op">)</span>,</span>
 <span>                 n_iter <span class="op">=</span> <span class="fl">5000L</span>,</span>
 <span>                 psi_tune <span class="op">=</span> <span class="fl">1.0</span>,</span>
+<span>                 store_z <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>                 seed <span class="op">=</span> <span class="fl">42L</span>,</span>
 <span>                 nug <span class="op">=</span> <span class="va">nug</span><span class="op">)</span></span>
 <span></span>
@@ -415,11 +418,11 @@ both the emission signal and the spatial structure:</p>
 </h2>
 <p>The Poisson emission models count data. Each observation is drawn
 from
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Poisson</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>λ</mi><msub><mi>z</mi><mi>i</mi></msub></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{Poisson}(\lambda_{z_i})</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Poisson</mtext><mo stretchy="false" form="prefix">(</mo><msub><mi>λ</mi><msub><mi>z</mi><mi>i</mi></msub></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{Poisson}(\lambda_{z_i})</annotation></semantics></math>.
 As with the Gaussian case, a single observation per vertex is sufficient
 for identifiability.</p>
 <p>The prior is a Gamma distribution:
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mi>k</mi></msub><mo>∼</mo><mtext mathvariant="normal">Gamma</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>α</mi><mn>0</mn></msub><mo>,</mo><msub><mi>β</mi><mn>0</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\lambda_k \sim \text{Gamma}(\alpha_0, \beta_0)</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mi>k</mi></msub><mo>∼</mo><mtext mathvariant="normal">Gamma</mtext><mo stretchy="false" form="prefix">(</mo><msub><mi>α</mi><mn>0</mn></msub><mo>,</mo><msub><mi>β</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\lambda_k \sim \text{Gamma}(\alpha_0, \beta_0)</annotation></semantics></math>
 with rate parameterization (mean
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>=</mo><msub><mi>α</mi><mn>0</mn></msub><mi>/</mi><msub><mi>β</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">= \alpha_0 / \beta_0</annotation></semantics></math>).</p>
 <div class="section level3">
@@ -448,8 +451,8 @@ contributes meaningfully to classification:</p>
 <p><img src="emission-models_files/figure-html/poisson-sim-1.png" class="r-plt" alt="" width="480"></p>
 <p>Fit with Poisson emission:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model_p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mdgm_model.html">mdgm_model</a></span><span class="op">(</span><span class="va">nug</span>, dag_type <span class="op">=</span> <span class="st">"spanning_tree"</span>,</span>
-<span>                       n_colors <span class="op">=</span> <span class="fl">2L</span>, emission <span class="op">=</span> <span class="st">"poisson"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">model_p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/srf_model.html">srf_model</a></span><span class="op">(</span><span class="va">nug</span>, spatial <span class="op">=</span> <span class="fu"><a href="../reference/mdgm.html">mdgm</a></span><span class="op">(</span>dag_type <span class="op">=</span> <span class="st">"spanning_tree"</span><span class="op">)</span>,</span>
+<span>                     emission <span class="op">=</span> <span class="st">"poisson"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">result_p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mcmc.html">mcmc</a></span><span class="op">(</span><span class="va">model_p</span>, y <span class="op">=</span> <span class="va">y_pois</span>,</span>
 <span>                 z_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
@@ -457,6 +460,7 @@ contributes meaningfully to classification:</p>
 <span>                 theta_init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">8</span><span class="op">)</span>,</span>
 <span>                 n_iter <span class="op">=</span> <span class="fl">5000L</span>,</span>
 <span>                 psi_tune <span class="op">=</span> <span class="fl">1.0</span>,</span>
+<span>                 store_z <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>                 seed <span class="op">=</span> <span class="fl">42L</span>,</span>
 <span>                 nug <span class="op">=</span> <span class="va">nug</span><span class="op">)</span></span>
 <span></span>

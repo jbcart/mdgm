@@ -1,8 +1,9 @@
-# Run MCMC inference for an MDGM model
+# Run MCMC inference for a spatial random field model
 
 Performs Markov chain Monte Carlo sampling to estimate the posterior
-distribution of the spatial field, DAG structure, dependence parameter,
-and (for hierarchical models) emission parameters.
+distribution of the spatial field, dependence parameter, and (for
+hierarchical models) emission parameters. For MDGM models, the DAG
+structure is also sampled.
 
 ## Usage
 
@@ -16,6 +17,7 @@ mcmc(
   n_iter = 1000L,
   psi_tune = 0.1,
   emission_prior_params = NULL,
+  store_z = FALSE,
   seed = NULL,
   nug = NULL
 )
@@ -25,9 +27,9 @@ mcmc(
 
 - model:
 
-  An [MdgmModel](https://jbcart.github.io/mdgm/reference/MdgmModel.md)
+  An [SrfModel](https://jbcart.github.io/mdgm/reference/SrfModel.md)
   object created by
-  [`mdgm_model()`](https://jbcart.github.io/mdgm/reference/mdgm_model.md).
+  [`srf_model()`](https://jbcart.github.io/mdgm/reference/srf_model.md).
 
 - y:
 
@@ -73,6 +75,14 @@ mcmc(
   Default: `c(1, 1)` for Bernoulli/Poisson, `c(0, 10000, 0.01, 0.01)`
   for Gaussian (non-informative).
 
+- store_z:
+
+  Logical; if `TRUE`, store the full latent field matrix (`n x n_iter`).
+  Default is `FALSE` to conserve memory — on large grids (e.g. 1000x1000
+  with 10,000 iterations), the z matrix alone requires ~40 GB. When
+  `FALSE`, per-iteration summary statistics (allocation counts,
+  sufficient statistics, MAP configuration) are still computed.
+
 - seed:
 
   Optional integer seed for reproducibility.
@@ -85,14 +95,14 @@ mcmc(
 
 ## Value
 
-An [MdgmResult](https://jbcart.github.io/mdgm/reference/MdgmResult.md)
+An [SrfResult](https://jbcart.github.io/mdgm/reference/SrfResult.md)
 object containing posterior samples.
 
 ## See also
 
-[`mdgm_model()`](https://jbcart.github.io/mdgm/reference/mdgm_model.md)
+[`srf_model()`](https://jbcart.github.io/mdgm/reference/srf_model.md)
 for model construction,
-[MdgmResult](https://jbcart.github.io/mdgm/reference/MdgmResult.md) for
+[SrfResult](https://jbcart.github.io/mdgm/reference/SrfResult.md) for
 accessing results.
 
 ## Examples
@@ -106,7 +116,7 @@ A[3, 4] <- A[4, 3] <- 1
 nug <- nug_from_adj_mat(A, seed = 42L)
 
 # Standalone model
-model <- mdgm_model(nug, dag_type = "spanning_tree")
+model <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"))
 result <- mcmc(model, z_init = c(0L, 0L, 1L, 1L),
                psi_init = 0.5, n_iter = 100L)
 result$summary()

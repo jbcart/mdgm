@@ -6,6 +6,27 @@ over directed acyclic graph (DAG) structures—including spanning trees
 and acyclic orientations—with optional emission models for hierarchical
 observation processes.
 
+Creates a configuration object for a mixture of directed graphical
+models spatial field. Used as the `spatial` argument to
+[`srf_model()`](https://jbcart.github.io/mdgm/reference/srf_model.md).
+
+## Usage
+
+``` r
+mdgm(dag_type = c("spanning_tree", "acyclic_orientation", "rooted"))
+```
+
+## Arguments
+
+- dag_type:
+
+  DAG construction type: `"spanning_tree"`, `"acyclic_orientation"`, or
+  `"rooted"`.
+
+## Value
+
+A list of class `mdgm_config`.
+
 ## Model types
 
 - **Standalone**: The spatial field \\z\\ is observed directly. The MCMC
@@ -23,7 +44,10 @@ observation processes.
   [`nug_from_adj_mat()`](https://jbcart.github.io/mdgm/reference/nug_from_adj_mat.md)
 
 - Model specification:
-  [`mdgm_model()`](https://jbcart.github.io/mdgm/reference/mdgm_model.md)
+  [`srf_model()`](https://jbcart.github.io/mdgm/reference/srf_model.md)
+  with `mdgm()` or
+  [`mrf()`](https://jbcart.github.io/mdgm/reference/mrf.md)
+  configuration helpers
 
 - MCMC inference:
   [`mcmc()`](https://jbcart.github.io/mdgm/reference/mcmc.md)
@@ -47,3 +71,14 @@ Useful links:
 ## Author
 
 **Maintainer**: Brandon Carter <brandon.carter@duke.edu>
+
+## Examples
+
+``` r
+mdgm(dag_type = "spanning_tree")
+#> $dag_type
+#> [1] "spanning_tree"
+#> 
+#> attr(,"class")
+#> [1] "mdgm_config"
+```

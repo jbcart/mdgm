@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Mixture of Directed Graphical Models • mdgm</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Mixture of Directed Graphical Models">
 <meta name="description" content="Bayesian inference for discrete spatial random fields using mixtures of directed graphical models (MDGM). Implements MCMC sampling over directed acyclic graph structures (spanning trees, acyclic orientations) with optional emission models for hierarchical observation processes. The C++ core provides efficient graph algorithms and sampling; the R interface exposes model construction, MCMC execution, and posterior summaries. Based on Carter and Calder (2024) &lt;doi:10.48550/arXiv.2406.15700&gt;.">
@@ -61,7 +61,14 @@
 <!-- badges: start -->
 <!-- badges: end -->
 <p>Full documentation: <a href="https://jbcart.github.io/mdgm/" class="uri">https://jbcart.github.io/mdgm/</a></p>
-<p><strong>mdgm</strong> (Mixture of Directed Graphical Models) provides Bayesian inference for discrete spatial random fields. Instead of working with a Markov random field and its intractable normalizing constant, the MDGM defines a mixture over directed acyclic graphs (DAGs) compatible with an undirected neighborhood graph. Each DAG admits a tractable likelihood, avoiding the partition function entirely.</p>
+<p><strong>mdgm</strong> provides Bayesian inference for discrete spatial random fields. It supports two spatial model families on undirected graphs:</p>
+<ul>
+<li>
+<strong>Mixture of Directed Graphical Models (MDGM)</strong> — avoids the intractable MRF partition function by defining a mixture over compatible DAGs.</li>
+<li>
+<strong>Markov Random Field (MRF)</strong> — classical Potts/Ising model with inference via the exchange algorithm (exact) or pseudo-likelihood (approximate).</li>
+</ul>
+<p>Both can be combined with emission distributions (Bernoulli, Gaussian, Poisson) for hierarchical models where the spatial field is latent.</p>
 <p>See <a href="https://arxiv.org/abs/2406.15700" class="external-link">Carter and Calder (2024)</a> for the full methodological details.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -90,7 +97,7 @@
 <span>       <span class="fl">0L</span>, <span class="fl">0L</span>, <span class="fl">1L</span>, <span class="fl">1L</span>,</span>
 <span>       <span class="fl">1L</span>, <span class="fl">1L</span>, <span class="fl">1L</span>, <span class="fl">0L</span>,</span>
 <span>       <span class="fl">1L</span>, <span class="fl">1L</span>, <span class="fl">0L</span>, <span class="fl">0L</span><span class="op">)</span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mdgm_model.html">mdgm_model</a></span><span class="op">(</span><span class="va">nug</span>, dag_type <span class="op">=</span> <span class="st">"spanning_tree"</span><span class="op">)</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/srf_model.html">srf_model</a></span><span class="op">(</span><span class="va">nug</span>, spatial <span class="op">=</span> <span class="fu"><a href="reference/mdgm.html">mdgm</a></span><span class="op">(</span>dag_type <span class="op">=</span> <span class="st">"spanning_tree"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mcmc.html">mcmc</a></span><span class="op">(</span><span class="va">model</span>, z_init <span class="op">=</span> <span class="va">z</span>, psi_init <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>               n_iter <span class="op">=</span> <span class="fl">2000L</span>, psi_tune <span class="op">=</span> <span class="fl">1.0</span>, seed <span class="op">=</span> <span class="fl">42L</span><span class="op">)</span></span>
 <span><span class="va">result</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></span>
@@ -99,16 +106,34 @@
 <span><span class="co">#&gt;   Iterations: 2000 (burnin: 0)</span></span>
 <span><span class="co">#&gt;   Psi acceptance rate: 0.462</span></span>
 <span><span class="co">#&gt;   Psi posterior mean: 0.8447 (sd: 0.5658)</span></span>
-<span><span class="co">#&gt;   Psi R-hat: 1.0035, ESS: 308</span></span></code></pre></div>
+<span><span class="co">#&gt;   Diagnostics:</span></span>
+<span><span class="co">#&gt;     psi — R-hat: 1.0035, ESS: 308</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="mrf-example">MRF example<a class="anchor" aria-label="anchor" href="#mrf-example"></a>
+</h3>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Fit an MRF with pseudo-likelihood</span></span>
+<span><span class="va">model_mrf</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/srf_model.html">srf_model</a></span><span class="op">(</span><span class="va">nug</span>, spatial <span class="op">=</span> <span class="fu"><a href="reference/mrf.html">mrf</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"pseudo_likelihood"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">result_mrf</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mcmc.html">mcmc</a></span><span class="op">(</span><span class="va">model_mrf</span>, z_init <span class="op">=</span> <span class="va">z</span>, psi_init <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>                   n_iter <span class="op">=</span> <span class="fl">2000L</span>, psi_tune <span class="op">=</span> <span class="fl">0.5</span>, seed <span class="op">=</span> <span class="fl">42L</span><span class="op">)</span></span>
+<span><span class="va">result_mrf</span><span class="op">$</span><span class="fu">summary</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; MRF MCMC Results</span></span>
+<span><span class="co">#&gt;   Vertices: 16, Colors: 2</span></span>
+<span><span class="co">#&gt;   Iterations: 2000 (burnin: 0)</span></span>
+<span><span class="co">#&gt;   Psi acceptance rate: 0.699</span></span>
+<span><span class="co">#&gt;   Psi posterior mean: 1.0303 (sd: 0.5364)</span></span>
+<span><span class="co">#&gt;   Diagnostics:</span></span>
+<span><span class="co">#&gt;     psi — R-hat: 1.0044, ESS: 110</span></span></code></pre></div>
 <p>See <code><a href="articles/mdgm.html">vignette("mdgm")</a></code> for a full walkthrough including visualization and posterior diagnostics.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="c-unit-tests">C++ unit tests<a class="anchor" aria-label="anchor" href="#c-unit-tests"></a>
 </h2>
 <p>The C++ core ships with GoogleTest unit tests under <code>tests/cpp/</code>. Build and run them with:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">-B</span> build <span class="at">-DBUILD_TESTS</span><span class="op">=</span>ON</span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> build</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="ex">ctest</span> <span class="at">--test-dir</span> build</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">-B</span> build <span class="at">-DBUILD_TESTS</span><span class="op">=</span>ON</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> build</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="ex">ctest</span> <span class="at">--test-dir</span> build</span></code></pre></div>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">

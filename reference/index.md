@@ -15,13 +15,27 @@ Create undirected graphs from various representations.
 
 ## Model & Inference
 
-Specify MDGM models and run MCMC.
+Specify spatial random field models and run MCMC.
+
+- [`srf_model()`](https://jbcart.github.io/mdgm/reference/srf_model.md)
+  : Create a spatial random field model
+- [`mdgm()`](https://jbcart.github.io/mdgm/reference/mdgm.md) : mdgm:
+  Mixture of Directed Graphical Models
+- [`mrf()`](https://jbcart.github.io/mdgm/reference/mrf.md) : MRF
+  spatial configuration
+- [`mcmc()`](https://jbcart.github.io/mdgm/reference/mcmc.md) : Run MCMC
+  inference for a spatial random field model
+- [`SrfModel`](https://jbcart.github.io/mdgm/reference/SrfModel.md)
+  [`MdgmModel`](https://jbcart.github.io/mdgm/reference/SrfModel.md) :
+  Spatial Random Field Model
+- [`SrfResult`](https://jbcart.github.io/mdgm/reference/SrfResult.md) :
+  MCMC Result
+- [`sample_mrf()`](https://jbcart.github.io/mdgm/reference/sample_mrf.md)
+  : Sample from a Markov Random Field
+
+## Superseded
+
+Functions that have been replaced by newer alternatives.
 
 - [`mdgm_model()`](https://jbcart.github.io/mdgm/reference/mdgm_model.md)
-  : Create an MDGM model
-- [`mcmc()`](https://jbcart.github.io/mdgm/reference/mcmc.md) : Run MCMC
-  inference for an MDGM model
-- [`MdgmModel`](https://jbcart.github.io/mdgm/reference/MdgmModel.md) :
-  MDGM Model
-- [`MdgmResult`](https://jbcart.github.io/mdgm/reference/MdgmResult.md)
-  : MCMC Result
+  **\[superseded\]** : Create an MDGM model (legacy interface)

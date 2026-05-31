@@ -1,6 +1,7 @@
 # Getting Started with mdgm
 
 ``` r
+
 library(mdgm)
 library(ggplot2)
 ```
@@ -8,16 +9,20 @@ library(ggplot2)
 ## What is mdgm?
 
 The **mdgm** package implements Bayesian inference for discrete spatial
-random fields using **Mixtures of Directed Graphical Models**. Like a
-Markov random field (MRF), the MDGM takes an undirected graph as input
-to represent spatial structure. However, instead of specifying a single
-joint distribution with an intractable normalizing constant, the MDGM
-defines a mixture over directed acyclic graphs (DAGs) compatible with
-the undirected graph. Each DAG admits an efficient factorization,
-avoiding the computational burden of the MRF partition function while
-providing valid probabilistic inference.
+random fields. It supports two spatial model families:
 
-The approach is described in:
+- **Mixture of Directed Graphical Models (MDGM)** — defines a mixture
+  over directed acyclic graphs (DAGs) compatible with an undirected
+  graph. Each DAG admits a tractable likelihood, avoiding the partition
+  function entirely.
+- **Markov Random Field (MRF)** — the classical Potts/Ising model on the
+  same graph. Inference for the dependence parameter uses either the
+  **exchange algorithm** (exact) or **pseudo-likelihood** (approximate).
+
+Both can be combined with emission distributions (Bernoulli, Gaussian,
+Poisson) for hierarchical models where the spatial field is latent.
+
+The MDGM approach is described in:
 
 > Carter, J. B. and Calder, C. A. (2024). Mixture of Directed Graphical
 > Models for Discrete Spatial Random Fields.
@@ -29,6 +34,7 @@ Create a 4x4 grid graph with rook adjacency using
 [`nug_from_grid()`](https://jbcart.github.io/mdgm/reference/nug_from_grid.md):
 
 ``` r
+
 nug <- nug_from_grid(4, 4, seed = 42L)
 nug$nvertices()
 #> [1] 16
@@ -47,6 +53,7 @@ The [igraph](https://r.igraph.org/) package (suggested, not required)
 provides a quick way to visualize the neighborhood structure:
 
 ``` r
+
 library(igraph)
 #> 
 #> Attaching package: 'igraph'
@@ -77,19 +84,20 @@ plot(g, layout = coords, vertex.size = 20, vertex.label = 1:n,
 
 ![](mdgm_files/figure-html/igraph-grid-1.png)
 
-## Fitting a standalone model
+## Fitting a standalone MDGM
 
-In a standalone model, the spatial field $z$ is observed directly — no
+In a standalone model, the spatial field $`z`$ is observed directly — no
 emission distribution is needed. Here we fit a spanning-tree MDGM to a
 deterministic checkerboard pattern on the 4x4 grid:
 
 ``` r
+
 z <- c(0L, 0L, 0L, 1L,
        0L, 0L, 1L, 1L,
        1L, 1L, 1L, 0L,
        1L, 1L, 0L, 0L)
 
-model <- mdgm_model(nug, dag_type = "spanning_tree")
+model <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"))
 
 result <- mcmc(model, z_init = z, psi_init = 0.5,
                n_iter = 2000L, psi_tune = 1.0, seed = 42L)
@@ -106,6 +114,7 @@ result$summary()
 We can color the graph vertices by their field values:
 
 ``` r
+
 plot(g, layout = coords, vertex.size = 20, vertex.label = 1:n,
      vertex.color = c("#440154", "#fde725")[z + 1],
      vertex.label.color = "white", edge.color = "grey40",
@@ -117,6 +126,7 @@ plot(g, layout = coords, vertex.size = 20, vertex.label = 1:n,
 Or visualize as a raster:
 
 ``` r
+
 grid_df <- data.frame(
   x = rep(1:4, times = 4),
   y = rep(4:1, each = 4),
@@ -135,9 +145,10 @@ ggplot(grid_df, aes(x, y, fill = z)) +
 
 ## Posterior diagnostics
 
-Trace plot for the spatial dependence parameter $\psi$:
+Trace plot for the spatial dependence parameter $`\psi`$:
 
 ``` r
+
 psi_df <- data.frame(iteration = seq_along(result$psi()), psi = result$psi())
 
 ggplot(psi_df, aes(iteration, psi)) +
@@ -151,6 +162,7 @@ ggplot(psi_df, aes(iteration, psi)) +
 Acceptance rates:
 
 ``` r
+
 result$acceptance_rates()
 #>       psi     graph 
 #> 0.4777389 0.0000000
@@ -163,6 +175,7 @@ edge appears in the posterior spanning-tree samples. We can use these
 proportions to scale edge widths:
 
 ``` r
+
 eip <- result$edge_inclusion_probs(nug, burnin = 200L)
 head(eip[order(-eip$prob), ])
 #>    vertex1 vertex2      prob
@@ -197,17 +210,18 @@ plot(g, layout = coords, vertex.size = 20, vertex.label = 1:n,
 
 Edges between same-colored vertices appear more frequently in the
 posterior spanning trees, reflecting the spatial dependence captured by
-$\psi$.
+$`\psi`$.
 
 ## Fitting a hierarchical model
 
-In a hierarchical model, $z$ is a latent field and observations are
+In a hierarchical model, $`z`$ is a latent field and observations are
 generated through an emission distribution. Here we use a Bernoulli
 emission:
 
 ``` r
-model_h <- mdgm_model(nug, dag_type = "spanning_tree", n_colors = 2L,
-                       emission = "bernoulli")
+
+model_h <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"),
+                     emission = "bernoulli")
 
 # Simulate 5 Bernoulli observations per vertex (multiple needed for identifiability)
 set.seed(1)
@@ -232,15 +246,95 @@ result_h$summary()
 #>     p_2 — R-hat: 0.9989, ESS: 207
 ```
 
+## Markov random field models
+
+The package also supports classical MRF (Potts/Ising) models on the same
+graph. The [`mrf()`](https://jbcart.github.io/mdgm/reference/mrf.md)
+configuration helper specifies the inference method for the dependence
+parameter $`\psi`$:
+
+- `"exchange"` — the exchange algorithm, which cancels the intractable
+  partition function by sampling an auxiliary field (exact)
+- `"pseudo_likelihood"` — replaces the joint likelihood with the product
+  of full conditionals (fast, approximate)
+
+``` r
+
+# MRF with pseudo-likelihood inference
+model_mrf <- srf_model(nug, spatial = mrf(method = "pseudo_likelihood"))
+
+result_mrf <- mcmc(model_mrf, z_init = z, psi_init = 0.5,
+                   n_iter = 2000L, psi_tune = 0.5, seed = 42L)
+result_mrf$summary()
+#> MRF MCMC Results
+#>   Vertices: 16, Colors: 2
+#>   Iterations: 2000 (burnin: 0)
+#>   Psi acceptance rate: 0.681
+#>   Psi posterior mean: 0.8784 (sd: 0.4959)
+#>   Diagnostics:
+#>     psi — R-hat: 1.0057, ESS: 158
+```
+
+The exchange algorithm is more expensive per iteration but provides
+exact inference:
+
+``` r
+
+model_ex <- srf_model(nug, spatial = mrf(method = "exchange",
+                                         n_aux_sweeps = 100L))
+
+result_ex <- mcmc(model_ex, z_init = z, psi_init = 0.5,
+                  n_iter = 500L, psi_tune = 0.5, seed = 42L)
+result_ex$summary()
+#> MRF MCMC Results
+#>   Vertices: 16, Colors: 2
+#>   Iterations: 500 (burnin: 0)
+#>   Psi acceptance rate: 0.485
+#>   Psi posterior mean: 0.4567 (sd: 0.2781)
+#>   Diagnostics:
+#>     psi — R-hat: 1.0084, ESS: 56
+```
+
+MRF models can also be combined with emission distributions for
+hierarchical inference, just like MDGM models:
+
+``` r
+
+model_mrf_h <- srf_model(nug,
+                         spatial = mrf(method = "pseudo_likelihood"),
+                         emission = "bernoulli")
+
+result_mrf_h <- mcmc(model_mrf_h, y = y,
+                     z_init = sample(0:1, n, replace = TRUE),
+                     psi_init = 0.5, theta_init = c(0.3, 0.7),
+                     n_iter = 500L, seed = 42L)
+result_mrf_h$summary()
+#> MRF MCMC Results
+#>   Vertices: 16, Colors: 2
+#>   Iterations: 500 (burnin: 0)
+#>   Psi acceptance rate: 0.866
+#>   Psi posterior mean: 0.5128 (sd: 0.4028)
+#>   Emission type: bernoulli
+#>   p_1 posterior mean: 0.2254 (sd: 0.0791)
+#>   p_2 posterior mean: 0.8159 (sd: 0.0668)
+#>   Diagnostics:
+#>     psi — R-hat: 1.2701, ESS: 8
+#>     p_1 — R-hat: 1.0071, ESS: 227
+#>     p_2 — R-hat: 1.0031, ESS: 278
+```
+
+Note that MRF results do not have DAG samples or edge inclusion
+probabilities, since the graph structure is fixed.
+
 ## Next steps
 
 - **[Working with Undirected
   Graphs](https://jbcart.github.io/mdgm/articles/graph-construction.md)**
   — Graph constructors, querying structure, and sampling spanning trees.
-- **[MDGM Model
+- **[Model
   Specification](https://jbcart.github.io/mdgm/articles/mdgm-models.md)**
-  — DAG types, the spatial field model, emission distributions, and MCMC
-  details.
+  — DAG types, MRF methods, the spatial field model, emission
+  distributions, and MCMC details.
 - **[Emission
   Models](https://jbcart.github.io/mdgm/articles/emission-models.md)** —
   Worked examples for Bernoulli, Gaussian, and Poisson emission

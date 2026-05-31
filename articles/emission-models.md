@@ -1,26 +1,28 @@
 # Emission Models
 
 ``` r
+
 library(mdgm)
 library(ggplot2)
 ```
 
 ## Overview
 
-In a hierarchical MDGM, the spatial field $z$ is latent and observations
-$y$ are generated through an **emission distribution**. The mdgm package
-supports three emission families:
+In a hierarchical model, the spatial field $`z`$ is latent and
+observations $`y`$ are generated through an **emission distribution**.
+Both MDGM and MRF spatial models support the same three emission
+families:
 
-| Family    | Observation type | Parameters                    | Prior                             |
-|:----------|:-----------------|:------------------------------|:----------------------------------|
-| Bernoulli | Binary (0/1)     | $p_{k}$ (success probability) | Beta$(a,b)$                       |
-| Gaussian  | Continuous       | $\mu_{k}$, $\sigma_{k}^{2}$   | Independent Normal, Inverse-Gamma |
-| Poisson   | Count            | $\lambda_{k}$ (rate)          | Gamma$(\alpha,\beta)$             |
+| Family | Observation type | Parameters | Prior |
+|:---|:---|:---|:---|
+| Bernoulli | Binary (0/1) | $`p_k`$ (success probability) | Beta$`(a, b)`$ |
+| Gaussian | Continuous | $`\mu_k`$, $`\sigma_k^2`$ | Independent Normal, Inverse-Gamma |
+| Poisson | Count | $`\lambda_k`$ (rate) | Gamma$`(\alpha, \beta)`$ |
 
 All emission families enforce an **identifiability constraint** on their
-location parameters: $p_{0} < p_{1} < \cdots$ (Bernoulli),
-$\mu_{0} < \mu_{1} < \cdots$ (Gaussian), or
-$\lambda_{0} < \lambda_{1} < \cdots$ (Poisson). This is achieved via
+location parameters: $`p_0 < p_1 < \cdots`$ (Bernoulli),
+$`\mu_0 < \mu_1 < \cdots`$ (Gaussian), or
+$`\lambda_0 < \lambda_1 < \cdots`$ (Poisson). This is achieved via
 truncated conjugate posterior sampling.
 
 ## Simulating a spatial field
@@ -31,6 +33,7 @@ random seed vertices, regions expand outward one cell at a time,
 producing blocky but asymmetric patterns:
 
 ``` r
+
 grow_regions <- function(nug, n_colors, seed = NULL) {
   if (!is.null(seed)) set.seed(seed)
   n <- nug$nvertices()
@@ -61,6 +64,7 @@ grow_regions <- function(nug, n_colors, seed = NULL) {
 ```
 
 ``` r
+
 nug <- nug_from_grid(8, 8, seed = 42L)
 n <- nug$nvertices()
 
@@ -81,15 +85,16 @@ ggplot(grid_df, aes(x, y, fill = z)) +
 
 ## Bernoulli emission
 
-The Bernoulli emission models binary observations. Each vertex $i$ can
-have multiple replicate observations $y_{i1},\ldots,y_{im_{i}}$, each
-drawn independently from $\text{Bernoulli}\left( p_{z_{i}} \right)$.
-Multiple replicates per vertex are needed for identifiability in the
-Bernoulli case.
+The Bernoulli emission models binary observations. Each vertex $`i`$ can
+have multiple replicate observations $`y_{i1}, \ldots, y_{im_i}`$, each
+drawn independently from $`\text{Bernoulli}(p_{z_i})`$. Multiple
+replicates per vertex are needed for identifiability in the Bernoulli
+case.
 
 ### Example: binary indicators on a grid
 
 ``` r
+
 set.seed(1)
 p_true <- c(0.3, 0.7)
 
@@ -115,8 +120,9 @@ ggplot(obs_df_b, aes(x, y, fill = value)) +
 Fit the model:
 
 ``` r
-model_b <- mdgm_model(nug, dag_type = "spanning_tree",
-                       n_colors = 2L, emission = "bernoulli")
+
+model_b <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"),
+                     emission = "bernoulli")
 
 result_b <- mcmc(model_b, y = y_bern,
                  z_init = sample(0:1, n, replace = TRUE),
@@ -124,6 +130,7 @@ result_b <- mcmc(model_b, y = y_bern,
                  theta_init = c(0.3, 0.7),
                  n_iter = 5000L,
                  psi_tune = 1.0,
+                 store_z = TRUE,
                  seed = 42L,
                  nug = nug)
 
@@ -145,6 +152,7 @@ result_b$summary(burnin = 1000L)
 ### Posterior trace plots
 
 ``` r
+
 psi_df_b <- data.frame(iteration = seq_along(result_b$psi()), psi = result_b$psi())
 ggplot(psi_df_b, aes(iteration, psi)) +
   geom_line(alpha = 0.6, linewidth = 0.3) +
@@ -155,6 +163,7 @@ ggplot(psi_df_b, aes(iteration, psi)) +
 ![](emission-models_files/figure-html/bernoulli-psi-trace-1.png)
 
 ``` r
+
 ep_b <- result_b$emission_params()
 n_iter <- ncol(ep_b$p)
 
@@ -177,6 +186,7 @@ ggplot(p_df, aes(iteration, value, color = parameter)) +
 ### Edge inclusion probabilities
 
 ``` r
+
 result_b$plot(burnin = 1000L, which = "edge_inclusion")
 ```
 
@@ -185,13 +195,14 @@ result_b$plot(burnin = 1000L, which = "edge_inclusion")
 ## Gaussian emission
 
 The Gaussian emission models continuous observations. Each observation
-is drawn from
-$\mathcal{N}\left( \mu_{z_{i}},\sigma_{z_{i}}^{2} \right)$. A single
+is drawn from $`\mathcal{N}(\mu_{z_i}, \sigma_{z_i}^2)`$. A single
 observation per vertex is sufficient for identifiability.
 
-The priors on $\mu_{k}$ and $\sigma_{k}^{2}$ are independent:
-$$\mu_{k} \sim \mathcal{N}\left( \mu_{0},\sigma_{0}^{2} \right),\qquad\sigma_{k}^{2} \sim \text{InverseGamma}\left( \alpha_{0},\beta_{0} \right)$$
-where $\sigma_{0}^{2}$ is the prior variance for the mean.
+The priors on $`\mu_k`$ and $`\sigma_k^2`$ are independent:
+``` math
+\mu_k \sim \mathcal{N}(\mu_0, \sigma^2_0), \qquad \sigma_k^2 \sim \text{InverseGamma}(\alpha_0, \beta_0)
+```
+where $`\sigma^2_0`$ is the prior variance for the mean.
 
 ### Example: spatial temperature field
 
@@ -200,6 +211,7 @@ in mean but share similar spread, making classification rely on both the
 emission signal and the spatial structure:
 
 ``` r
+
 set.seed(2)
 mu_true <- c(5, 12)
 sigma2_true <- c(9, 9)
@@ -227,8 +239,9 @@ ggplot(obs_df, aes(x, y, fill = value)) +
 Fit with Gaussian emission:
 
 ``` r
-model_g <- mdgm_model(nug, dag_type = "spanning_tree",
-                       n_colors = 2L, emission = "gaussian")
+
+model_g <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"),
+                     emission = "gaussian")
 
 # theta_init: c(mu_1, mu_2, sigma2_1, sigma2_2)
 result_g <- mcmc(model_g, y = y_gauss,
@@ -237,6 +250,7 @@ result_g <- mcmc(model_g, y = y_gauss,
                  theta_init = c(4, 14, 9, 9),
                  n_iter = 5000L,
                  psi_tune = 1.0,
+                 store_z = TRUE,
                  seed = 42L,
                  nug = nug)
 
@@ -262,6 +276,7 @@ result_g$summary(burnin = 1000L)
 ### Posterior trace plots
 
 ``` r
+
 psi_df_g <- data.frame(iteration = seq_along(result_g$psi()), psi = result_g$psi())
 ggplot(psi_df_g, aes(iteration, psi)) +
   geom_line(alpha = 0.6, linewidth = 0.3) +
@@ -272,6 +287,7 @@ ggplot(psi_df_g, aes(iteration, psi)) +
 ![](emission-models_files/figure-html/gaussian-psi-trace-1.png)
 
 ``` r
+
 ep_g <- result_g$emission_params()
 n_iter_g <- ncol(ep_g$mu)
 
@@ -292,6 +308,7 @@ ggplot(mu_df, aes(iteration, value, color = parameter)) +
 ![](emission-models_files/figure-html/gaussian-trace-1.png)
 
 ``` r
+
 sigma2_df <- data.frame(
   iteration = rep(seq_len(n_iter_g), 2),
   value = c(ep_g$sigma2[1, ], ep_g$sigma2[2, ]),
@@ -311,6 +328,7 @@ ggplot(sigma2_df, aes(iteration, value, color = parameter)) +
 ### Edge inclusion probabilities
 
 ``` r
+
 result_g$plot(burnin = 1000L, which = "edge_inclusion")
 ```
 
@@ -319,12 +337,12 @@ result_g$plot(burnin = 1000L, which = "edge_inclusion")
 ## Poisson emission
 
 The Poisson emission models count data. Each observation is drawn from
-$\text{Poisson}\left( \lambda_{z_{i}} \right)$. As with the Gaussian
-case, a single observation per vertex is sufficient for identifiability.
+$`\text{Poisson}(\lambda_{z_i})`$. As with the Gaussian case, a single
+observation per vertex is sufficient for identifiability.
 
 The prior is a Gamma distribution:
-$\lambda_{k} \sim \text{Gamma}\left( \alpha_{0},\beta_{0} \right)$ with
-rate parameterization (mean $= \alpha_{0}/\beta_{0}$).
+$`\lambda_k \sim \text{Gamma}(\alpha_0, \beta_0)`$ with rate
+parameterization (mean $`= \alpha_0 / \beta_0`$).
 
 ### Example: spatial species counts
 
@@ -332,6 +350,7 @@ We again use overlapping rates so that the spatial structure contributes
 meaningfully to classification:
 
 ``` r
+
 set.seed(3)
 lambda_true <- c(4, 10)
 
@@ -356,8 +375,9 @@ ggplot(obs_df_p, aes(x, y, fill = value)) +
 Fit with Poisson emission:
 
 ``` r
-model_p <- mdgm_model(nug, dag_type = "spanning_tree",
-                       n_colors = 2L, emission = "poisson")
+
+model_p <- srf_model(nug, spatial = mdgm(dag_type = "spanning_tree"),
+                     emission = "poisson")
 
 result_p <- mcmc(model_p, y = y_pois,
                  z_init = sample(0:1, n, replace = TRUE),
@@ -365,6 +385,7 @@ result_p <- mcmc(model_p, y = y_pois,
                  theta_init = c(3, 8),
                  n_iter = 5000L,
                  psi_tune = 1.0,
+                 store_z = TRUE,
                  seed = 42L,
                  nug = nug)
 
@@ -386,6 +407,7 @@ result_p$summary(burnin = 1000L)
 ### Posterior trace plots
 
 ``` r
+
 psi_df_p <- data.frame(iteration = seq_along(result_p$psi()), psi = result_p$psi())
 ggplot(psi_df_p, aes(iteration, psi)) +
   geom_line(alpha = 0.6, linewidth = 0.3) +
@@ -396,6 +418,7 @@ ggplot(psi_df_p, aes(iteration, psi)) +
 ![](emission-models_files/figure-html/poisson-psi-trace-1.png)
 
 ``` r
+
 ep_p <- result_p$emission_params()
 n_iter_p <- ncol(ep_p$lambda)
 
@@ -418,6 +441,7 @@ ggplot(lambda_df, aes(iteration, value, color = parameter)) +
 ### Edge inclusion probabilities
 
 ``` r
+
 result_p$plot(burnin = 1000L, which = "edge_inclusion")
 ```
 
@@ -429,6 +453,7 @@ For all three emission types, the posterior mode of the latent field
 should recover the true spatial pattern:
 
 ``` r
+
 burnin <- 1000L
 
 recover_field <- function(result, burnin) {
@@ -477,7 +502,7 @@ ggplot(field_df, aes(x, y, fill = factor(value))) +
 ## Prior tuning tips
 
 - **Bernoulli** `c(a, b)`: Use `c(1, 1)` (uniform) as a default.
-  Increase `a` and `b` to shrink $p_{k}$ toward 0.5 if you expect weak
+  Increase `a` and `b` to shrink $`p_k`$ toward 0.5 if you expect weak
   signal.
 - **Gaussian** `c(mu_0, sigma2_0, alpha_0, beta_0)`: Set `mu_0` near the
   data mean, `sigma2_0` large (e.g., 10000) for a vague location prior,
