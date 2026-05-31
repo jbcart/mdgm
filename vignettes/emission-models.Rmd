@@ -133,6 +133,7 @@ result_b <- mcmc(model_b, y = y_bern,
                  theta_init = c(0.3, 0.7),
                  n_iter = 5000L,
                  psi_tune = 1.0,
+                 store_z = TRUE,
                  seed = 42L,
                  nug = nug)
 
@@ -225,6 +226,7 @@ result_g <- mcmc(model_g, y = y_gauss,
                  theta_init = c(4, 14, 9, 9),
                  n_iter = 5000L,
                  psi_tune = 1.0,
+                 store_z = TRUE,
                  seed = 42L,
                  nug = nug)
 
@@ -326,6 +328,7 @@ result_p <- mcmc(model_p, y = y_pois,
                  theta_init = c(3, 8),
                  n_iter = 5000L,
                  psi_tune = 1.0,
+                 store_z = TRUE,
                  seed = 42L,
                  nug = nug)
 
