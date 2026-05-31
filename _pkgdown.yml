@@ -22,6 +22,11 @@ reference:
       - SrfResult
       - sample_mrf
 
+  - title: Superseded
+    desc: Functions that have been replaced by newer alternatives.
+    contents:
+      - mdgm_model
+
 navbar:
   structure:
     left: [intro, reference, articles]
